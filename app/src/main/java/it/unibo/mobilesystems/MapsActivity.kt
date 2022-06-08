@@ -1,10 +1,8 @@
 package it.unibo.mobilesystems
 
-import android.Manifest
-import android.app.Activity
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.graphics.Color
 import android.location.Location
 import android.location.LocationListener
@@ -13,13 +11,11 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.preference.PreferenceManager
 import android.view.View
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.app.ActivityCompat
-import com.google.android.material.floatingactionbutton.FloatingActionButton
+import it.unibo.mobilesystems.bluetoothUtils.BluetoothTest
 import it.unibo.mobilesystems.databinding.ActivityMapsBinding
-import it.unibo.mobilesystems.debugUtils.debugger.printDebug
+import it.unibo.mobilesystems.debugUtils.debugger
 import it.unibo.mobilesystems.permissionManager.PermissionType
-import it.unibo.mobilesystems.permissionManager.PermissionsManager.permissionRequest
+import it.unibo.mobilesystems.permissionManager.PermissionsManager.permissionCheck
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.views.MapView
@@ -28,17 +24,13 @@ import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 import java.util.*
 
 class MapsActivity : AppCompatActivity(), LocationListener {
-
-
+    //TODO: FIX MAPS Activity (Maps not working)
 
     private lateinit var binding: ActivityMapsBinding
 
     lateinit var map : MapView
     lateinit var locationManager: LocationManager
     lateinit var mLocationOverlay : MyLocationNewOverlay
-
-
-
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -54,28 +46,20 @@ class MapsActivity : AppCompatActivity(), LocationListener {
 
     }
 
+    @SuppressLint("MissingPermission")
     fun startMap (): MapView {
-        var maps : MapView = findViewById(R.id.map)
+        val maps : MapView = findViewById(R.id.map)
         maps.setTileSource(TileSourceFactory.MAPNIK)
-        maps.setMultiTouchControls(true);
+        maps.setMultiTouchControls(true)
 
         locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
 
         //PERMISSION CHECK
-        if (ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-                permissionRequest(PermissionType.Location, this)
-                printDebug("REQUESTING LOCATION PERMISSION")
-        }else{
-            locationManager.requestLocationUpdates(LocationManager.FUSED_PROVIDER, 0, 0.0f, this)
+        if(permissionCheck(PermissionType.Location, this)){
+            locationManager.requestLocationUpdates(LocationManager.FUSED_PROVIDER, 0, 10.0f, this)
         }
+
 
         //MAP INITIALIZATION
         this.mLocationOverlay = MyLocationNewOverlay(GpsMyLocationProvider(applicationContext), maps)
@@ -87,11 +71,9 @@ class MapsActivity : AppCompatActivity(), LocationListener {
         return maps
     }
 
-
-
     override fun onLocationChanged(p0: Location) {
-        printDebug("Location changed")
-        printDebug(p0)
+        debugger.printDebug("Location changed")
+        debugger.printDebug(p0)
     }
 
     fun hello(v : View){
@@ -108,12 +90,14 @@ class MapsActivity : AppCompatActivity(), LocationListener {
         var rnd = kotlin.random.Random.nextInt()
         lateinit var activityClass : Class<out AppCompatActivity>
 
-        if(rnd % 3 == 0){
+        /*if(rnd % 3 == 0){
             activityClass = BluetoothActivity::class.java
         }else{
             activityClass = MainActivity::class.java
         }
+         */
 
+        activityClass = BluetoothTest::class.java
         val intent = Intent(this, activityClass)
         startActivity(intent)
     }
