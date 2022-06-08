@@ -6,6 +6,6 @@ package it.unibo.mobilesystems.permissionManager
 }*/
 
 enum class PermissionType () {
-    Location (),
-    Bluetooth ()
+    Location (),    //  Ordinal = 0
+    Bluetooth ()  //  Ordinal = 1
 }
