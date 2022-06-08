@@ -1,41 +1,108 @@
 package it.unibo.mobilesystems.permissionManager
 
 import android.Manifest
-import android.app.Activity
-import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import it.unibo.mobilesystems.debugUtils.debugger
+
+
+// https://stackoverflow.com/questions/35484767/activitycompat-requestpermissions-not-showing-dialog-box
 
 object PermissionsManager {
 
-    fun permissionRequest(permissionType: PermissionType, app: AppCompatActivity) {
-        permissionRequest(permissionType.name, app)
-    }
+    var version = Build.VERSION.SDK_INT
 
-    fun permissionRequest(permissionType: String, app : AppCompatActivity): Boolean {
-        //  Consider calling
-        //    ActivityCompat#requestPermissions
-        // here to request the missing permissions, and then overriding
-        //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-        //                                          int[] grantResults)
-        // to handle the case where the user grants the permission. See the documentation
-        // for ActivityCompat#requestPermissions for more details.
-        if (permissionType == PermissionType.Location.name) {
-            return requestLocationPermission(app)
-        } else if (permissionType == PermissionType.Bluetooth.name)
-            return requestBluetoothPermission()
+    fun permissionCheck(permissionType: PermissionType, context : AppCompatActivity) : Boolean{
+        if(permissionType == PermissionType.Bluetooth)
+            return checkBluetoothPermission(context)
+        else if(permissionType == PermissionType.Location)
+            return checkLocationPermission(context)
 
         return false
     }
 
-    private fun requestBluetoothPermission(): Boolean {
-        TODO("Not yet implemented")
+    private fun checkLocationPermission(context: AppCompatActivity) : Boolean {
+        val permissions = arrayOf(
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        )
+
+        if (ActivityCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            )!= PackageManager.PERMISSION_GRANTED
+        ) {
+            debugger.printDebug("Location Permission NOT GRANTED CORRECTLY [ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION]")
+            permissionsRequest(context, permissions, PermissionType.Location.ordinal)
+            return true
+        }else{
+            debugger.printDebug("Bluetooth Permission GRANTED CORRECTLY [ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION]")
+            return true
+        }
+
+    }
+
+    private fun checkBluetoothPermission(context : AppCompatActivity) : Boolean{
+        if(version >= 31) {
+            val permissions = arrayOf(
+                Manifest.permission.BLUETOOTH_SCAN,
+                Manifest.permission.BLUETOOTH_CONNECT
+            )
+            if (ActivityCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.BLUETOOTH_CONNECT
+                ) != PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.BLUETOOTH_SCAN
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                debugger.printDebug("Bluetooth Permission: NOT GRANTED CORRECTLY [BLUETOOTH_CONNECT, BLUETOOTH_SCAN]")
+                permissionsRequest(context, permissions, PermissionType.Bluetooth.ordinal)
+                return false
+            } else {
+                debugger.printDebug("Bluetooth Permission: GRANTED CORRECTLY [BLUETOOTH_CONNECT, BLUETOOTH_SCAN]")
+                return true
+            }
+        }
+        else {
+            val permissions = arrayOf(
+                Manifest.permission.BLUETOOTH,
+                Manifest.permission.BLUETOOTH_ADMIN
+            )
+            if (ActivityCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.BLUETOOTH
+                ) != PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.BLUETOOTH_ADMIN
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                debugger.printDebug("Bluetooth Permission NOT GRANTED CORRECTLY [BLUETOOTH, BLUETOOTH_ADMIN]")
+                permissionsRequest(context, permissions, PermissionType.Bluetooth.ordinal)
+                //permissionRequest(PermissionType.Bluetooth, context)
+                return false
+            } else {
+                debugger.printDebug("Bluetooth Permission GRANTED CORRECTLY [BLUETOOTH_CONNECT, BLUETOOTH_ADMIN]")
+                return true
+            }
+        }
+
+    }
+
+    fun permissionsRequest(context: AppCompatActivity, permissions : Array<out String>, intCode : Int){
+        ActivityCompat.requestPermissions(context, permissions, intCode)
     }
 
 
 
     private fun requestLocationPermission(app: AppCompatActivity): Boolean {
-         var granted : Boolean = false
+        var granted = false
         val locationPermissionRequest = app.registerForActivityResult(
             ActivityResultContracts.RequestMultiplePermissions()
         ) { permissions ->
