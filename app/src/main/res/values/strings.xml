@@ -19,4 +19,10 @@
     <string name="attachment_summary_on">Automatically download attachments for incoming emails
     </string>
     <string name="attachment_summary_off">Only download attachments when manually requested</string>
+
+
+    <!-- Various Strings -->
+    <string name="text_Paired">Paired Devices</string>
+    <string name="text_Discovered">Discovered Devices</string>
+
 </resources>

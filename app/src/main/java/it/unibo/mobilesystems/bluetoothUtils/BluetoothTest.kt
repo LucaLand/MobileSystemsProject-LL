@@ -10,6 +10,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Bundle
+import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import it.unibo.mobilesystems.BluetoothActivity
@@ -23,15 +24,23 @@ class BluetoothTest : BluetoothActivity() {
     lateinit var bluetoothAdapter: BluetoothAdapter
     lateinit var bluetoothBtn : FloatingActionButton
 
+
+
+     var bluetoothDevicesDiscovered = mutableListOf<BluetoothDevice?>()
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         bluetoothBtn = findViewById(R.id.bluetoothButton)
         bluetoothBtn.setOnClickListener{bluetoothSearch()}
 
+
+
         addReceivers(this)
 
         bluetoothInit()
         bluetoothEnable()
+        printBluetoothPairedDevices()
         bluetoothSearch()
     }
 
@@ -40,6 +49,7 @@ class BluetoothTest : BluetoothActivity() {
         unregisterReceiver(receiverBluetoothDevices)
         unregisterReceiver(receiverScanStart)
         unregisterReceiver(receiverScanEnd)
+        unregisterReceiver(receiverBluetoothStateChanged)
     }
 
     fun bluetoothInit() {
@@ -59,6 +69,13 @@ class BluetoothTest : BluetoothActivity() {
             bluetoothAdapter.enable()
         }
     }
+
+    @SuppressLint("MissingPermission")
+    fun printBluetoothPairedDevices() {
+        val pairedDevices: Set<BluetoothDevice>? = bluetoothAdapter.bondedDevices
+        printPairedDevices(pairedDevices)
+    }
+
 
     @SuppressLint("MissingPermission")
     fun bluetoothSearch(){
@@ -93,12 +110,12 @@ class BluetoothTest : BluetoothActivity() {
                     // object and its info from the Intent.
                     val device: BluetoothDevice? =
                         intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
+                    if(device != null && !bluetoothDevicesDiscovered.contains(device)) bluetoothDevicesDiscovered.add(device)
                     val deviceName = device?.name
                     val deviceHardwareAddress = device?.address // MAC address
-                    printDevice("Nome: $deviceName - MAC: $deviceHardwareAddress")
-
+                    //printDevice("Nome: $deviceName - MAC: $deviceHardwareAddress")
                     //Debug Log
-                    debugger.printDebug("$device")
+                    debugger.printDebug("Nome: $deviceName - MAC: $deviceHardwareAddress")
                 }
             }
         }
@@ -122,7 +139,7 @@ class BluetoothTest : BluetoothActivity() {
             when(intent.action) {
                 BluetoothAdapter.ACTION_DISCOVERY_FINISHED -> {
                     debugger.printDebug("DISCOVERY - END")
-                    //bluetoothManager.
+                    printDiscoveredDevices(bluetoothDevicesDiscovered)
                 }
             }
         }
