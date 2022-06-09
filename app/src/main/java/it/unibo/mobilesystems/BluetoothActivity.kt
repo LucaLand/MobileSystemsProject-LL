@@ -1,20 +1,24 @@
 package it.unibo.mobilesystems
 
 
+
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
+import android.graphics.Color
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
 import android.widget.LinearLayout
+import android.widget.ProgressBar
 import android.widget.TextView
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import it.unibo.mobilesystems.debugUtils.debugger
 import it.unibo.mobilesystems.permissionManager.PermissionType
 import it.unibo.mobilesystems.permissionManager.PermissionsManager.permissionCheck
-
 
 
 open class BluetoothActivity : AppCompatActivity() {
@@ -24,62 +28,76 @@ open class BluetoothActivity : AppCompatActivity() {
     private lateinit var boxListPairedDevices : LinearLayout
     private lateinit var boxListDiscoveredDevices : LinearLayout
 
+    lateinit var deviceTextView: TextView
+    lateinit var longClickListener : View.OnLongClickListener
+
+    lateinit var loadingBar : ProgressBar
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_bluetooth)
 
+        /** UI ITEM **/
         backBtn = findViewById(R.id.backButton)
-        backBtn.setOnClickListener{backButton(backBtn)}
-
         boxListPairedDevices = findViewById(R.id.pairedDevicesBox)
         boxListDiscoveredDevices = findViewById(R.id.discoveredDevicesBox)
+        deviceTextView = findViewById(R.id.deviceTextView)
+        loadingBar = findViewById(R.id.progressBar)
+        //SETTING LISTENERS
+        backBtn.setOnClickListener{backButton(backBtn)}
+        loadingBar.animate()
 
         permissionCheck(PermissionType.Bluetooth, this)
     }
 
-    fun backButton(view : View){
-        view.isVisible = false
-        val intent = Intent(this, MapsActivity::class.java)
-        startActivity(intent)
-    }
+
 
     @SuppressLint("MissingPermission")
     fun printPairedDevices(devices : Set<BluetoothDevice>?){
-        if (devices != null) {
-            devices.forEach { device ->
-                val deviceName = device.name
-                val deviceHardwareAddress = device.address // MAC address
-                debugger.printDebug("Nome: $deviceName - MAC: $deviceHardwareAddress")
-                printPairedDevice("Nome: $deviceName - MAC: $deviceHardwareAddress")
-            }
+        devices?.forEach { device ->
+            val deviceName = device.name
+            val deviceHardwareAddress = device.address // MAC address
+            debugger.printDebug("Nome: $deviceName - MAC: $deviceHardwareAddress")
+            printPairedDevice(deviceToString(device))
         }
     }
 
     private fun printPairedDevice(s: String) {
-        val txtDevice = TextView(this)
-        txtDevice.setText(s)
-        boxListPairedDevices.addView(txtDevice)
+        boxListPairedDevices.addView(createDeviceTextView(s))
+        boxListPairedDevices.addView(LayoutInflater.from(this).inflate(R.layout.separator_line, null) as View)
     }
 
     @SuppressLint("MissingPermission")
     fun printDiscoveredDevices(devices : MutableList<BluetoothDevice?>){
+        debugger.printDebug("FOUNDED DEVICES:")
         devices.forEach { device ->
             val deviceName = device?.name
-            val deviceHardwareAddress = device?.address // MAC address
-            debugger.printDebug("FOUNDED DEVICES:")
-            debugger.printDebug("Nome: $deviceName - MAC: $deviceHardwareAddress")
-            printDiscoveredDevice("Nome: $deviceName - MAC: $deviceHardwareAddress")
+            var s = deviceToString(device)
+            debugger.printDebug(s)
+            if(deviceName!=null)printDiscoveredDevice(s)
         }
     }
 
-    private fun printDiscoveredDevice(device : String){
+    @SuppressLint("MissingPermission")
+    fun deviceToString(device : BluetoothDevice?) : String{
+        val deviceName = device?.name               //NOME
+        val deviceHardwareAddress = device?.address // MAC address
+        return "Nome: $deviceName || MAC: $deviceHardwareAddress"
+    }
+
+    private fun printDiscoveredDevice(s : String){
         val label = findViewById<TextView>(R.id.textView2)
         if(!label.isVisible) label.isVisible = true
 
-        val txtDevice = TextView(this)
-        txtDevice.setText(device)
-        boxListDiscoveredDevices.addView(txtDevice)
+        boxListDiscoveredDevices.addView(createDeviceTextView(s))
+        boxListDiscoveredDevices.addView(LayoutInflater.from(this).inflate(R.layout.separator_line, null) as View)
+    }
+
+    private fun createDeviceTextView(s : String) : TextView{
+        val view: View = LayoutInflater.from(this).inflate(R.layout.device_text_view, null)
+        (view as TextView).text = s
+        view.setOnLongClickListener(longClickListener)
+        return view
     }
 
     override fun onRequestPermissionsResult(
@@ -90,6 +108,24 @@ open class BluetoothActivity : AppCompatActivity() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         debugger.printDebug("PERMISSION RESULT: Code:|$requestCode| - |${permissions}| - |$grantResults|")
     }
+
+    fun pageClean(){
+        boxListPairedDevices.removeAllViews()
+        boxListDiscoveredDevices.removeAllViews()
+    }
+
+
+    /** ----------------ON-CLICK FUNCTIONS------------------ **/
+
+    fun backButton(view : View){
+        view.isVisible = false
+        val intent = Intent(this, MapsActivity::class.java)
+        startActivity(intent)
+    }
+
+
+
+
 
 }
 

@@ -9,9 +9,14 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.graphics.Color
 import android.os.Bundle
+import android.view.View
 import android.widget.LinearLayout
+import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.isGone
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import it.unibo.mobilesystems.BluetoothActivity
 import it.unibo.mobilesystems.R
@@ -22,6 +27,7 @@ class BluetoothTest : BluetoothActivity() {
 
     lateinit var bluetoothManager: BluetoothManager
     lateinit var bluetoothAdapter: BluetoothAdapter
+
     lateinit var bluetoothBtn : FloatingActionButton
 
 
@@ -32,16 +38,15 @@ class BluetoothTest : BluetoothActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         bluetoothBtn = findViewById(R.id.bluetoothButton)
-        bluetoothBtn.setOnClickListener{bluetoothSearch()}
-
-
+        //LISTENER
+        bluetoothBtn.setOnClickListener{refreshBluetoothPage()}
+        longClickListener = View.OnLongClickListener{ view : View -> onDeviceClick(view)}
 
         addReceivers(this)
 
         bluetoothInit()
         bluetoothEnable()
-        printBluetoothPairedDevices()
-        bluetoothSearch()
+        refreshBluetoothPage()
     }
 
     override fun onDestroy() {
@@ -70,12 +75,17 @@ class BluetoothTest : BluetoothActivity() {
         }
     }
 
+    fun refreshBluetoothPage(){
+        pageClean()
+        printBluetoothPairedDevices()
+        bluetoothSearch()
+    }
+
     @SuppressLint("MissingPermission")
     fun printBluetoothPairedDevices() {
         val pairedDevices: Set<BluetoothDevice>? = bluetoothAdapter.bondedDevices
         printPairedDevices(pairedDevices)
     }
-
 
     @SuppressLint("MissingPermission")
     fun bluetoothSearch(){
@@ -83,7 +93,9 @@ class BluetoothTest : BluetoothActivity() {
         debugger.printDebug(bluetoothAdapter.startDiscovery())
     }
 
-    fun addReceivers(app : AppCompatActivity){
+    /** RECEIVERS*/
+
+    private fun addReceivers(app : AppCompatActivity){
         var filter = IntentFilter(BluetoothDevice.ACTION_FOUND)
         app.registerReceiver(receiverBluetoothDevices, filter)
         //debugger.printDebug("Registered Broadcast ReciverFound : $receiverBluetoothDevices")
@@ -128,6 +140,7 @@ class BluetoothTest : BluetoothActivity() {
             when(intent.action) {
                 BluetoothAdapter.ACTION_DISCOVERY_STARTED -> {
                     debugger.printDebug("DISCOVERY - START")
+                    loadingBar.isGone = false
                 }
             }
         }
@@ -140,6 +153,7 @@ class BluetoothTest : BluetoothActivity() {
                 BluetoothAdapter.ACTION_DISCOVERY_FINISHED -> {
                     debugger.printDebug("DISCOVERY - END")
                     printDiscoveredDevices(bluetoothDevicesDiscovered)
+                    loadingBar.isGone = true
                 }
             }
         }
@@ -153,7 +167,7 @@ class BluetoothTest : BluetoothActivity() {
                     if(bluetoothAdapter.isEnabled) {
                         debugger.printDebug("Bluetooth State Changed: Enabled")
                         bluetoothAdapter.enable()
-                        bluetoothSearch()
+                        refreshBluetoothPage()
                     }else{
                         debugger.printDebug("Bluetooth State Changed: Disabled")
                         bluetoothEnable()
@@ -162,4 +176,26 @@ class BluetoothTest : BluetoothActivity() {
             }
         }
     }
+
+
+    /** LISTENER **/
+    fun onDeviceClick(view : View) : Boolean{
+        var txt = (view as TextView).text
+        var strings = txt.split(" || ")
+        var deviceName = strings[0].split("Nome: ")[1].trim()
+        var deviceMac = strings[1].split("MAC: ")[1].trim()
+        debugger.printDebug(strings[1].split("MAC: "))
+        debugger.printDebug("DEVICE SELECTED: $deviceName - $deviceMac")
+        Toast.makeText(this, "Connecting...", Toast.LENGTH_SHORT).show()
+        view.setBackgroundColor(Color.rgb(70,70,70))
+        //deviceConnect(deviceMac)
+        return true
+    }
+
+    private fun deviceConnect(mac : String) {
+        TODO("Not yet implemented")
+        //bluetoothAdapter.getRemoteDevice(mac)
+    }
+
+
 }

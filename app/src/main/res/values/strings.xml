@@ -24,5 +24,7 @@
     <!-- Various Strings -->
     <string name="text_Paired">Paired Devices</string>
     <string name="text_Discovered">Discovered Devices</string>
+    <string name="text_Conncected">Connected Device</string>
+
 
 </resources>
