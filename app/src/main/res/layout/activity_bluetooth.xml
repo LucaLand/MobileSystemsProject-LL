@@ -70,7 +70,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="vertical" >
-
             </LinearLayout>
 
             <TextView
@@ -89,17 +88,19 @@
                 android:layout_height="3dp"
                 android:background="@android:color/darker_gray" />
 
+            <LinearLayout
+                android:id="@+id/discoveredDevicesBox"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+            </LinearLayout>
+
             <ProgressBar
                 android:id="@+id/progressBar"
                 style="?android:attr/progressBarStyle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
 
-            <LinearLayout
-                android:id="@+id/discoveredDevicesBox"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="vertical" />
         </LinearLayout>
     </ScrollView>
 
