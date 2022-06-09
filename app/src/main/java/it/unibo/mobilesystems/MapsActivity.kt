@@ -13,7 +13,7 @@ import android.preference.PreferenceManager
 import android.view.View
 import it.unibo.mobilesystems.bluetoothUtils.BluetoothTest
 import it.unibo.mobilesystems.databinding.ActivityMapsBinding
-import it.unibo.mobilesystems.debugUtils.debugger
+import it.unibo.mobilesystems.debugUtils.Debugger
 import it.unibo.mobilesystems.permissionManager.PermissionType
 import it.unibo.mobilesystems.permissionManager.PermissionsManager.permissionCheck
 import org.osmdroid.config.Configuration
@@ -25,7 +25,8 @@ import java.util.*
 
 class MapsActivity : AppCompatActivity(), LocationListener {
     //TODO: FIX MAPS Activity (Maps not working)
-
+    //TODO: FIX Activity Opening and returning (Creates a new Activity every time)
+    //TODO: CREATE A MOTION PAD TO SEND MESSAGE TO THE ROBOT
     private lateinit var binding: ActivityMapsBinding
 
     lateinit var map : MapView
@@ -72,8 +73,8 @@ class MapsActivity : AppCompatActivity(), LocationListener {
     }
 
     override fun onLocationChanged(p0: Location) {
-        debugger.printDebug("Location changed")
-        debugger.printDebug(p0)
+        Debugger.printDebug("Location changed")
+        Debugger.printDebug(p0)
     }
 
     fun hello(v : View){
