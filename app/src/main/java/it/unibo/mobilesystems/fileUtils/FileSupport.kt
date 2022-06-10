@@ -10,8 +10,43 @@ import java.util.*
 
 
 object FileSupport {
+
+    //CONS for CONFIG KEY in FILE
+    const val CONFIG_UUID = "UUID"
+    var configMap : MutableMap<String, String>? = null
+
+    private const val CONFIG_FILE_NAME = "file.conf"
     private const val dirName = "MobileSystemProj"
-    //TODO (Read config file in a HashMap or Kotlin Pair)
+
+    fun init(app: AppCompatActivity){
+        configMap = readConfigurationFromFileMap(CONFIG_FILE_NAME, app)
+    }
+
+    fun getConfigString(key: String) : String?{
+        Debugger.printDebug("getConfig", "Key: $key + Map: $configMap")
+        return configMap?.get(key)
+    }
+
+    fun readConfigurationFromFileMap(fileName: String, app: AppCompatActivity): MutableMap<String, String>?{
+        var mutableMap = mutableMapOf<String, String>()
+        val bufferReaderFile = openAssetFileBuffer(fileName, app)
+        try {
+            bufferReaderFile?.use { r ->
+                var s = r.readLine()
+                var key = s.split(":")[0].trim()
+                var value = s.split(":")[1].trim()
+                Debugger.printDebug("readConfigurationFromFileMap", "Key: $key || Value: $value")
+                mutableMap?.set(key, value)
+            }
+        } catch (e: FileNotFoundException) {
+            Debugger.printDebug("FileNotFoundException: $fileName")
+            //e.printStackTrace();
+        } catch (e: IOException) {
+            Debugger.printDebug("IOException: $fileName")
+            //e.printStackTrace();
+        }
+        return mutableMap
+    }
 
 
     @Throws(FileNotFoundException::class)
@@ -33,6 +68,8 @@ object FileSupport {
         }
         return null
     }
+
+
 
     private fun readConfigurationFromFile(fileName: String, app: AppCompatActivity): List<String>?{
         val bufferReaderFile = openAssetFileBuffer(fileName, app)
