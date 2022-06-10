@@ -77,14 +77,13 @@ class MapsActivity : AppCompatActivity(), LocationListener {
         mLocationOverlay.enableMyLocation()
         map.overlays.add(this.mLocationOverlay)
 
-        Debugger.printDebug("LocationProvider: ${mLocationOverlay.myLocationProvider}")
-        val lastLocation = locationManager.getLastKnownLocation(locationProvider)
-        if(lastLocation!=null){
-            map.controller.setCenter(GeoPoint(lastLocation))
-            Debugger.printDebug("LastLocation not Null")
-        }
+        Debugger.printDebug("LocationProvider: $locationProvider ${mLocationOverlay.myLocationProvider}")
+
+        //ITALY Center GeoPoint
+        map.controller.setCenter(GeoPoint(42.820897, 12.532178))
+
         //MAP INITIALIZATION
-        map.controller.zoomTo(8, null)
+        map.controller.zoomTo(8, 0)
         mLocationOverlay.enableFollowLocation()
         return map
     }
