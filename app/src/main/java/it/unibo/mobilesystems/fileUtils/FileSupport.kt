@@ -11,7 +11,7 @@ import java.util.*
 
 object FileSupport {
     private const val dirName = "MobileSystemProj"
-
+    //TODO (Read config file in a HashMap or Kotlin Pair)
 
 
     @Throws(FileNotFoundException::class)
