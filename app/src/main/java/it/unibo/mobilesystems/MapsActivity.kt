@@ -36,7 +36,7 @@ import java.util.*
 
 
 class MapsActivity : AppCompatActivity(), LocationListener {
-    //TODO: FIX MAPS Activity (Maps not working)
+
     //TODO: FIX Activity Opening and returning (Creates a new Activity every time)
     //TODO: CREATE A MOTION PAD TO SEND MESSAGE TO THE ROBOT
 
@@ -64,6 +64,29 @@ class MapsActivity : AppCompatActivity(), LocationListener {
         Configuration.getInstance().load(applicationContext, androidx.preference.PreferenceManager.getDefaultSharedPreferences(applicationContext))
 
         map = startMap()
+    }
+    @SuppressLint("MissingPermission")
+    private fun startMap (): MapView {
+        map = findViewById(R.id.mapview)
+        map.setTileSource(TileSourceFactory.DEFAULT_TILE_SOURCE)
+        map.setMultiTouchControls(true)
+        map.maxZoomLevel = 22.0
+        map.minZoomLevel = 1.0
+
+        mLocationOverlay = MyLocationNewOverlay(map)
+        mLocationOverlay.enableMyLocation()
+        map.overlays.add(this.mLocationOverlay)
+
+        Debugger.printDebug("LocationProvider: ${mLocationOverlay.myLocationProvider}")
+        val lastLocation = locationManager.getLastKnownLocation(locationProvider)
+        if(lastLocation!=null){
+            map.controller.setCenter(GeoPoint(lastLocation))
+            Debugger.printDebug("LastLocation not Null")
+        }
+        //MAP INITIALIZATION
+        map.controller.zoomTo(8, null)
+        mLocationOverlay.enableFollowLocation()
+        return map
     }
 
 
@@ -130,32 +153,6 @@ class MapsActivity : AppCompatActivity(), LocationListener {
         }
     }
 
-
-    @SuppressLint("MissingPermission")
-    private fun startMap (): MapView {
-        map = findViewById(R.id.mapview)
-        map.setTileSource(TileSourceFactory.DEFAULT_TILE_SOURCE)
-        map.setMultiTouchControls(true)
-        map.maxZoomLevel = 22.0
-        map.minZoomLevel = 1.0
-
-
-        mLocationOverlay = MyLocationNewOverlay(GpsMyLocationProvider(applicationContext), map)
-        mLocationOverlay.enableMyLocation()
-        map.overlays.add(this.mLocationOverlay)
-
-        //mLocationOverlay.enableFollowLocation()
-        Debugger.printDebug("LocationProvider: $locationProvider")
-        val lastLocation = locationManager.getLastKnownLocation(locationProvider)
-        if(lastLocation!=null){
-            map.controller.setCenter(GeoPoint(lastLocation))
-            Debugger.printDebug("LastLocation not Null")
-        }
-        //MAP INITIALIZATION
-        map.controller.zoomTo(8, 0)
-        mLocationOverlay.enableFollowLocation()
-        return map
-    }
 
     override fun onLocationChanged(p0: Location) {
         Debugger.printDebug("Location changed [$p0]")
