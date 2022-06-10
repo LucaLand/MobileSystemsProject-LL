@@ -9,7 +9,6 @@ import android.location.LocationListener
 import android.location.LocationManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.preference.PreferenceManager
 import android.view.View
 import it.unibo.mobilesystems.bluetoothUtils.BluetoothTest
 import it.unibo.mobilesystems.databinding.ActivityMapsBinding
@@ -27,6 +26,8 @@ class MapsActivity : AppCompatActivity(), LocationListener {
     //TODO: FIX MAPS Activity (Maps not working)
     //TODO: FIX Activity Opening and returning (Creates a new Activity every time)
     //TODO: CREATE A MOTION PAD TO SEND MESSAGE TO THE ROBOT
+
+
     private lateinit var binding: ActivityMapsBinding
 
     lateinit var map : MapView
@@ -37,15 +38,15 @@ class MapsActivity : AppCompatActivity(), LocationListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-         binding = ActivityMapsBinding.inflate(layoutInflater)
-         setContentView(binding.root)
+        binding = ActivityMapsBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        Configuration.getInstance().load(applicationContext, PreferenceManager.getDefaultSharedPreferences(applicationContext))
+
+        Configuration.getInstance().load(applicationContext, androidx.preference.PreferenceManager.getDefaultSharedPreferences(applicationContext))
         setContentView(R.layout.activity_maps)
         map = startMap()
-
-
     }
+
 
     @SuppressLint("MissingPermission")
     fun startMap (): MapView {
@@ -55,12 +56,10 @@ class MapsActivity : AppCompatActivity(), LocationListener {
 
         locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
-
         //PERMISSION CHECK
         if(permissionCheck(PermissionType.Location, this)){
             locationManager.requestLocationUpdates(LocationManager.FUSED_PROVIDER, 0, 10.0f, this)
         }
-
 
         //MAP INITIALIZATION
         this.mLocationOverlay = MyLocationNewOverlay(GpsMyLocationProvider(applicationContext), maps)
