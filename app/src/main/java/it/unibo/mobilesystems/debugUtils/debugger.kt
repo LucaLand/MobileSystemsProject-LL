@@ -2,11 +2,23 @@ package it.unibo.mobilesystems.debugUtils
 
 object Debugger {
 
-    fun printDebug(msg: Any?) {
-        val annot =
-            object {}.javaClass.enclosingMethod?.getAnnotation(DebuggerContextNameAnnotation::class.java)
+    fun printDebug(name: String, msg: Any?) {
         val string = msg.toString()
-        printDebug(string)
+        printDebug("[$name] - $string")
+    }
+
+    fun printDebug(msg: String) {
+        println("LL-MobileSystemProj [DEBUGGER]: $msg")
+    }
+
+
+
+    /** DEPRECATED **/
+
+    @Deprecated("DEPRECATED printDebug(Obj) - Use printDebug(String) or printDebug(name, msg)")
+    private fun printDebug(method: Any?, msg: Any?) {
+        val annot = method?.javaClass?.getAnnotation(DebuggerContextNameAnnotation::class.java)
+        val string = msg.toString()
 
         if (annot == null)
             printDebug(string)
@@ -14,12 +26,16 @@ object Debugger {
             printDebug("[${annot.contextName}] - $string")
     }
 
-    fun printDebug(name: String, msg: Any?) {
+    @Deprecated("DEPRECATED printDebug(Obj) - Use printDebug(String) or printDebug(name, msg)")
+    fun printDebug(msg: Any?) {
+        //AUTO ANNOTATION GETTING NOT WORKING
+        val annot =
+            object {}.javaClass.enclosingMethod?.getAnnotation(DebuggerContextNameAnnotation::class.java)
         val string = msg.toString()
-        printDebug("[$name] - $string")
-    }
 
-    private fun printDebug(msg: String) {
-        println("LL-MobileSystemProj [DEBUGGER]: $msg")
+        if (annot == null)
+            printDebug(string)
+        else
+            printDebug("[${annot.contextName}] - $string")
     }
 }
