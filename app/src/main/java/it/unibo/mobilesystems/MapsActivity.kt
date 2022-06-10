@@ -22,6 +22,7 @@ import com.google.android.gms.tasks.Task
 import it.unibo.mobilesystems.bluetoothUtils.BluetoothTest
 import it.unibo.mobilesystems.databinding.ActivityMapsBinding
 import it.unibo.mobilesystems.debugUtils.Debugger
+import it.unibo.mobilesystems.fileUtils.FileSupport
 import it.unibo.mobilesystems.permissionManager.PermissionType
 import it.unibo.mobilesystems.permissionManager.PermissionsManager.permissionCheck
 import it.unibo.mobilesystems.permissionManager.PermissionsManager.permissionsCheck
@@ -44,7 +45,6 @@ class MapsActivity : AppCompatActivity(), LocationListener {
     private lateinit var binding: ActivityMapsBinding
 
     private lateinit var map : MapView
-    lateinit var locationManager: LocationManager
     lateinit var mLocationOverlay : MyLocationNewOverlay
     lateinit var locationProvider: String
 
@@ -53,9 +53,7 @@ class MapsActivity : AppCompatActivity(), LocationListener {
         super.onCreate(savedInstanceState)
         binding = ActivityMapsBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        //setContentView(R.layout.activity_maps)
-
-        locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        FileSupport.init(this)
 
         internetPermissions()
         locationPermission()
