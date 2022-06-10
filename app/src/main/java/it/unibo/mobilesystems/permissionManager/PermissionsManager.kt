@@ -28,10 +28,11 @@ object PermissionsManager {
     }
 
     //@DebuggerContextNameAnnotation("Permission Check")
-    fun permissionsCheck(permissions: Array<out String>, context: AppCompatActivity) : Boolean{
+    fun permissionsCheck(context: AppCompatActivity, permissions: Array<out String>) : Boolean{
         permissions.forEach { permission ->
             if(ActivityCompat.checkSelfPermission(context, permission) != PackageManager.PERMISSION_GRANTED) {
                 Debugger.printDebug("Permission [${permission}] - NOT Granted ")
+
                 return false
             }else{
                 Debugger.printDebug("Permission [${permission}] - Granted (top) ")
@@ -70,7 +71,7 @@ object PermissionsManager {
             permissionsRequest(context, permissions, PermissionType.Location.ordinal)
             false
         }else{
-            Debugger.printDebug("Bluetooth Permission GRANTED CORRECTLY [ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION]")
+            Debugger.printDebug("Location Permission GRANTED CORRECTLY [ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION]")
             true
         }
 

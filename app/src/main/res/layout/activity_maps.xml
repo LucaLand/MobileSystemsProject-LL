@@ -9,8 +9,8 @@
         android:id="@+id/button2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:onClick="hello"
-        android:text="Button" />
+        android:onClick="myPositionButton"
+        android:text="MyPosition" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/floatingActionButton"
@@ -23,9 +23,10 @@
         app:srcCompat="@android:drawable/stat_sys_data_bluetooth" />
 
     <org.osmdroid.views.MapView
-        android:id="@+id/map"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent">
+        android:id="@+id/mapview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tilesource="Mapnik">
 
     </org.osmdroid.views.MapView>
 
