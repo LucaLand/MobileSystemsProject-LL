@@ -1,12 +1,25 @@
 package it.unibo.mobilesystems.debugUtils
 
-object debugger {
+object Debugger {
 
-    fun printDebug(msg : Any?){
-        var string = msg.toString()
+    fun printDebug(msg: Any?) {
+        val annot =
+            object {}.javaClass.enclosingMethod?.getAnnotation(DebuggerContextNameAnnotation::class.java)
+        val string = msg.toString()
         printDebug(string)
+
+        if (annot == null)
+            printDebug(string)
+        else
+            printDebug("[${annot.contextName}] - $string")
     }
-    private fun printDebug(msg : String){
+
+    fun printDebug(name: String, msg: Any?) {
+        val string = msg.toString()
+        printDebug("[$name] - $string")
+    }
+
+    private fun printDebug(msg: String) {
         println("LL-MobileSystemProj [DEBUGGER]: $msg")
     }
 }
