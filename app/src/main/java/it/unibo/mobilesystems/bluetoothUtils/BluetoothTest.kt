@@ -26,18 +26,20 @@ import it.unibo.mobilesystems.debugUtils.DebuggerContextNameAnnotation
 import it.unibo.mobilesystems.fileUtils.FileSupport
 import java.util.*
 
+private const val FILE_NAME = "file.conf"
 
 class BluetoothTest : BluetoothActivity() {
 
+    private lateinit var bluetoothBtn : FloatingActionButton
+
+    var uuid : UUID? = null
     lateinit var bluetoothManager: BluetoothManager
     lateinit var bluetoothAdapter: BluetoothAdapter
 
-    lateinit var bluetoothBtn : FloatingActionButton
+    var bluetoothDevicesDiscovered = mutableListOf<BluetoothDevice?>()
 
-
-
-     var bluetoothDevicesDiscovered = mutableListOf<BluetoothDevice?>()
-
+    lateinit var myBluetoothService : MyBluetoothService
+    lateinit var bluetoothThread : MyBluetoothService.BluetoothSocketThread
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,23 +47,45 @@ class BluetoothTest : BluetoothActivity() {
         //LISTENER
         bluetoothBtn.setOnClickListener{refreshBluetoothPage()}
         longClickListener = View.OnLongClickListener{ view : View -> onDeviceClick(view)}
-
+        //Add Receivers for Bluetooth Actions
         addReceivers(this)
 
+        //Bluetooth Initialization
         bluetoothInit()
         bluetoothEnable()
         refreshBluetoothPage()
+
+        uiidInit()
+        Debugger.printDebug("UUID: $uuid")
+        myBluetoothService = MyBluetoothService(Handler.createAsync(Looper.myLooper()!!))
     }
 
+    @SuppressLint("MissingPermission")
     override fun onDestroy() {
         super.onDestroy()
         unregisterReceiver(receiverBluetoothDevices)
         unregisterReceiver(receiverScanStart)
         unregisterReceiver(receiverScanEnd)
         unregisterReceiver(receiverBluetoothStateChanged)
+        bluetoothAdapter.cancelDiscovery()
     }
 
-    fun bluetoothInit() {
+    @SuppressLint("MissingPermission")
+    override fun onStop() {
+        super.onStop()
+        bluetoothAdapter.cancelDiscovery()
+    }
+
+    private fun uiidInit(){
+        uuid = FileSupport.getUUIDFromAssetFile(FILE_NAME, this)
+        if(uuid == null)
+            uuid = UUID.randomUUID()
+    }
+
+    /**
+     * ----------BLUETOOTH INIT & SEARCH FUNCTION------------
+     * **/
+    private fun bluetoothInit() {
         val bluetoothManager: BluetoothManager = getSystemService(BluetoothManager::class.java)
         this.bluetoothManager = bluetoothManager
         bluetoothAdapter = bluetoothManager.adapter
@@ -70,19 +94,49 @@ class BluetoothTest : BluetoothActivity() {
     @SuppressLint("MissingPermission")
     fun bluetoothEnable(){
         if (!bluetoothAdapter.isEnabled) {
-            debugger.printDebug("Bluetooth State: DISBALED")
+            Debugger.printDebug("Bluetooth State: DISABLED")
             val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
             startActivityForResult(enableBtIntent, 4)
         }else{
-            debugger.printDebug("Bluetooth State: ENABLED")
+            Debugger.printDebug("Bluetooth State: ENABLED")
             bluetoothAdapter.enable()
         }
     }
 
+    @SuppressLint("MissingPermission")
+    fun bluetoothSearch(){
+        bluetoothAdapter.cancelDiscovery()
+        Debugger.printDebug(bluetoothAdapter.startDiscovery())
+    }
+
+
+    /**
+     * ----------------- BLUETOOTH SOCKET FUNCTION --------------------
+     * **/
+    @SuppressLint("MissingPermission")
+    private fun deviceConnect(mac : String) {
+        bluetoothAdapter.cancelDiscovery()
+        Debugger.printDebug("ASYNC NOW 1")
+        bluetoothThread = myBluetoothService.BluetoothSocketThread(bluetoothAdapter, mac, uuid!!)
+        bluetoothThread.start()
+        Debugger.printDebug("ASYNC DONE 4")
+    }
+
+    private fun bluetoothSendData(th : MyBluetoothService.BluetoothSocketThread, s: String){
+        th.write(s.toByteArray())
+    }
+
+
+
+    /**
+     * ----------Page FUNCTION------------
+     * **/
     fun refreshBluetoothPage(){
         pageClean()
         printBluetoothPairedDevices()
         bluetoothSearch()
+        enableLoadingBar(true)
+        bluetoothDevicesDiscovered.clear()
     }
 
     @SuppressLint("MissingPermission")
@@ -91,14 +145,15 @@ class BluetoothTest : BluetoothActivity() {
         printPairedDevices(pairedDevices)
     }
 
-    @SuppressLint("MissingPermission")
-    fun bluetoothSearch(){
-        bluetoothAdapter.cancelDiscovery()
-        debugger.printDebug(bluetoothAdapter.startDiscovery())
+    fun enableLoadingBar(boolean: Boolean){
+        loadingBar.isVisible = boolean
     }
 
-    /** RECEIVERS*/
 
+
+    /**
+     * ---------- RECEIVER ------------
+     * **/
     private fun addReceivers(app : AppCompatActivity){
         var filter = IntentFilter(BluetoothDevice.ACTION_FOUND)
         app.registerReceiver(receiverBluetoothDevices, filter)
@@ -117,63 +172,65 @@ class BluetoothTest : BluetoothActivity() {
         //debugger.printDebug("Registered Broadcast ReciverEnd : $receiverScanStart")
     }
 
+    //FINDING DEVICES
     private val receiverBluetoothDevices = object : BroadcastReceiver() {
         @SuppressLint("MissingPermission")
+        @DebuggerContextNameAnnotation("DISCOVERY")
         override fun onReceive(context: Context, intent: Intent) {
             when(intent.action) {
                 BluetoothDevice.ACTION_FOUND -> {
-                    // Discovery has found a device. Get the BluetoothDevice
-                    // object and its info from the Intent.
                     val device: BluetoothDevice? =
                         intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
-                    if(device != null && !bluetoothDevicesDiscovered.contains(device)) bluetoothDevicesDiscovered.add(device)
-                    val deviceName = device?.name
-                    val deviceHardwareAddress = device?.address // MAC address
-                    //printDevice("Nome: $deviceName - MAC: $deviceHardwareAddress")
-                    //Debug Log
-                    debugger.printDebug("Nome: $deviceName - MAC: $deviceHardwareAddress")
+                    if(device?.name!= null && !bluetoothDevicesDiscovered.contains(device)) {
+                        bluetoothDevicesDiscovered.add(device)
+                        val deviceString = deviceToString(device)
+                        printDiscoveredDevice(deviceString)
+                        Debugger.printDebug(deviceString)
+                    }
                 }
             }
         }
     }
 
-
+    //SCAN START
     private val receiverScanStart = object : BroadcastReceiver() {
         @SuppressLint("MissingPermission")
         override fun onReceive(context: Context, intent: Intent) {
             when(intent.action) {
                 BluetoothAdapter.ACTION_DISCOVERY_STARTED -> {
-                    debugger.printDebug("DISCOVERY - START")
-                    loadingBar.isGone = false
+                    Debugger.printDebug("DISCOVERY - START")
+                    enableLoadingBar(true)
                 }
             }
         }
     }
 
+    //SCAN END
     private val receiverScanEnd = object : BroadcastReceiver() {
         @SuppressLint("MissingPermission")
         override fun onReceive(context: Context, intent: Intent) {
             when(intent.action) {
                 BluetoothAdapter.ACTION_DISCOVERY_FINISHED -> {
-                    debugger.printDebug("DISCOVERY - END")
-                    printDiscoveredDevices(bluetoothDevicesDiscovered)
-                    loadingBar.isGone = true
+                    Debugger.printDebug("DISCOVERY - END")
+                    enableLoadingBar(false)
+                    //printDiscoveredDevices(bluetoothDevicesDiscovered)
                 }
             }
         }
     }
 
+    //BLUETOOTH STATE CHANGED
     private val receiverBluetoothStateChanged = object : BroadcastReceiver() {
         @SuppressLint("MissingPermission")
         override fun onReceive(context: Context, intent: Intent) {
             when(intent.action) {
                 BluetoothAdapter.ACTION_STATE_CHANGED -> {
                     if(bluetoothAdapter.isEnabled) {
-                        debugger.printDebug("Bluetooth State Changed: Enabled")
+                        Debugger.printDebug("Bluetooth State Changed: Enabled")
                         bluetoothAdapter.enable()
                         refreshBluetoothPage()
                     }else{
-                        debugger.printDebug("Bluetooth State Changed: Disabled")
+                        Debugger.printDebug("Bluetooth State Changed: Disabled")
                         bluetoothEnable()
                     }
                 }
@@ -181,25 +238,23 @@ class BluetoothTest : BluetoothActivity() {
         }
     }
 
-
-    /** LISTENER **/
-    fun onDeviceClick(view : View) : Boolean{
-        var txt = (view as TextView).text
-        var strings = txt.split(" || ")
-        var deviceName = strings[0].split("Nome: ")[1].trim()
-        var deviceMac = strings[1].split("MAC: ")[1].trim()
-        debugger.printDebug(strings[1].split("MAC: "))
-        debugger.printDebug("DEVICE SELECTED: $deviceName - $deviceMac")
+    /**
+     * ------------- LISTENER -----------------
+     * **/
+    private fun onDeviceClick(view : View) : Boolean{
+        val txt = (view as TextView).text
+        val strings = txt.split(" || ")
+        val deviceName = strings[0].split("Nome: ")[1].trim()
+        val deviceMac = strings[1].split("MAC: ")[1].trim()
+        Debugger.printDebug(strings[1].split("MAC: "))
+        Debugger.printDebug("DEVICE SELECTED: $deviceName - $deviceMac")
         Toast.makeText(this, "Connecting...", Toast.LENGTH_SHORT).show()
         view.setBackgroundColor(Color.rgb(70,70,70))
-        //deviceConnect(deviceMac)
+        deviceConnect(deviceMac)
         return true
     }
 
-    private fun deviceConnect(mac : String) {
-        TODO("Not yet implemented")
-        //bluetoothAdapter.getRemoteDevice(mac)
-    }
+
 
 
 }
