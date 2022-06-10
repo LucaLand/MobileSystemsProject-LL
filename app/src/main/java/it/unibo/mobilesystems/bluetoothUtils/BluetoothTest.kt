@@ -55,8 +55,8 @@ class BluetoothTest : BluetoothActivity() {
         bluetoothEnable()
         refreshBluetoothPage()
 
-        uiidInit()
-        Debugger.printDebug("UUID: $uuid")
+        uuidInit()
+        Debugger.printDebug("uuidInit()","UUID: $uuid")
         myBluetoothService = MyBluetoothService(Handler.createAsync(Looper.myLooper()!!))
     }
 
@@ -76,8 +76,8 @@ class BluetoothTest : BluetoothActivity() {
         bluetoothAdapter.cancelDiscovery()
     }
 
-    private fun uiidInit(){
-        uuid = FileSupport.getUUIDFromAssetFile(FILE_NAME, this)
+    private fun uuidInit(){
+        uuid = UUID.fromString(FileSupport.getConfigString(FileSupport.CONFIG_UUID))
         if(uuid == null)
             uuid = UUID.randomUUID()
     }
@@ -106,7 +106,7 @@ class BluetoothTest : BluetoothActivity() {
     @SuppressLint("MissingPermission")
     fun bluetoothSearch(){
         bluetoothAdapter.cancelDiscovery()
-        Debugger.printDebug(bluetoothAdapter.startDiscovery())
+        bluetoothAdapter.startDiscovery()
     }
 
 
