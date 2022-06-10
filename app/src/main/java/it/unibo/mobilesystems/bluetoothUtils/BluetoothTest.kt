@@ -11,16 +11,20 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.Color
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.View
-import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.isGone
+import androidx.core.view.isVisible
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import it.unibo.mobilesystems.BluetoothActivity
 import it.unibo.mobilesystems.R
-import it.unibo.mobilesystems.debugUtils.debugger
+import it.unibo.mobilesystems.debugUtils.Debugger
+import it.unibo.mobilesystems.debugUtils.DebuggerContextNameAnnotation
+import it.unibo.mobilesystems.fileUtils.FileSupport
+import java.util.*
 
 
 class BluetoothTest : BluetoothActivity() {
