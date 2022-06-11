@@ -24,6 +24,9 @@ import it.unibo.mobilesystems.R
 import it.unibo.mobilesystems.debugUtils.Debugger
 import it.unibo.mobilesystems.debugUtils.DebuggerContextNameAnnotation
 import it.unibo.mobilesystems.fileUtils.FileSupport
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import java.util.*
 
 private const val FILE_NAME = "file.conf"
@@ -31,6 +34,7 @@ private const val FILE_NAME = "file.conf"
 class BluetoothTest : BluetoothActivity() {
 
     private lateinit var bluetoothBtn : FloatingActionButton
+    lateinit var sendButton : FloatingActionButton
 
     var uuid : UUID? = null
     lateinit var bluetoothManager: BluetoothManager
@@ -44,9 +48,11 @@ class BluetoothTest : BluetoothActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         bluetoothBtn = findViewById(R.id.bluetoothButton)
+        sendButton = findViewById(R.id.sendButton)
         //LISTENER
         bluetoothBtn.setOnClickListener{refreshBluetoothPage()}
         longClickListener = View.OnLongClickListener{ view : View -> onDeviceClick(view)}
+        sendButton.setOnClickListener({bluetoothSendData(bluetoothThread, "CIAOOOOOO!!!")})
         //Add Receivers for Bluetooth Actions
         addReceivers(this)
 
@@ -120,10 +126,13 @@ class BluetoothTest : BluetoothActivity() {
         bluetoothThread = myBluetoothService.BluetoothSocketThread(bluetoothAdapter, mac, uuid!!)
         bluetoothThread.start()
         Debugger.printDebug("ASYNC DONE 4")
+
     }
+
 
     private fun bluetoothSendData(th : MyBluetoothService.BluetoothSocketThread, s: String){
         th.write(s.toByteArray())
+        Debugger.printDebug("MSG SENDED: $s")
     }
 
 
@@ -254,6 +263,21 @@ class BluetoothTest : BluetoothActivity() {
         return true
     }
 
+    fun moveButtonClick(view: View){
+        when((view as TextView).text){
+            "Right" ->  {bluetoothSendData(bluetoothThread, "Gira a destra bro!")}
+            "Left"  ->   {bluetoothSendData(bluetoothThread, "Gira a destra bro!")}
+        }
+        runBlocking {
+            launch {
+                bluetoothSendData(bluetoothThread,"Ciao, ti ho mandato un messaggio! Bomber")
+                delay(2000)
+                bluetoothSendData(bluetoothThread,"Visto che funziona fai una bella GIT PUSH!")
+            }
+        }
+
+
+    }
 
 
 

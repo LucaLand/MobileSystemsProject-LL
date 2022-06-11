@@ -66,6 +66,7 @@ class MyBluetoothService(
         override fun run() {
             initSocket()
             connectToSocket(bluetoothSocket)
+            Debugger.printDebug("InitSocket and Connect")
             var numBytes: Int // bytes returned from read()
 
             // Keep listening to the InputStream until an exception occurs.
@@ -83,7 +84,9 @@ class MyBluetoothService(
                 val readMsg = handler.obtainMessage(
                     MESSAGE_READ, numBytes, -1,
                     mmBuffer)
+                Debugger.printDebug("$readMsg")
                 readMsg.sendToTarget()
+
             }
         }
 
@@ -91,6 +94,7 @@ class MyBluetoothService(
         fun write(bytes: ByteArray) {
             try {
                 mmOutStream.write(bytes)
+                Debugger.printDebug("Message Sent Correctly")
             } catch (e: IOException) {
                 Log.e(TAG, "Error occurred when sending data", e)
 
