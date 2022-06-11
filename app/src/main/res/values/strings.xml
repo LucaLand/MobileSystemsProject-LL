@@ -2,7 +2,7 @@
     <string name="app_name">MobileSystemsProj</string>
     <string name="tab_text_1">Tab 1</string>
     <string name="tab_text_2">Tab 2</string>
-    <string name="title_activity_maps">LL-MSProj-V1</string>
+    <string name="title_activity_maps">LL-MSProj-S2.6</string>
     <string name="title_activity_bluetooth">BluetoothActivity</string>
 
     <!-- Preference Titles -->
