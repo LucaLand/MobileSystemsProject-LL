@@ -3,7 +3,6 @@ package it.unibo.mobilesystems
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
-import android.content.Context
 import android.content.Intent
 import android.content.IntentSender
 import android.graphics.Color
@@ -15,10 +14,13 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import androidx.constraintlayout.widget.ConstraintLayout
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
 import com.google.android.gms.tasks.Task
+import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.google.android.material.bottomsheet.BottomSheetBehavior.BottomSheetCallback
 import it.unibo.mobilesystems.bluetoothUtils.BluetoothTest
 import it.unibo.mobilesystems.databinding.ActivityMapsBinding
 import it.unibo.mobilesystems.debugUtils.Debugger
@@ -31,7 +33,6 @@ import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
-import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 import java.util.*
 
@@ -39,7 +40,9 @@ import java.util.*
 class MapsActivity : AppCompatActivity(), LocationListener {
 
     //TODO: FIX Activity Opening and returning (Creates a new Activity every time)
-    //TODO: CREATE A MOTION PAD TO SEND MESSAGE TO THE ROBOT
+    //TODO: FIX the bottom pad animation and motion (can also be opened with a button, and do the animation programmatically)
+    //TODO: Activity have to pass SocketThread Object (or other objects) between them
+    //TODO: More Structured code (1.Unify BluetoothActivity and Bluetooth test, dividing UI function and BL
 
 
     private lateinit var binding: ActivityMapsBinding
@@ -61,6 +64,7 @@ class MapsActivity : AppCompatActivity(), LocationListener {
         enableLocationOnDevice()
         Configuration.getInstance().load(applicationContext, androidx.preference.PreferenceManager.getDefaultSharedPreferences(applicationContext))
 
+        bottomPadInit()
         map = startMap()
     }
     @SuppressLint("MissingPermission")
@@ -84,6 +88,32 @@ class MapsActivity : AppCompatActivity(), LocationListener {
         map.controller.zoomTo(8, 0)
         mLocationOverlay.enableFollowLocation()
         return map
+    }
+
+    private fun bottomPadInit(){
+
+        val bottomPad : ConstraintLayout = findViewById(R.id.bottom_sheet_layout)
+        val sheetBehavior = BottomSheetBehavior.from(bottomPad)
+
+        sheetBehavior.isHideable = false
+        sheetBehavior.setBottomSheetCallback(
+            object : BottomSheetCallback() {
+                override fun onStateChanged(bottomSheet: View, newState: Int) {
+                    when (newState) {
+                        BottomSheetBehavior.STATE_HIDDEN -> {}
+                        BottomSheetBehavior.STATE_EXPANDED -> {
+                            //bottomSheetArrowImageView.setImageResource(R.drawable.icn_chevron_down)
+                        }
+                        BottomSheetBehavior.STATE_COLLAPSED -> {
+                            //bottomSheetArrowImageView.setImageResource(R.drawable.icn_chevron_up)
+                        }
+                        BottomSheetBehavior.STATE_DRAGGING -> {}
+                        BottomSheetBehavior.STATE_SETTLING -> {}//bottomSheetArrowImageView.setImageResource( R.drawable.icn_chevron_up )
+                    }
+                }
+
+                override fun onSlide(bottomSheet: View, slideOffset: Float) {}
+            })
     }
 
 
