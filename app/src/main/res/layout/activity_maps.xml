@@ -54,7 +54,7 @@
 
     <include
         android:id="@+id/bottom_sheet_layout"
-        layout="@layout/fragment_main"
+        layout="@layout/bottom_navigatio_pad_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="160dp"
