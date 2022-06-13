@@ -50,13 +50,14 @@ const val ROBOT_DEVICE_ADDRESS = "DEVICE MAC"
 
 const val ROBOT_FOUND_ACTION = "ROBOT_FOUND_ACTION"
 const val SOCKET_OPENED_ACTION = "SOCKET_OPENED_ACTION"
+const val SOCKET_CLOSED_ACTION = "SOCKET_CLOSED_ACTION"
+
 
 class MainMapsActivity : AppCompatActivity(), LocationListener {
 
-    //TODO: FIX Activity Opening and returning (Creates a new Activity every time)
     //TODO: FIX the bottom pad animation and motion (can also be opened with a button, and do the animation programmatically)
-    //TODO: Activity have to pass SocketThread Object (or other objects) between them
-    //TODO: More Structured code (1.Unify BluetoothActivity and Bluetooth test, dividing UI function and BL
+
+    //TODO(IMPORTANT [ultimo]: Gestire le Action del bluetooth tipo (Inizio Ricerca, Fine Ricerca, Stato del bluetooth cambiato)
 
     private val bluetoothMessageHandler: BluetoothSocketMessagesHandler = BluetoothSocketMessagesHandler()
 
@@ -76,12 +77,17 @@ class MainMapsActivity : AppCompatActivity(), LocationListener {
         ConfigManager.init(this)
 
         //Handler For bluetooth messages
-        bluetoothMessageHandler.setCallbackForMessage(MESSAGE_READ, {string -> Debugger.printDebug("$string")})
+        bluetoothMessageHandler.setCallbackForMessage(MESSAGE_READ) { string ->
+            Debugger.printDebug("Handler-Receive","Recived MSG: $string")
+        }
         bluetoothMessageHandler.setCallbackForMessage(MESSAGE_CONNECTION_TRUE) {
             Debugger.printDebug("Maps-Actiity", "RECIVED MESSAGE_CONNECTION_TRUE - Sended Socket Opened Action")
             sendBroadcast(Intent().setAction(SOCKET_OPENED_ACTION))
         }
-        bluetoothMessageHandler.setCallbackForMessage(MESSAGE_SOCKET_ERROR) { MyBluetoothService.restartConnection() }
+        bluetoothMessageHandler.setCallbackForMessage(MESSAGE_SOCKET_ERROR) {
+            Debugger.printDebug("Maps-Actiity", "Received Error Message: Socket Closed!")
+            sendBroadcast(Intent().setAction(SOCKET_CLOSED_ACTION))
+            MyBluetoothService.restartConnection() }
         MyBluetoothService.setServiceHandler(bluetoothMessageHandler)
 
         //PERMISSION
@@ -114,7 +120,7 @@ class MainMapsActivity : AppCompatActivity(), LocationListener {
                 DeviceInfoIntentResult.getDeviceResult(intent)
             }
         }
-        val intent = Intent(this, BluetoothConncectionActivity::class.java)
+        val intent = Intent(this, BluetoothConnectionActivity::class.java)
         startBluetoothActivityForResult.launch(intent)
     }
 
