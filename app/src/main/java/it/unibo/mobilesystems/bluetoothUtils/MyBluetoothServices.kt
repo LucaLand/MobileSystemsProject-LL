@@ -29,6 +29,7 @@ const val MESSAGE_CONNECTION_TRUE = 74
 
 private const val CLASS_NAME = "SERVICE-CLASS"
 object MyBluetoothService{
+    private const val maximumConnectionRetry = 30
     lateinit var connectionThread: BluetoothSocketThread
     var enabled = true
     var numberOfConnectionTried: Int = 0
@@ -64,7 +65,7 @@ object MyBluetoothService{
 
     //---------------------------------
     fun restartConnection(){
-        if(numberOfConnectionTried <= 10) {
+        if(numberOfConnectionTried <= maximumConnectionRetry) {
             if (connectionThread.isAlive) {
                 connectionThread.cancel()
             }
@@ -119,10 +120,12 @@ object MyBluetoothService{
                 handler.sendMessage(sendMessage)
             }catch (e: IOException) {
                 Debugger.printDebug("socket.connect()","ERROR: read failed, socket might closed or timeout")
+                val writeErrorMsg = handler.obtainMessage(MESSAGE_SOCKET_ERROR)
+                handler.sendMessage(writeErrorMsg)
             }
         }
 
-        fun waitSomeTime(mills: Long){
+        private fun waitSomeTime(mills: Long){
             Debugger.printDebug(CLASS_NAME, "Waiting before to retry open another socket...")
             runBlocking {
                 delay(mills)
@@ -130,7 +133,7 @@ object MyBluetoothService{
         }
 
         override fun run() {
-            connectionThread.waitSomeTime(3000) //3 second first time starts
+            connectionThread.waitSomeTime(5000) //3 second first time starts
             initSocket()
             connectToSocket(bluetoothSocket)
             Debugger.printDebug("Initialized Socket: Now Listening...")
@@ -152,8 +155,7 @@ object MyBluetoothService{
                 // Send the obtained bytes to the UI activity.
                 val readMsg = handler.obtainMessage(
                     MESSAGE_READ, numBytes, -1,
-                    mmBuffer)
-                Debugger.printDebug("$readMsg")
+                    mmBuffer.dropLast(mmBuffer.lastIndex).toByteArray().decodeToString())
                 readMsg.sendToTarget()
 
             }
@@ -179,7 +181,7 @@ object MyBluetoothService{
 
             // Share the sent message with the UI activity.
             val writtenMsg = handler.obtainMessage(
-                MESSAGE_WRITE, -1, -1, mmBuffer.toString())
+                MESSAGE_WRITE, -1, -1, mmBuffer.decodeToString())
             writtenMsg.sendToTarget()
         }
 
