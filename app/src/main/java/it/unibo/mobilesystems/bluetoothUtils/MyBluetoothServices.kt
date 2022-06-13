@@ -5,6 +5,8 @@ import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothSocket
 import android.os.Bundle
 import android.os.Handler
+import android.os.Looper
+import android.os.Message
 import android.util.Log
 import it.unibo.mobilesystems.debugUtils.Debugger
 import java.io.IOException
@@ -19,18 +21,71 @@ private const val TAG = "MY_APP_DEBUG_TAG"
 const val MESSAGE_READ: Int = 0
 const val MESSAGE_WRITE: Int = 1
 const val MESSAGE_TOAST: Int = 2
+const val MESSAGE_SOCKET_ERROR: Int = 154
+const val MESSAGE_SEND_ERROR: Int = 99
 // ... (Add other message types here as needed.)
 
 class MyBluetoothService(
     // handler that gets info from Bluetooth service
-    private val handler: Handler
+    //private val handler: Handler,
+    private val mac: String,
+    private val uuid: UUID,
+    private val bluetoothAdapter: BluetoothAdapter,
 ) {
+    var connctionThread: BluetoothSocketThread
 
-    inner class BluetoothSocketThread(bluetoothAdapter: BluetoothAdapter, mac : String, uuid: UUID) : Thread(){
+    //HANDLER FOR ERROR MESSAGES
+    val handler = Handler(Looper.myLooper()!!) { msg: Message ->
+        Debugger.printDebug("HANDLER", "${msg.data}")
+        when (msg.what) {
+            MESSAGE_SOCKET_ERROR -> {
+                if (enabled)
+                    restartConnection()
+            }
+            MESSAGE_SEND_ERROR -> {
+                Debugger.printDebug("HANDLER", "ERROR SENDING MESSAGE")
+            }
+            MESSAGE_READ -> {
+                Debugger.printDebug("HANDLER", msg.obj.toString())
+            }
 
-        private var bluetoothAdapter = bluetoothAdapter
-        private var mac = mac
-        private var uuid = uuid
+        }
+        true
+    }
+
+    var enabled = true
+
+
+    //-------- CONSTRUCTOR ------------
+    init {
+        connctionThread = BluetoothSocketThread(bluetoothAdapter, mac, uuid)
+        connctionThread.start()
+    }
+
+    //---------------------------------
+    fun restartConnection(){
+        if(connctionThread.isAlive){
+            connctionThread.cancel()
+        }
+        connctionThread = BluetoothSocketThread(bluetoothAdapter, mac, uuid)
+        connctionThread.start()
+    }
+
+    fun stopService(){
+        enabled = false
+    }
+
+    fun sendMsg(s : String){
+        connctionThread.write(s.toByteArray())
+    }
+
+
+
+    /** ------------------------------------------------------------------------------ **/
+
+    inner class BluetoothSocketThread(private var bluetoothAdapter: BluetoothAdapter,
+                                      private var mac: String, private var uuid: UUID
+    ) : Thread(){
 
         private lateinit var bluetoothSocket : BluetoothSocket
 
@@ -47,26 +102,25 @@ class MyBluetoothService(
 
         @SuppressLint("MissingPermission")
         fun createSocket(bluetoothAdapter: BluetoothAdapter, mac: String, uuid: UUID) : BluetoothSocket{
-            Debugger.printDebug("ASYNC NOW 1.2")
+            Debugger.printDebug("Creating Socket...")
             return bluetoothAdapter.getRemoteDevice(mac).createRfcommSocketToServiceRecord(uuid)
         }
 
         @SuppressLint("MissingPermission")
         fun connectToSocket(socket: BluetoothSocket){
-            Debugger.printDebug("ASYNC NOW 2")
             try{
                 socket.connect()
+                Debugger.printDebug("socket.connect()","CONNECTED TO SOCKET")
             }catch (e: IOException) {
-                Debugger.printDebug("socket.connect() ERROR: read failed, socket might closed or timeout")
+                Debugger.printDebug("socket.connect()","ERROR: read failed, socket might closed or timeout")
             }
-            Debugger.printDebug("ASYNC NOW 3")
         }
-        //manageMyConnectedSocket(bluetoothSocket)
 
         override fun run() {
             initSocket()
             connectToSocket(bluetoothSocket)
-            Debugger.printDebug("InitSocket and Connect")
+
+            Debugger.printDebug("Initialized Socket: Now Listening...")
             var numBytes: Int // bytes returned from read()
 
             // Keep listening to the InputStream until an exception occurs.
@@ -76,6 +130,8 @@ class MyBluetoothService(
                     mmInStream.read(mmBuffer)
                 } catch (e: IOException) {
                     //Log.d(TAG, "Input stream was disconnected", e)
+                    val writeErrorMsg = handler.obtainMessage(MESSAGE_SOCKET_ERROR)
+                    handler.sendMessage(writeErrorMsg)
                     Debugger.printDebug("Input stream was disconnected IOException in Thread.run() - Thread Closed")
                     break
                 }
@@ -97,7 +153,7 @@ class MyBluetoothService(
                 Debugger.printDebug("Message Sent Correctly")
             } catch (e: IOException) {
                 Log.e(TAG, "Error occurred when sending data", e)
-
+                Debugger.printDebug("Message Send Error")
                 // Send a failure message back to the activity.
                 val writeErrorMsg = handler.obtainMessage(MESSAGE_TOAST)
                 val bundle = Bundle().apply {
@@ -118,6 +174,7 @@ class MyBluetoothService(
         fun cancel() {
             try {
                 bluetoothSocket.close()
+                Debugger.printDebug("CONNECTION CLOSED!")
             } catch (e: IOException) {
                 Log.e(TAG, "Could not close the connect socket", e)
             }
