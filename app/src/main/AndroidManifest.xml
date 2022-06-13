@@ -31,7 +31,6 @@
          devices.
     -->
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
-
     <uses-feature android:name="android.hardware.bluetooth" />
 
     <application
@@ -45,7 +44,7 @@
         android:theme="@style/Theme.MobileSystemsProj"
         tools:targetApi="31">
         <activity
-            android:name=".BluetoothConncectionActivity"
+            android:name=".BluetoothConnectionActivity"
             android:exported="true">
         </activity>
         <activity
@@ -54,7 +53,6 @@
             android:label="@string/title_activity_maps">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>

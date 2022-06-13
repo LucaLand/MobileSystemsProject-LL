@@ -2,6 +2,7 @@ package it.unibo.mobilesystems.debugUtils
 
 object Debugger {
 
+
     fun printDebug(name: String, msg: Any?) {
         val string = msg.toString()
         printDebug("[$name] - $string")
@@ -12,6 +13,13 @@ object Debugger {
     }
 
 
+    //EXPERIMENTING
+    fun printDebugWName(useThis: Any?, msg: String){
+        if(useThis!=null)
+            printDebug(useThis?.javaClass?.name.toString(), msg)
+        else
+            printDebug(msg)
+    }
 
     /** DEPRECATED **/
 
