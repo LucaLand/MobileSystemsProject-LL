@@ -14,5 +14,4 @@ class BluetoothActionReceiver(val actionHandlerList : MutableList<ActionHandler>
                 actionHandler.func(context, intent)
         }
     }
-
 }
