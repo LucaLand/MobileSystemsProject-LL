@@ -2,7 +2,6 @@ package it.unibo.mobilesystems.fileUtils
 
 import android.os.Environment
 import androidx.appcompat.app.AppCompatActivity
-import it.unibo.mobilesystems.bluetoothUtils.BluetoothTest
 import it.unibo.mobilesystems.debugUtils.Debugger
 import it.unibo.mobilesystems.debugUtils.DebuggerContextNameAnnotation
 import java.io.*
@@ -11,32 +10,22 @@ import java.util.*
 
 object FileSupport {
 
-    //CONS for CONFIG KEY in FILE
-    const val CONFIG_UUID = "UUID"
-    var configMap : MutableMap<String, String>? = null
-
-    private const val CONFIG_FILE_NAME = "file.conf"
     private const val dirName = "MobileSystemProj"
 
-    fun init(app: AppCompatActivity){
-        configMap = readConfigurationFromFileMap(CONFIG_FILE_NAME, app)
-    }
-
-    fun getConfigString(key: String) : String?{
-        Debugger.printDebug("getConfig", "Key: $key + Map: $configMap")
-        return configMap?.get(key)
-    }
-
-    fun readConfigurationFromFileMap(fileName: String, app: AppCompatActivity): MutableMap<String, String>?{
-        var mutableMap = mutableMapOf<String, String>()
+    fun readConfigurationMapFromFile(fileName: String, app: AppCompatActivity): MutableMap<String, String>{
+        val mutableMap = mutableMapOf<String, String>()
         val bufferReaderFile = openAssetFileBuffer(fileName, app)
         try {
             bufferReaderFile?.use { r ->
-                var s = r.readLine()
-                var key = s.split(":")[0].trim()
-                var value = s.split(":")[1].trim()
-                Debugger.printDebug("readConfigurationFromFileMap", "Key: $key || Value: $value")
-                mutableMap?.set(key, value)
+                r.readLines().forEach {
+                    val key = it.split(":")[0].trim()
+                    val value = it.split(":")[1].trim()
+                    Debugger.printDebug(
+                        "readConfigurationFromFileMap",
+                        "Key: $key || Value: $value"
+                    )
+                    mutableMap.set(key, value)
+                }
             }
         } catch (e: FileNotFoundException) {
             Debugger.printDebug("FileNotFoundException: $fileName")
@@ -58,7 +47,6 @@ object FileSupport {
                 )
             )
             Debugger.printDebug("OPENING FILE: $fileName")
-            if (r == null) throw FileNotFoundException("File:$fileName not found!")
             return r
         } catch (e: FileNotFoundException) {
             //e.printStackTrace();
