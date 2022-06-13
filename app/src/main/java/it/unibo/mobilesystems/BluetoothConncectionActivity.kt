@@ -6,8 +6,6 @@ import android.bluetooth.BluetoothDevice
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
-import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -19,7 +17,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import it.unibo.mobilesystems.bluetoothUtils.MyBluetoothManager
 import it.unibo.mobilesystems.debugUtils.Debugger
 import it.unibo.mobilesystems.fileUtils.ConfigManager
-import it.unibo.mobilesystems.recivers.ActionHandler
 import java.util.*
 
 class BluetoothConncectionActivity : AppCompatActivity() {
@@ -46,6 +43,7 @@ class BluetoothConncectionActivity : AppCompatActivity() {
         deviceName = ConfigManager.getConfigString(ROBOT_DEVICE_NAME)
         deviceAddress = ConfigManager.getConfigString(ROBOT_DEVICE_ADDRESS)
 
+        //TODO(RECEIVER FOR ROBOT FOUNDED and Connection Estabilished - We can use Handler)
         //RECEIVER FOR ROBOT FOUNDED (Action sended by MyBluetoothManager)
         /*
         registerReceiver(
@@ -60,7 +58,7 @@ class BluetoothConncectionActivity : AppCompatActivity() {
         myBluetoothManager = MyBluetoothManager(this)
         myBluetoothManager.bluetoothEnable()?.let { requestBluettothEnable(it) }
 
-        
+
         if(uuid != null) {
             if (deviceName != null)
                 myBluetoothManager.connectToDevice(deviceName!!, uuid)
@@ -71,14 +69,6 @@ class BluetoothConncectionActivity : AppCompatActivity() {
         }else{
             Debugger.printDebug("ERROR - NO UUID Initialized from the file.conf")
         }
-
-        /*
-        Debugger.printDebug("Connecting...  [Name: ${device?.name} || UUID: $uuid || MAC: ${device?.address}")
-        myBluetoothManager.connectToDeviceRobot(device!!)
-        */
-
-        //TEST
-        //this.registerReceiver(receiverBluetoothDevices, IntentFilter(BluetoothDevice.ACTION_FOUND))
     }
 
 
@@ -108,26 +98,5 @@ class BluetoothConncectionActivity : AppCompatActivity() {
     private fun connectionFinished(){
         finishActivity(BLUETOOTH_CONNECT_ACTIVITY_CODE)
     }
-
-    //TEST
-    //FINDING DEVICES
-    private val receiverBluetoothDevices = object : BroadcastReceiver() {
-        @SuppressLint("MissingPermission")
-        override fun onReceive(context: Context, intent: Intent) {
-            when(intent.action) {
-                BluetoothDevice.ACTION_FOUND -> {
-                    val device: BluetoothDevice? =
-                        intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
-                    if(device?.name == deviceName) {
-                        createDeviceTextView(device!!.name)
-                        Debugger.printDebug("Found: ${device.name} - FIND!")
-                    }else{
-                        Debugger.printDebug("Found: ${device?.name}")
-                    }
-                }
-            }
-        }
-    }
-
 
 }
