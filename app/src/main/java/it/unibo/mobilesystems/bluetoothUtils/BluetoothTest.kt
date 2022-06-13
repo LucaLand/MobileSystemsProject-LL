@@ -1,6 +1,6 @@
 package it.unibo.mobilesystems.bluetoothUtils
 
-
+/*
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
@@ -18,25 +18,16 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
-import com.google.android.material.floatingactionbutton.FloatingActionButton
 import it.unibo.mobilesystems.BluetoothActivity
-import it.unibo.mobilesystems.R
 import it.unibo.mobilesystems.debugUtils.Debugger
-import it.unibo.mobilesystems.debugUtils.DebuggerContextNameAnnotation
-import it.unibo.mobilesystems.fileUtils.FileSupport
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.util.*
 
-private const val FILE_NAME = "file.conf"
-
 class BluetoothTest : BluetoothActivity() {
 
-    private lateinit var bluetoothBtn : FloatingActionButton
-    lateinit var sendButton : FloatingActionButton
 
-    var uuid : UUID? = null
     lateinit var bluetoothManager: BluetoothManager
     lateinit var bluetoothAdapter: BluetoothAdapter
 
@@ -47,12 +38,6 @@ class BluetoothTest : BluetoothActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        bluetoothBtn = findViewById(R.id.bluetoothButton)
-        sendButton = findViewById(R.id.sendButton)
-        //LISTENER
-        bluetoothBtn.setOnClickListener{refreshBluetoothPage()}
-        longClickListener = View.OnLongClickListener{ view : View -> onDeviceClick(view)}
-        sendButton.setOnClickListener({bluetoothSendData(bluetoothThread, "CIAOOOOOO!!!")})
         //Add Receivers for Bluetooth Actions
         addReceivers(this)
 
@@ -82,11 +67,7 @@ class BluetoothTest : BluetoothActivity() {
         bluetoothAdapter.cancelDiscovery()
     }
 
-    private fun uuidInit(){
-        uuid = UUID.fromString(FileSupport.getConfigString(FileSupport.CONFIG_UUID))
-        if(uuid == null)
-            uuid = UUID.randomUUID()
-    }
+
 
     /**
      * ----------BLUETOOTH INIT & SEARCH FUNCTION------------
@@ -184,7 +165,6 @@ class BluetoothTest : BluetoothActivity() {
     //FINDING DEVICES
     private val receiverBluetoothDevices = object : BroadcastReceiver() {
         @SuppressLint("MissingPermission")
-        @DebuggerContextNameAnnotation("DISCOVERY")
         override fun onReceive(context: Context, intent: Intent) {
             when(intent.action) {
                 BluetoothDevice.ACTION_FOUND -> {
@@ -282,3 +262,5 @@ class BluetoothTest : BluetoothActivity() {
 
 
 }
+
+ */

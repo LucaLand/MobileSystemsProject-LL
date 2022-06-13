@@ -1,7 +1,5 @@
-package it.unibo.mobilesystems.recivers
+package it.unibo.mobilesystems.receivers
 
-import android.app.Notification
-import android.bluetooth.BluetoothAdapter
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent

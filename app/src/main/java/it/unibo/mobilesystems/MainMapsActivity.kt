@@ -13,6 +13,8 @@ import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import androidx.activity.result.ActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import com.google.android.gms.common.api.ApiException
@@ -21,10 +23,10 @@ import com.google.android.gms.location.*
 import com.google.android.gms.tasks.Task
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetBehavior.BottomSheetCallback
-import it.unibo.mobilesystems.bluetoothUtils.BluetoothTest
+import it.unibo.mobilesystems.bluetoothUtils.*
 import it.unibo.mobilesystems.databinding.ActivityMapsBinding
 import it.unibo.mobilesystems.debugUtils.Debugger
-import it.unibo.mobilesystems.fileUtils.FileSupport
+import it.unibo.mobilesystems.fileUtils.ConfigManager
 import it.unibo.mobilesystems.permissionManager.PermissionType
 import it.unibo.mobilesystems.permissionManager.PermissionsManager.permissionCheck
 import it.unibo.mobilesystems.permissionManager.PermissionsManager.permissionsCheck
@@ -36,28 +38,53 @@ import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 import java.util.*
 
+const val BLUETOOTH_CONNECT_ACTIVITY_CODE = 486431
+const val RESULT_DEVICE_NAME_CODE = "deviceName"
+const val RESULT_DEVICE_ADDRESS_CODE = "deviceAddress"
+const val RESULT_DEVICE_UUID_CODE = "deviceAddress"
 
-class MapsActivity : AppCompatActivity(), LocationListener {
+const val CONFIG_FILE_NAME = "file.conf"
+const val UUID_CONFIG = "UUID"
+const val ROBOT_DEVICE_NAME = "DEVICE NAME"
+const val ROBOT_DEVICE_ADDRESS = "DEVICE MAC"
+
+const val ROBOT_FOUND_ACTION = "ROBOT_FOUND_ACTION"
+const val SOCKET_OPENED_ACTION = "SOCKET_OPENED_ACTION"
+
+class MainMapsActivity : AppCompatActivity(), LocationListener {
 
     //TODO: FIX Activity Opening and returning (Creates a new Activity every time)
     //TODO: FIX the bottom pad animation and motion (can also be opened with a button, and do the animation programmatically)
     //TODO: Activity have to pass SocketThread Object (or other objects) between them
     //TODO: More Structured code (1.Unify BluetoothActivity and Bluetooth test, dividing UI function and BL
 
+    private val bluetoothMessageHandler: BluetoothSocketMessagesHandler = BluetoothSocketMessagesHandler()
 
     private lateinit var binding: ActivityMapsBinding
 
     private lateinit var map : MapView
-    lateinit var mLocationOverlay : MyLocationNewOverlay
-    lateinit var locationProvider: String
+    private lateinit var mLocationOverlay : MyLocationNewOverlay
+    private lateinit var locationProvider: String
 
+    var uuid : UUID? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMapsBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        FileSupport.init(this)
+        //CONFIG
+        ConfigManager.init(this)
 
+        //Handler For bluetooth messages
+        bluetoothMessageHandler.setCallbackForMessage(MESSAGE_READ, {string -> Debugger.printDebug("$string")})
+        bluetoothMessageHandler.setCallbackForMessage(MESSAGE_CONNECTION_TRUE) {
+            Debugger.printDebug("Maps-Actiity", "RECIVED MESSAGE_CONNECTION_TRUE - Sended Socket Opened Action")
+            sendBroadcast(Intent().setAction(SOCKET_OPENED_ACTION))
+        }
+        bluetoothMessageHandler.setCallbackForMessage(MESSAGE_SOCKET_ERROR) { MyBluetoothService.restartConnection() }
+        MyBluetoothService.setServiceHandler(bluetoothMessageHandler)
+
+        //PERMISSION
         internetPermissions()
         locationPermission()
         setProvider()
@@ -65,8 +92,33 @@ class MapsActivity : AppCompatActivity(), LocationListener {
         Configuration.getInstance().load(applicationContext, androidx.preference.PreferenceManager.getDefaultSharedPreferences(applicationContext))
 
         bottomPadInit()
+
         map = startMap()
+
+        startBluetoothActivity()
     }
+
+    private fun uuidInit() : UUID {
+        val uuidString = ConfigManager.getConfigString(UUID_CONFIG)
+        return if(uuidString == null)
+            UUID.randomUUID()
+        else
+            UUID.fromString(uuidString)
+    }
+
+    private fun startBluetoothActivity() {
+        val startBluetoothActivityForResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                Debugger.printDebug("requestBluettothEnable", "Accepted - Enabled")
+                // Handle the Intent
+                DeviceInfoIntentResult.getDeviceResult(intent)
+            }
+        }
+        val intent = Intent(this, BluetoothConncectionActivity::class.java)
+        startBluetoothActivityForResult.launch(intent)
+    }
+
+
     @SuppressLint("MissingPermission")
     private fun startMap (): MapView {
         map = findViewById(R.id.mapview)
@@ -200,9 +252,10 @@ class MapsActivity : AppCompatActivity(), LocationListener {
 
     fun bluetoothButton (view: View){
         lateinit var activityClass : Class<out AppCompatActivity>
-        activityClass = BluetoothTest::class.java
-        val intent = Intent(this, activityClass)
-        startActivity(intent)
+        //activityClass = BluetoothTest::class.java
+        //val intent = Intent(this, activityClass)
+        //startActivity(intent)
+        MyBluetoothService.sendMsg("Ciao")
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

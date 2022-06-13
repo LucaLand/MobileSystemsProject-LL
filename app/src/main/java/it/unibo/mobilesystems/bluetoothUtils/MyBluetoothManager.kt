@@ -6,27 +6,24 @@ import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
 import android.content.Intent
 import android.content.IntentFilter
-import android.os.Handler
-import android.os.Looper
 import androidx.appcompat.app.AppCompatActivity
+import it.unibo.mobilesystems.ROBOT_FOUND_ACTION
 import it.unibo.mobilesystems.debugUtils.Debugger
-import it.unibo.mobilesystems.recivers.ActionHandler
-import it.unibo.mobilesystems.recivers.BluetoothActionReceiver
+import it.unibo.mobilesystems.receivers.ActionHandler
+import it.unibo.mobilesystems.receivers.BluetoothActionReceiver
 import java.util.*
 
 class MyBluetoothManager(val acitivity: AppCompatActivity) {
 
-
     private var bluetoothManager: BluetoothManager? = null
-    private lateinit var bluetoothAdapter: BluetoothAdapter
-    lateinit var myBluetoothService: MyBluetoothService
+    lateinit var bluetoothAdapter: BluetoothAdapter
     var pairedDevicesList : Set<BluetoothDevice>? = null
     var foundedDevices : Set<BluetoothDevice>? = null
 
     //Parameters needed for receiver search
     lateinit var deviceNameOrAddress: String
     lateinit var deviceUUID : UUID
-    lateinit var receiver : BluetoothActionReceiver
+    var receiver : BluetoothActionReceiver? = null
 
     //CONSTRUCTOR
     init {
@@ -73,26 +70,24 @@ class MyBluetoothManager(val acitivity: AppCompatActivity) {
         }
     }
 
-    fun connectToDevice(device: BluetoothDevice, deviceUUID: UUID): MyBluetoothService{
-        bluetoothAdapter.cancelDiscovery()
-        val mac = device.address
-        val name = device.name
-        Debugger.printDebug("Trying Connection to Device [$name||$mac]")
-
-        Debugger.printDebug("Creating SocketThread")
-        myBluetoothService = MyBluetoothService(mac, deviceUUID, bluetoothAdapter)
-        return myBluetoothService
-    }
-
     @SuppressLint("MissingPermission")
-    fun connectToDevice(deviceNameOrAddress: String, uuid: UUID){
+    fun connectToDevice(deviceNameOrAddress: String, uuid: UUID): BluetoothDevice?{
         val device = isDevicePaired(deviceNameOrAddress)
         if(device == null)
             searchAndConnect(deviceNameOrAddress, uuid)
         else
-            connectToDevice(device, uuid)
+            return device
+        return null
     }
 
+    /*private fun tryDeviceConnection(device: BluetoothDevice, deviceUUID: UUID): MyBluetoothService{
+        bluetoothAdapter.cancelDiscovery()
+        val mac = device.address
+        val name = device.name
+        Debugger.printDebug("Trying Connection to Device [$name||$mac]")
+        return myBluetoothService
+        //IF CONNECTED SEND A DEVICE CONNECTED ACTION
+    }*/
 
     fun findDevice(deviceNameOrAddress: String, uuid: UUID) : BluetoothDevice?{
         val device = isDevicePaired(deviceNameOrAddress)
@@ -102,11 +97,6 @@ class MyBluetoothManager(val acitivity: AppCompatActivity) {
             return device
         return null
     }
-    
-    private fun initSearchReceiver() {
-        TODO("Not yet implemented")
-    }
-
 
     /** PRIVATE FUNCTION **/
 
@@ -119,7 +109,9 @@ class MyBluetoothManager(val acitivity: AppCompatActivity) {
 
         val actionHandlerList = mutableListOf(deviceFoundHandler)
         //Unregister the previous
-        this.acitivity.unregisterReceiver(receiver)
+        if(receiver!=null){
+            this.acitivity.unregisterReceiver(receiver)
+        }
         //Save and register the new
         receiver = BluetoothActionReceiver(actionHandlerList)
         this.acitivity.registerReceiver(receiver, IntentFilter())
@@ -136,17 +128,14 @@ class MyBluetoothManager(val acitivity: AppCompatActivity) {
     private fun search(deviceNameOrAddress: String, uuid: UUID){
         bluetoothAdapter.cancelDiscovery()
         setDeviceParameters(deviceNameOrAddress, uuid)
-        initSearchReceiver()
+        //initSearchReceiver()
         bluetoothAdapter.startDiscovery()
     }
-
 
     private fun setDeviceParameters(deviceNameOrMac: String, uuid: UUID){
         this.deviceNameOrAddress = deviceNameOrMac
         this.deviceUUID = uuid
     }
-
-
 
     //CALL BACK FOR HANDLER
     private fun deviceFoundConnect(intent: Intent?){
@@ -154,11 +143,21 @@ class MyBluetoothManager(val acitivity: AppCompatActivity) {
             intent?.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
         if(device?.name == this.deviceNameOrAddress || device?.address == this.deviceNameOrAddress) {
             Debugger.printDebug("DEVICE FOUND! - ${device.name} || [${device.address}]")
-            connectToDevice(device, this.deviceUUID)
+            this.acitivity.sendBroadcast(DeviceInfoIntentResult.createIntentResult(device).setAction(
+                ROBOT_FOUND_ACTION))
+            //tryDeviceConnection(device, this.deviceUUID)
         }
     }
 
-
+    private fun deviceFound(intent: Intent?){
+        val device: BluetoothDevice? =
+            intent?.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
+        if(device?.name == this.deviceNameOrAddress || device?.address == this.deviceNameOrAddress) {
+            Debugger.printDebug("DEVICE FOUND! - ${device.name} || [${device.address}]")
+            this.acitivity.sendBroadcast(DeviceInfoIntentResult.createIntentResult(device).setAction(
+                ROBOT_FOUND_ACTION))
+        }
+    }
 
 
 

@@ -1,7 +1,7 @@
 package it.unibo.mobilesystems
 
 
-
+/*
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
 import android.content.Intent
@@ -15,11 +15,19 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import it.unibo.mobilesystems.debugUtils.Debugger
+import it.unibo.mobilesystems.fileUtils.FileSupport
 import it.unibo.mobilesystems.permissionManager.PermissionType
 import it.unibo.mobilesystems.permissionManager.PermissionsManager.permissionCheck
+import java.util.*
 
 
 open class BluetoothActivity : AppCompatActivity() {
+
+
+    private lateinit var bluetoothBtn : FloatingActionButton
+    lateinit var sendButton : FloatingActionButton
+
+
 
     private lateinit var backBtn : FloatingActionButton
 
@@ -44,10 +52,17 @@ open class BluetoothActivity : AppCompatActivity() {
         //SETTING LISTENERS
         backBtn.setOnClickListener{backButton(backBtn)}
         loadingBar.animate()
+        bluetoothBtn = findViewById(R.id.bluetoothButton)
+        sendButton = findViewById(R.id.sendButton)
+        //LISTENER
+        bluetoothBtn.setOnClickListener{refreshBluetoothPage()}
+        longClickListener = View.OnLongClickListener{ view : View -> onDeviceClick(view)}
+        sendButton.setOnClickListener({bluetoothSendData(bluetoothThread, "CIAOOOOOO!!!")})
 
         permissionCheck(PermissionType.Bluetooth, this)
     }
 
+//MAIN CLASS
 
 
     @SuppressLint("MissingPermission")
@@ -117,7 +132,7 @@ open class BluetoothActivity : AppCompatActivity() {
     /** ----------------ON CLICK FUNCTIONS------------------ **/
 
     fun backButton(view : View){
-        val intent = Intent(this, MapsActivity::class.java)
+        val intent = Intent(this, MainMapsActivity::class.java)
         startActivity(intent)
     }
 
@@ -126,4 +141,6 @@ open class BluetoothActivity : AppCompatActivity() {
 
 
 }
+
+ */
 

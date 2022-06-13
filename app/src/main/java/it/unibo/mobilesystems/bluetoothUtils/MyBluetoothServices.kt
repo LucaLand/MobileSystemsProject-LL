@@ -5,10 +5,10 @@ import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothSocket
 import android.os.Bundle
 import android.os.Handler
-import android.os.Looper
-import android.os.Message
 import android.util.Log
 import it.unibo.mobilesystems.debugUtils.Debugger
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
@@ -23,52 +23,56 @@ const val MESSAGE_WRITE: Int = 1
 const val MESSAGE_TOAST: Int = 2
 const val MESSAGE_SOCKET_ERROR: Int = 154
 const val MESSAGE_SEND_ERROR: Int = 99
+const val MESSAGE_CONNECTION_TRUE = 74
 // ... (Add other message types here as needed.)
 
-class MyBluetoothService(
-    // handler that gets info from Bluetooth service
-    //private val handler: Handler,
-    private val mac: String,
-    private val uuid: UUID,
-    private val bluetoothAdapter: BluetoothAdapter,
-) {
-    var connctionThread: BluetoothSocketThread
 
-    //HANDLER FOR ERROR MESSAGES
-    val handler = Handler(Looper.myLooper()!!) { msg: Message ->
-        Debugger.printDebug("HANDLER", "${msg.data}")
-        when (msg.what) {
-            MESSAGE_SOCKET_ERROR -> {
-                if (enabled)
-                    restartConnection()
-            }
-            MESSAGE_SEND_ERROR -> {
-                Debugger.printDebug("HANDLER", "ERROR SENDING MESSAGE")
-            }
-            MESSAGE_READ -> {
-                Debugger.printDebug("HANDLER", msg.obj.toString())
-            }
+private const val CLASS_NAME = "SERVICE-CLASS"
+object MyBluetoothService{
+    lateinit var connectionThread: BluetoothSocketThread
+    var enabled = true
+    var numberOfConnectionTried: Int = 0
 
-        }
-        true
+    lateinit var handler: Handler
+    lateinit var mac: String
+    lateinit var uuid: UUID
+    lateinit var bluetoothAdapter: BluetoothAdapter
+
+
+    fun setServiceBluetoothAdapter(bluetoothAdapter: BluetoothAdapter){
+        this.bluetoothAdapter = bluetoothAdapter
     }
 
-    var enabled = true
+    fun setDevice(macAddress: String, uuid: UUID){
+        this.mac = macAddress
+        this.uuid = uuid
+    }
 
+    fun setServiceHandler(handler: Handler){
+        this.handler = handler
+    }
 
-    //-------- CONSTRUCTOR ------------
-    init {
-        connctionThread = BluetoothSocketThread(bluetoothAdapter, mac, uuid)
-        connctionThread.start()
+    fun startSocketConnection(){
+        bluetoothAdapter.cancelDiscovery()
+        connectionThread = BluetoothSocketThread(
+            bluetoothAdapter,
+            mac,
+            uuid
+        )
+        connectionThread.start()
     }
 
     //---------------------------------
     fun restartConnection(){
-        if(connctionThread.isAlive){
-            connctionThread.cancel()
+        if(numberOfConnectionTried <= 10) {
+            if (connectionThread.isAlive) {
+                connectionThread.cancel()
+            }
+            connectionThread = BluetoothSocketThread(bluetoothAdapter, mac, uuid)
+            connectionThread.start()
+            numberOfConnectionTried++
         }
-        connctionThread = BluetoothSocketThread(bluetoothAdapter, mac, uuid)
-        connctionThread.start()
+        Debugger.printDebug(CLASS_NAME, "Retriing N.$numberOfConnectionTried")
     }
 
     fun stopService(){
@@ -76,14 +80,14 @@ class MyBluetoothService(
     }
 
     fun sendMsg(s : String){
-        connctionThread.write(s.toByteArray())
+        connectionThread.write(s.toByteArray())
     }
 
 
 
     /** ------------------------------------------------------------------------------ **/
 
-    inner class BluetoothSocketThread(private var bluetoothAdapter: BluetoothAdapter,
+    class BluetoothSocketThread(private var bluetoothAdapter: BluetoothAdapter,
                                       private var mac: String, private var uuid: UUID
     ) : Thread(){
 
@@ -107,19 +111,28 @@ class MyBluetoothService(
         }
 
         @SuppressLint("MissingPermission")
-        fun connectToSocket(socket: BluetoothSocket){
+        private fun connectToSocket(socket: BluetoothSocket){
             try{
                 socket.connect()
                 Debugger.printDebug("socket.connect()","CONNECTED TO SOCKET")
+                val sendMessage = handler.obtainMessage(MESSAGE_CONNECTION_TRUE)
+                handler.sendMessage(sendMessage)
             }catch (e: IOException) {
                 Debugger.printDebug("socket.connect()","ERROR: read failed, socket might closed or timeout")
             }
         }
 
+        fun waitSomeTime(mills: Long){
+            Debugger.printDebug(CLASS_NAME, "Waiting before to retry open another socket...")
+            runBlocking {
+                delay(mills)
+            }
+        }
+
         override fun run() {
+            connectionThread.waitSomeTime(3000) //3 second first time starts
             initSocket()
             connectToSocket(bluetoothSocket)
-
             Debugger.printDebug("Initialized Socket: Now Listening...")
             var numBytes: Int // bytes returned from read()
 
@@ -157,7 +170,7 @@ class MyBluetoothService(
                 // Send a failure message back to the activity.
                 val writeErrorMsg = handler.obtainMessage(MESSAGE_TOAST)
                 val bundle = Bundle().apply {
-                    putString("toast", "Couldn't send data to the other device")
+                    putString("MSG", "Couldn't send data to the other device")
                 }
                 writeErrorMsg.data = bundle
                 handler.sendMessage(writeErrorMsg)
@@ -166,7 +179,7 @@ class MyBluetoothService(
 
             // Share the sent message with the UI activity.
             val writtenMsg = handler.obtainMessage(
-                MESSAGE_WRITE, -1, -1, mmBuffer)
+                MESSAGE_WRITE, -1, -1, mmBuffer.toString())
             writtenMsg.sendToTarget()
         }
 

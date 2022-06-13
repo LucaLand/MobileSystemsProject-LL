@@ -10,7 +10,11 @@ object ConfigManager {
     var configMap : MutableMap<String, String>? = null
 
     fun init(app: AppCompatActivity?){
-        configMap = readConfigMap(app)
+        if(configMap.isNullOrEmpty())
+            configMap = readConfigMap(app)
+        else
+            Debugger.printDebug("ConfigManager", "Config Already Initialized")
+        //configMap = readConfigMap(app)
     }
 
     private fun readConfigMap(app: AppCompatActivity?) : MutableMap<String, String>?{
