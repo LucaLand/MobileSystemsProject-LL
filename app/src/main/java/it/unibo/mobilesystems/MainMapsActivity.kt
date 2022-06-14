@@ -25,6 +25,7 @@ import com.google.android.gms.location.*
 import com.google.android.gms.tasks.Task
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetBehavior.BottomSheetCallback
+import it.unibo.kactor.MsgUtil
 import it.unibo.mobilesystems.bluetoothUtils.*
 import it.unibo.mobilesystems.databinding.ActivityMapsBinding
 import it.unibo.mobilesystems.debugUtils.Debugger
@@ -292,12 +293,20 @@ class MainMapsActivity : AppCompatActivity(), LocationListener {
     }
 
      fun onMoveButtonClick(view: View){
-        when(view.id){
-            R.id.buttonForward -> {sendMessage("w")}
-            R.id.buttonRight -> {sendMessage("r")}
-            R.id.buttonLeft -> {sendMessage("l")}
-            R.id.buttonBack -> {sendMessage("b")}
-            R.id.haltButton -> {sendMessage("h")}
+         //TEST ROBOT MSG
+         /*
+         val w = MsgUtil.buildDispatch("BeautifulViewActivity","cmd", "cmd(w)", "basicrobot").toString()
+         val r = MsgUtil.buildDispatch("BeautifulViewActivity","cmd", "cmd(r)", "basicrobot").toString()
+         val l = MsgUtil.buildDispatch("BeautifulViewActivity","cmd", "cmd(l)", "basicrobot").toString()
+         val h = MsgUtil.buildDispatch("BeautifulViewActivity","cmd", "cmd(h)", "basicrobot").toString()
+         val b = MsgUtil.buildDispatch("BeautifulViewActivity","cmd", "cmd(w)", "basicrobot").toString()
+          */
+         when(view.id){
+            R.id.buttonForward -> {sendMessage(MsgUtil.buildDispatch("BeautifulViewActivity","cmd", "cmd(w)", "basicrobot").toString())}
+            R.id.buttonRight -> {sendMessage(MsgUtil.buildDispatch("BeautifulViewActivity","cmd", "cmd(r)", "basicrobot").toString())}
+            R.id.buttonLeft -> {sendMessage(MsgUtil.buildDispatch("BeautifulViewActivity","cmd", "cmd(l)", "basicrobot").toString())}
+            R.id.buttonBack -> {sendMessage(MsgUtil.buildDispatch("BeautifulViewActivity","cmd", "cmd(s)", "basicrobot").toString())}
+            R.id.haltButton -> {sendMessage(MsgUtil.buildDispatch("BeautifulViewActivity","cmd", "cmd(h)", "basicrobot").toString())}
         }
     }
 
