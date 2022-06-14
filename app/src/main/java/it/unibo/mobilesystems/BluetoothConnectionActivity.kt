@@ -11,12 +11,14 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.Button
+import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.isGone
 import androidx.core.view.isInvisible
+import androidx.core.view.isVisible
 import it.unibo.mobilesystems.bluetoothUtils.DeviceInfoIntentResult
 import it.unibo.mobilesystems.bluetoothUtils.MyBluetoothManager
 import it.unibo.mobilesystems.bluetoothUtils.MyBluetoothService
@@ -83,6 +85,7 @@ class BluetoothConnectionActivity : AppCompatActivity() {
         registerReceiver(ActionHandler(SOCKET_OPENED_ACTION){context, intent ->
             this.correctelyConnected()
             Debugger.printDebug("Bluetooth-Activity", "SOCKET_OPENED_ACTION arrived")
+            findViewById<LinearLayout>(R.id.deviceBox).addView(createDeviceTextView("DEVICE: ${deviceName}"))
         }.createBroadcastReceiver(), IntentFilter(SOCKET_OPENED_ACTION))
 
         //SOCKET ERROR AND CLOSED
@@ -108,8 +111,7 @@ class BluetoothConnectionActivity : AppCompatActivity() {
                 Debugger.printDebug("No CONFIGURATION FOR DEVICE (Name or Address! in file.conf)")
 
             if(device != null){
-                createDeviceTextView("DEVICE: device.name")
-                Debugger.printDebug("BLUETOOTH ACTIVITY", "Device is not null")
+                Debugger.printDebug("BLUETOOTH ACTIVITY", "Device is Already Paired!")
                 MyBluetoothService.setDevice(device.address, uuid!!)
                 MyBluetoothService.startSocketConnection()
             }
@@ -162,6 +164,7 @@ class BluetoothConnectionActivity : AppCompatActivity() {
 
     fun correctelyConnected(){
         startButton.isEnabled = true
+        progressBar.isVisible = false
     }
 
 
