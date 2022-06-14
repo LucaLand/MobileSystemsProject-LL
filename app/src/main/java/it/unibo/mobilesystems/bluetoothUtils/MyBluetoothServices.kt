@@ -67,7 +67,9 @@ object MyBluetoothService{
     fun restartConnection(){
         if(numberOfConnectionTried <= maximumConnectionRetry) {
             if (connectionThread.isAlive) {
-                connectionThread.cancel()
+                if(connectionThread.socketCreated)
+                    connectionThread.cancel()
+                connectionThread.interrupt()
             }
             connectionThread = BluetoothSocketThread(bluetoothAdapter, mac, uuid)
             connectionThread.start()
@@ -98,6 +100,8 @@ object MyBluetoothService{
         lateinit var mmOutStream: OutputStream
         lateinit var mmBuffer: ByteArray
 
+        var socketCreated = false
+
         private fun initSocket(){
             bluetoothSocket = createSocket(bluetoothAdapter, mac, uuid)
             mmInStream = bluetoothSocket.inputStream
@@ -106,23 +110,26 @@ object MyBluetoothService{
         }
 
         @SuppressLint("MissingPermission")
-        fun createSocket(bluetoothAdapter: BluetoothAdapter, mac: String, uuid: UUID) : BluetoothSocket{
+        private fun createSocket(bluetoothAdapter: BluetoothAdapter, mac: String, uuid: UUID) : BluetoothSocket{
             Debugger.printDebug("Creating Socket...")
             return bluetoothAdapter.getRemoteDevice(mac).createRfcommSocketToServiceRecord(uuid)
         }
 
         @SuppressLint("MissingPermission")
-        private fun connectToSocket(socket: BluetoothSocket){
-            try{
+        private fun connectToSocket(socket: BluetoothSocket): Boolean{
+            socketCreated = try{
                 socket.connect()
                 Debugger.printDebug("socket.connect()","CONNECTED TO SOCKET")
                 val sendMessage = handler.obtainMessage(MESSAGE_CONNECTION_TRUE)
                 handler.sendMessage(sendMessage)
+                true
             }catch (e: IOException) {
                 Debugger.printDebug("socket.connect()","ERROR: read failed, socket might closed or timeout")
                 val writeErrorMsg = handler.obtainMessage(MESSAGE_SOCKET_ERROR)
                 handler.sendMessage(writeErrorMsg)
+                false
             }
+            return socketCreated
         }
 
         private fun waitSomeTime(mills: Long){
@@ -135,12 +142,12 @@ object MyBluetoothService{
         override fun run() {
             connectionThread.waitSomeTime(5000) //3 second first time starts
             initSocket()
-            connectToSocket(bluetoothSocket)
+            var res = connectToSocket(bluetoothSocket)
             Debugger.printDebug("Initialized Socket: Now Listening...")
             var numBytes: Int // bytes returned from read()
 
             // Keep listening to the InputStream until an exception occurs.
-            while (true) {
+            while (res) {
                 // Read from the InputStream.
                 numBytes = try {
                     mmInStream.read(mmBuffer)
@@ -149,6 +156,7 @@ object MyBluetoothService{
                     val writeErrorMsg = handler.obtainMessage(MESSAGE_SOCKET_ERROR)
                     handler.sendMessage(writeErrorMsg)
                     Debugger.printDebug("Input stream was disconnected IOException in Thread.run() - Thread Closed")
+                    socketCreated = false
                     break
                 }
 
