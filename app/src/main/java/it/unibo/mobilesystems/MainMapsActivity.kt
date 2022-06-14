@@ -55,11 +55,11 @@ const val SOCKET_OPENED_ACTION = "SOCKET_OPENED_ACTION"
 const val SOCKET_CLOSED_ACTION = "SOCKET_CLOSED_ACTION"
 
 
+
 class MainMapsActivity : AppCompatActivity(), LocationListener {
 
     //TODO: FIX the bottom pad animation and motion (can also be opened with a button, and do the animation programmatically)
-
-    //TODO(IMPORTANT [ultimo]: Gestire le Action del bluetooth tipo (Inizio Ricerca, Fine Ricerca, Stato del bluetooth cambiato)
+    //TODO(-Sulla disconnessione del dispositivo (nella maps activity) devo bloccare l'utillizzo dell socket, usiamo la variabile enabled del MyService Object)
 
     private val bluetoothMessageHandler: BluetoothSocketMessagesHandler = BluetoothSocketMessagesHandler()
 
@@ -94,11 +94,11 @@ class MainMapsActivity : AppCompatActivity(), LocationListener {
 
         //HANDLERS for Socket Created and Socket Error (Closed)
         bluetoothMessageHandler.setCallbackForMessage(MESSAGE_CONNECTION_TRUE) {
-            Debugger.printDebug("Maps-Actiity", "RECIVED MESSAGE_CONNECTION_TRUE - Sended Socket Opened Action")
+            Debugger.printDebug("Maps-Activity", "RECEIVED MESSAGE_CONNECTION_TRUE - Sent Socket Opened Action")
             sendBroadcast(Intent().setAction(SOCKET_OPENED_ACTION))
         }
         bluetoothMessageHandler.setCallbackForMessage(MESSAGE_SOCKET_ERROR) {
-            Debugger.printDebug("Maps-Actiity", "Received Error Message: Socket Closed!")
+            Debugger.printDebug("Maps-Activity", "Received Error Message: Socket Closed!")
             sendBroadcast(Intent().setAction(SOCKET_CLOSED_ACTION))
             MyBluetoothService.restartConnection() }
         MyBluetoothService.setServiceHandler(bluetoothMessageHandler)
