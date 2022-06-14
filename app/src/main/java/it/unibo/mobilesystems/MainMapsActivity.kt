@@ -13,6 +13,7 @@ import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.widget.Button
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -115,9 +116,10 @@ class MainMapsActivity : AppCompatActivity(), LocationListener {
     private fun startBluetoothActivity() {
         val startBluetoothActivityForResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
             if (result.resultCode == Activity.RESULT_OK) {
-                Debugger.printDebug("requestBluettothEnable", "Accepted - Enabled")
+                Debugger.printDebug( "Bluetooth Activity Started")
                 // Handle the Intent
                 DeviceInfoIntentResult.getDeviceResult(intent)
+                //HANDLE RESULT FROM THE BLUETOOTH ACTIVITY
             }
         }
         val intent = Intent(this, BluetoothConnectionActivity::class.java)
@@ -276,4 +278,20 @@ class MainMapsActivity : AppCompatActivity(), LocationListener {
             }
         }
     }
+
+     fun onMoveButtonClick(view: View){
+        when(view.id){
+            R.id.buttonForward -> {sendMessage("w")}
+            R.id.buttonRight -> {sendMessage("r")}
+            R.id.buttonLeft -> {sendMessage("l")}
+            R.id.buttonBack -> {sendMessage("b")}
+            R.id.haltButton -> {sendMessage("h")}
+        }
+    }
+
+    private fun sendMessage(s : String){
+        MyBluetoothService.sendMsg(s)
+    }
+
 }
+
