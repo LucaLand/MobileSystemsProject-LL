@@ -14,6 +14,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.Button
+import android.widget.Toast
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -77,10 +78,21 @@ class MainMapsActivity : AppCompatActivity(), LocationListener {
         //CONFIG
         ConfigManager.init(this)
 
-        //Handler For bluetooth messages
+        //Handlers For Socket Messages
         bluetoothMessageHandler.setCallbackForMessage(MESSAGE_READ) { string ->
-            Debugger.printDebug("Handler-Receive","Recived MSG: $string")
+            Debugger.printDebug("Handler-Receive","Received MSG: $string")
+            Toast.makeText(this, "Received: $string", 5 ).show()
         }
+        bluetoothMessageHandler.setCallbackForMessage(MESSAGE_WRITE) { string ->
+            Debugger.printDebug("Handler-Send","Sent MSG: $string")
+            //Toast.makeText(this, "Sent: $string", 5 ).show()
+        }
+        bluetoothMessageHandler.setCallbackForMessage(MESSAGE_TOAST) { string ->
+            Debugger.printDebug("Handler-Send","Sent MSG: $string")
+            Toast.makeText(this, "Toast: $string", 5 ).show()
+        }
+
+        //HANDLERS for Socket Created and Socket Error (Closed)
         bluetoothMessageHandler.setCallbackForMessage(MESSAGE_CONNECTION_TRUE) {
             Debugger.printDebug("Maps-Actiity", "RECIVED MESSAGE_CONNECTION_TRUE - Sended Socket Opened Action")
             sendBroadcast(Intent().setAction(SOCKET_OPENED_ACTION))
