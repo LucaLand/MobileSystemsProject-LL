@@ -67,6 +67,7 @@ class BluetoothConnectionActivity : AppCompatActivity() {
                     resultIntent = intent
                 }
                 researchDevice = false
+                findViewById<LinearLayout>(R.id.deviceBox).addView(createDeviceTextView("DEVICE: ${deviceName}"))
                 MyBluetoothService.setDevice(intent?.getStringExtra(RESULT_DEVICE_ADDRESS_CODE)!!, UUID.fromString(intent.getStringExtra(RESULT_DEVICE_UUID_CODE)))
                 MyBluetoothService.startSocketConnection()
             }.createBroadcastReceiver(), IntentFilter(ROBOT_FOUND_ACTION)
@@ -85,7 +86,7 @@ class BluetoothConnectionActivity : AppCompatActivity() {
         registerReceiver(ActionHandler(SOCKET_OPENED_ACTION){context, intent ->
             this.correctelyConnected()
             Debugger.printDebug("Bluetooth-Activity", "SOCKET_OPENED_ACTION arrived")
-            findViewById<LinearLayout>(R.id.deviceBox).addView(createDeviceTextView("DEVICE: ${deviceName}"))
+            //findViewById<LinearLayout>(R.id.deviceBox).addView(createDeviceTextView("DEVICE: ${deviceName}"))
         }.createBroadcastReceiver(), IntentFilter(SOCKET_OPENED_ACTION))
 
         //SOCKET ERROR AND CLOSED
@@ -104,14 +105,12 @@ class BluetoothConnectionActivity : AppCompatActivity() {
             if (deviceName != null) {
                 Debugger.printDebug("BLUETOOTH ACTIVITY", "Trying connection with DeviceName")
                 device = myBluetoothManager.connectToDevice(deviceName!!, uuid!!)
-            }else if(deviceAddress != null) {
-                device = myBluetoothManager.connectToDevice(deviceAddress!!, uuid!!)
-                Debugger.printDebug("BLUETOOTH ACTIVITY", "Trying connection with Address")
             }else
                 Debugger.printDebug("No CONFIGURATION FOR DEVICE (Name or Address! in file.conf)")
 
             if(device != null){
                 Debugger.printDebug("BLUETOOTH ACTIVITY", "Device is Already Paired!")
+                findViewById<LinearLayout>(R.id.deviceBox).addView(createDeviceTextView("DEVICE: ${deviceName}"))
                 MyBluetoothService.setDevice(device.address, uuid!!)
                 MyBluetoothService.startSocketConnection()
             }
@@ -172,7 +171,7 @@ class BluetoothConnectionActivity : AppCompatActivity() {
      * ON CLICK Functions
      * **/
     private fun connectionPhaseDone(){
-        MyBluetoothService.sendMsg("START- Are you ready gitRobot?")
+        //MyBluetoothService.sendMsg("START- Are you ready gitRobot?")
         this.finish()
     }
 
