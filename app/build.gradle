@@ -53,8 +53,7 @@ dependencies {
     implementation files('libs/webForActors-1.0.jar')
     implementation files('libs/it.unibo.qakactor-2.7.jar')
     implementation files('libs/unibonoawtsupports.jar')
-    implementation files('libs\\unibo.actor22-1.1.jar')
-    //implementation files('libs\\2p301.jar')
+    implementation files('libs/unibo.actor22-1.1.jar')
 
     // https://mvnrepository.com/artifact/it.unibo.alice.tuprolog/tuprolog
     implementation group: 'it.unibo.alice.tuprolog', name: 'tuprolog', version: '3.3.0'

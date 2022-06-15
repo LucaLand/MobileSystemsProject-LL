@@ -4,8 +4,12 @@ import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
+import android.bluetooth.le.BluetoothLeScanner
+import android.bluetooth.le.ScanCallback
+import android.bluetooth.le.ScanResult
 import android.content.Intent
 import android.content.IntentFilter
+import android.os.Handler
 import androidx.appcompat.app.AppCompatActivity
 import it.unibo.mobilesystems.ROBOT_FOUND_ACTION
 import it.unibo.mobilesystems.debugUtils.Debugger
@@ -13,10 +17,16 @@ import it.unibo.mobilesystems.receivers.ActionHandler
 import it.unibo.mobilesystems.receivers.BluetoothActionReceiver
 import java.util.*
 
+const val MESSAGE_RSSI = 147
+
 class MyBluetoothManager(val acitivity: AppCompatActivity) {
 
     private var bluetoothManager: BluetoothManager? = null
     lateinit var bluetoothAdapter: BluetoothAdapter
+    lateinit var bluetoothLeScanner: BluetoothLeScanner
+
+    var rssiHandler : BluetoothSocketMessagesHandler? = null
+
     var pairedDevicesList : Set<BluetoothDevice>? = null
     var foundedDevices : Set<BluetoothDevice>? = null
 
@@ -29,6 +39,7 @@ class MyBluetoothManager(val acitivity: AppCompatActivity) {
     init {
         if(bluetoothInit())
             pairedDevicesList = getPairedDevices()
+        bluetoothEnable()
     }
 
     /** PUBLIC FUNCTIONS **/
@@ -66,6 +77,7 @@ class MyBluetoothManager(val acitivity: AppCompatActivity) {
         }else{
             Debugger.printDebug("Bluetooth State: ENABLED")
             bluetoothAdapter.enable()
+            bluetoothLeScanner = bluetoothAdapter.bluetoothLeScanner
             null
         }
     }
@@ -153,11 +165,45 @@ class MyBluetoothManager(val acitivity: AppCompatActivity) {
         val device: BluetoothDevice? =
             intent?.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
         if(device?.name == this.deviceNameOrAddress || device?.address == this.deviceNameOrAddress) {
-            Debugger.printDebug("DEVICE FOUND! - ${device.name} || [${device.address}]")
-            this.acitivity.sendBroadcast(DeviceInfoIntentResult.createIntentResult(device).setAction(
+            val deviceRSSI = intent.getShortExtra(BluetoothDevice.EXTRA_RSSI, Short.MIN_VALUE)
+            Debugger.printDebug("DEVICE FOUND! - ${device.name} || ${device.address} || [RSSI:$deviceRSSI]")
+            val extras = mutableMapOf<String,String>()
+            extras[BluetoothDevice.EXTRA_DEVICE] = deviceRSSI.toString()
+            this.acitivity.sendBroadcast(DeviceInfoIntentResult.createIntentResult(device, extras).setAction(
                 ROBOT_FOUND_ACTION))
         }
     }
+
+    private val SCAN_PERIOD: Long = 10000
+    private var scanning = false
+
+    fun leScan(deviceName: String){
+        val leScanCallback: ScanCallback = object : ScanCallback() {
+            override fun onScanResult(callbackType: Int, result: ScanResult) {
+                super.onScanResult(callbackType, result)
+                if(result.device.name == deviceName && rssiHandler != null){
+                    val msg = rssiHandler!!.obtainMessage(MESSAGE_RSSI, result.rssi)
+                    Debugger.printDebug("leScan()", "LeScan found: ${result.device.name} - [RSSI: ${result.rssi}")
+                    Debugger.printDebug("leScan()", "Sending RSSI Message to Handler")
+                    msg.sendToTarget()
+                }
+            }
+        }
+
+        if (!scanning && rssiHandler != null) { // Stops scanning after a pre-defined scan period.
+            rssiHandler!!.postDelayed({
+                scanning = false
+                bluetoothLeScanner.stopScan(leScanCallback)
+            }, SCAN_PERIOD)
+            scanning = true
+            Debugger.printDebug("leScan()", "Started LeScan")
+            bluetoothLeScanner.startScan(leScanCallback)
+        } else {
+            scanning = false
+            bluetoothLeScanner.stopScan(leScanCallback)
+        }
+    }
+
 
 
 

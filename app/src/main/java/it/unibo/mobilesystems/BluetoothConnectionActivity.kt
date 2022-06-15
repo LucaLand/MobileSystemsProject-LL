@@ -40,6 +40,7 @@ class BluetoothConnectionActivity : AppCompatActivity() {
     var uuid : UUID? = null
 
     var researchDevice = true
+    var RSSIValue : Long = 0
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -62,10 +63,10 @@ class BluetoothConnectionActivity : AppCompatActivity() {
         registerReceiver(
             ActionHandler(ROBOT_FOUND_ACTION
             ) { context, intent ->
-                createDeviceTextView("")
                 if (intent != null) {
                     resultIntent = intent
                 }
+                myBluetoothManager.bluetoothAdapter.cancelDiscovery()
                 researchDevice = false
                 findViewById<LinearLayout>(R.id.deviceBox).addView(createDeviceTextView("DEVICE: ${deviceName}"))
                 MyBluetoothService.setDevice(intent?.getStringExtra(RESULT_DEVICE_ADDRESS_CODE)!!, UUID.fromString(intent.getStringExtra(RESULT_DEVICE_UUID_CODE)))
@@ -113,6 +114,8 @@ class BluetoothConnectionActivity : AppCompatActivity() {
                 findViewById<LinearLayout>(R.id.deviceBox).addView(createDeviceTextView("DEVICE: ${deviceName}"))
                 MyBluetoothService.setDevice(device.address, uuid!!)
                 MyBluetoothService.startSocketConnection()
+            }else{
+                Debugger.printDebug("BLUETOOTH ACTIVITY", "Device not Paired!")
             }
         }else{
             Debugger.printDebug("ERROR - NO UUID Initialized from the file.conf")
@@ -130,11 +133,12 @@ class BluetoothConnectionActivity : AppCompatActivity() {
                 myBluetoothManager.connectToDevice(this.deviceName!!, this.uuid!!)
             }
         }else
-            progressBar.isInvisible = true
+            progressBar.isVisible = false
     }
 
     private fun connectionError() {
         startButton.isEnabled = false
+        progressBar.isVisible = true
     }
 
     private fun setActivityResult(deviceName: String, macAddress: String, uuid: String){
@@ -151,10 +155,10 @@ class BluetoothConnectionActivity : AppCompatActivity() {
         return view
     }
 
-    fun requestBluettothEnable(intent: Intent){
+    private fun requestBluettothEnable(intent: Intent){
         val startForResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
             if (result.resultCode == Activity.RESULT_OK) {
-                Debugger.printDebug("requestBluettothEnable", "Accepted - Enabled")
+                Debugger.printDebug("requestBluetoothEnable", "Accepted - Enabled")
                 // Handle the Intent
             }
         }

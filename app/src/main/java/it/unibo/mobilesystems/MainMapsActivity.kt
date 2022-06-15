@@ -3,7 +3,9 @@ package it.unibo.mobilesystems
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.bluetooth.BluetoothDevice
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.IntentSender
 import android.graphics.Color
 import android.location.Location
@@ -11,9 +13,10 @@ import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
 import android.util.Log
 import android.view.View
-import android.widget.Button
+import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -34,6 +37,7 @@ import it.unibo.mobilesystems.permissionManager.PermissionType
 import it.unibo.mobilesystems.permissionManager.PermissionsManager.permissionCheck
 import it.unibo.mobilesystems.permissionManager.PermissionsManager.permissionsCheck
 import it.unibo.mobilesystems.permissionManager.PermissionsManager.permissionsRequest
+import it.unibo.mobilesystems.receivers.ActionHandler
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
@@ -61,8 +65,12 @@ class MainMapsActivity : AppCompatActivity(), LocationListener {
 
     //TODO: FIX the bottom pad animation and motion (can also be opened with a button, and do the animation programmatically)
     //TODO(-Sulla disconnessione del dispositivo (nella maps activity) devo bloccare l'utillizzo dell socket, usiamo la variabile enabled del MyService Object)
+    //TODO(Implement the use of BluetoothCompanion - See Android Developer Guide)
+
+    //TODO(LeScan non parte)
 
     private val bluetoothMessageHandler: BluetoothSocketMessagesHandler = BluetoothSocketMessagesHandler()
+    private lateinit var myBluetoothManager : MyBluetoothManager
 
     private lateinit var binding: ActivityMapsBinding
 
@@ -70,14 +78,29 @@ class MainMapsActivity : AppCompatActivity(), LocationListener {
     private lateinit var mLocationOverlay : MyLocationNewOverlay
     private lateinit var locationProvider: String
 
+    private lateinit var rssiProgressBarr : ProgressBar
+
+    private var deviceName: String? = ConfigManager.getConfigString(ROBOT_DEVICE_NAME)
+
     var uuid : UUID? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMapsBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        //UI COMPONENTS
+        rssiProgressBarr = findViewById(R.id.rssi_progress_bar)
+
         //CONFIG
         ConfigManager.init(this)
+        myBluetoothManager = MyBluetoothManager(this)
+
+        //Handlers For LeScanner Rssi Messages
+        myBluetoothManager.rssiHandler = BluetoothSocketMessagesHandler().setCallbackForMessage(MESSAGE_RSSI) {string ->
+            updateRSSIValue(string?.toInt())
+            Debugger.printDebug("RSSI Handler", "Recived RSSI Message - Updated RSSI Progress Bar")
+        }
 
         //Handlers For Socket Messages
         bluetoothMessageHandler.setCallbackForMessage(MESSAGE_READ) { string ->
@@ -103,6 +126,19 @@ class MainMapsActivity : AppCompatActivity(), LocationListener {
             sendBroadcast(Intent().setAction(SOCKET_CLOSED_ACTION))
             MyBluetoothService.restartConnection() }
         MyBluetoothService.setServiceHandler(bluetoothMessageHandler)
+
+        //RECEIVER FOR ROBOT FOUND to get RSSI
+        this.registerReceiver(ActionHandler(BluetoothDevice.ACTION_ACL_CONNECTED){context, intent ->
+            val mIntentAction = intent!!.action
+            if (BluetoothDevice.ACTION_ACL_CONNECTED == mIntentAction) {
+                val RSSI =
+                    intent!!.getShortExtra(BluetoothDevice.EXTRA_RSSI, Short.MIN_VALUE).toInt()
+                val mDeviceName = intent!!.getStringExtra(BluetoothDevice.EXTRA_NAME)
+                if(mDeviceName == ConfigManager.getConfigString(ROBOT_DEVICE_NAME))
+                    updateRSSIValue(RSSI)
+            }
+        }.createBroadcastReceiver(), IntentFilter(BluetoothDevice.ACTION_ACL_CONNECTED))
+
 
         //PERMISSION
         internetPermissions()
@@ -131,8 +167,13 @@ class MainMapsActivity : AppCompatActivity(), LocationListener {
             if (result.resultCode == Activity.RESULT_OK) {
                 Debugger.printDebug( "Bluetooth Activity Started")
                 // Handle the Intent
-                DeviceInfoIntentResult.getDeviceResult(intent)
+                val resultMap : MutableMap<String,String?> = DeviceInfoIntentResult.getDeviceResult(intent)
+                deviceName = resultMap.get(RESULT_DEVICE_NAME_CODE)
                 //HANDLE RESULT FROM THE BLUETOOTH ACTIVITY
+                myBluetoothManager.bluetoothLeScanner = myBluetoothManager.bluetoothAdapter.bluetoothLeScanner
+                if (deviceName != null) {
+                    myBluetoothManager.leScan(deviceName!!)
+                }
             }
         }
         val intent = Intent(this, BluetoothConnectionActivity::class.java)
@@ -312,6 +353,12 @@ class MainMapsActivity : AppCompatActivity(), LocationListener {
 
     private fun sendMessage(s : String){
         MyBluetoothService.sendMsg(s)
+    }
+
+    private fun updateRSSIValue(rssiValue: Int?){
+        if (rssiValue != null) {
+            rssiProgressBarr.setProgress(rssiValue, true)
+        }
     }
 
 }
