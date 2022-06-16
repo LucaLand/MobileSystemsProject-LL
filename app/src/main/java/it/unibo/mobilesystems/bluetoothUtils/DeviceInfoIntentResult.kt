@@ -9,6 +9,16 @@ import java.util.*
 
 object DeviceInfoIntentResult {
 
+
+    fun createIntentResult(extrasCodeAndValue: MutableMap<String, String>): Intent{
+        val intent = Intent()
+        extrasCodeAndValue.forEach{entry ->
+            intent.putExtra(entry.key, entry.value)
+        }
+        return intent
+    }
+
+
     fun createIntentResult(deviceName: String, macAddress: String, uuid: String): Intent{
         val intent = Intent()
         intent.putExtra(RESULT_DEVICE_NAME_CODE, deviceName)
@@ -17,14 +27,16 @@ object DeviceInfoIntentResult {
         return intent
     }
 
-    fun createIntentResult(bluetoothDevice: BluetoothDevice, uuid: String): Intent{
+    fun createIntentResult(bluetoothDevice: BluetoothDevice, otherExtra: MutableMap<String, String>): Intent{
         val deviceName = bluetoothDevice.name
         val macAddress = bluetoothDevice.address
 
         val intent = Intent()
         intent.putExtra(RESULT_DEVICE_NAME_CODE, deviceName)
         intent.putExtra(RESULT_DEVICE_ADDRESS_CODE, macAddress)
-        intent.putExtra(RESULT_DEVICE_UUID_CODE, uuid)
+        otherExtra.forEach{entry ->
+            intent.putExtra(entry.key, entry.value)
+        }
         return intent
     }
 

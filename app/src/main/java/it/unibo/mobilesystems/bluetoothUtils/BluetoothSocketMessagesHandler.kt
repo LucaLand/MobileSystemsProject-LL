@@ -8,13 +8,14 @@ import android.os.Message
 import it.unibo.mobilesystems.debugUtils.Debugger
 
 
-
+//TODO(Rename in MessageHandler)
 class BluetoothSocketMessagesHandler: Handler(Looper.myLooper()!!) {
 
     var callbackMap: MutableMap<Int, (string: String?) -> Unit> = mutableMapOf()
 
-    fun setCallbackForMessage(messageType: Int, callback: (string: String?) -> Unit){
+    fun setCallbackForMessage(messageType: Int, callback: (string: String?) -> Unit): BluetoothSocketMessagesHandler{
         callbackMap[messageType] = callback
+        return this
     }
 
 

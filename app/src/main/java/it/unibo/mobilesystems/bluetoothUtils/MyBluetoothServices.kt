@@ -189,7 +189,7 @@ object MyBluetoothService{
 
             // Share the sent message with the UI activity.
             val writtenMsg = handler.obtainMessage(
-                MESSAGE_WRITE, -1, -1, mmBuffer.decodeToString())
+                MESSAGE_WRITE, -1, -1, bytes.decodeToString()) //bytes.decodeToString()
             writtenMsg.sendToTarget()
         }
 
