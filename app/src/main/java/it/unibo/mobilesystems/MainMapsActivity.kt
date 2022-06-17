@@ -13,7 +13,6 @@ import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.ProgressBar
 import android.widget.Toast
@@ -32,9 +31,7 @@ import it.unibo.mobilesystems.bluetoothUtils.*
 import it.unibo.mobilesystems.databinding.ActivityMapsBinding
 import it.unibo.mobilesystems.debugUtils.Debugger
 import it.unibo.mobilesystems.fileUtils.ConfigManager
-import it.unibo.mobilesystems.joystickView.JoystickView1
 import it.unibo.mobilesystems.permissionManager.PermissionType
-import it.unibo.mobilesystems.permissionManager.PermissionsManager
 import it.unibo.mobilesystems.permissionManager.PermissionsManager.permissionCheck
 import it.unibo.mobilesystems.permissionManager.PermissionsManager.permissionsCheck
 import it.unibo.mobilesystems.permissionManager.PermissionsManager.permissionsRequest
@@ -300,10 +297,10 @@ class MainMapsActivity : AppCompatActivity(), LocationListener {
 
     private fun setProvider(){
         //Set Provider
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            locationProvider = LocationManager.FUSED_PROVIDER
+        locationProvider = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            LocationManager.FUSED_PROVIDER
         }else{
-            locationProvider = LocationManager.NETWORK_PROVIDER //locationManager.getBestProvider()
+            LocationManager.NETWORK_PROVIDER //locationManager.getBestProvider()
         }
     }
 
@@ -326,10 +323,6 @@ class MainMapsActivity : AppCompatActivity(), LocationListener {
     }
 
     fun bluetoothButton (view: View){
-        lateinit var activityClass : Class<out AppCompatActivity>
-        //activityClass = BluetoothTest::class.java
-        //val intent = Intent(this, activityClass)
-        //startActivity(intent)
         MyBluetoothService.sendMsg("Ciao")
     }
 
