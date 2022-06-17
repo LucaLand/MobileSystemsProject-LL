@@ -7,6 +7,20 @@
     android:layout_height="match_parent"
     android:background="#FFFFFF">
 
+
+    <it.unibo.mobilesystems.joystickView.JoystickView
+        android:id="@+id/joystickView"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:JV_backgroundColor="#009688"
+        app:JV_backgroundSizeRatio="30%"
+        app:JV_borderColor="#00796B"
+        app:JV_buttonColor="#FF6E40"
+        app:JV_buttonSizeRatio="10%"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <Button
         android:id="@+id/buttonLeft"
         android:layout_width="wrap_content"
@@ -15,6 +29,7 @@
         android:layout_marginTop="100dp"
         android:onClick="onMoveButtonClick"
         android:text="Left"
+        android:visibility="gone"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -25,6 +40,7 @@
         android:layout_marginTop="50dp"
         android:onClick="onMoveButtonClick"
         android:text="Up"
+        android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -37,6 +53,7 @@
         android:layout_marginEnd="60dp"
         android:onClick="onMoveButtonClick"
         android:text="Right"
+        android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -47,6 +64,7 @@
         android:layout_marginTop="140dp"
         android:onClick="onMoveButtonClick"
         android:text="Down"
+        android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.501"
         app:layout_constraintStart_toStartOf="parent"
@@ -70,6 +88,7 @@
         android:layout_marginTop="82dp"
         android:onClick="onMoveButtonClick"
         android:text="H"
+        android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/imageView2" />
