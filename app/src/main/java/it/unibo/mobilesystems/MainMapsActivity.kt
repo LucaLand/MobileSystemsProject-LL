@@ -13,12 +13,12 @@ import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Build
 import android.os.Bundle
-import android.os.Handler
 import android.util.Log
 import android.view.View
 import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.activity.result.ActivityResult
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -27,13 +27,14 @@ import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
 import com.google.android.gms.tasks.Task
 import com.google.android.material.bottomsheet.BottomSheetBehavior
-import com.google.android.material.bottomsheet.BottomSheetBehavior.BottomSheetCallback
 import it.unibo.kactor.MsgUtil
 import it.unibo.mobilesystems.bluetoothUtils.*
 import it.unibo.mobilesystems.databinding.ActivityMapsBinding
 import it.unibo.mobilesystems.debugUtils.Debugger
 import it.unibo.mobilesystems.fileUtils.ConfigManager
+import it.unibo.mobilesystems.joystickView.JoystickView1
 import it.unibo.mobilesystems.permissionManager.PermissionType
+import it.unibo.mobilesystems.permissionManager.PermissionsManager
 import it.unibo.mobilesystems.permissionManager.PermissionsManager.permissionCheck
 import it.unibo.mobilesystems.permissionManager.PermissionsManager.permissionsCheck
 import it.unibo.mobilesystems.permissionManager.PermissionsManager.permissionsRequest
@@ -70,7 +71,8 @@ class MainMapsActivity : AppCompatActivity(), LocationListener {
     //TODO(LeScan non parte)
 
     private val bluetoothMessageHandler: BluetoothSocketMessagesHandler = BluetoothSocketMessagesHandler()
-    private lateinit var myBluetoothManager : MyBluetoothManager
+    private var myBluetoothManager : MyBluetoothManager? = null
+    private var bluetoothActivityLauncher : ActivityResultLauncher<Intent>? = null
 
     private lateinit var binding: ActivityMapsBinding
 
@@ -92,13 +94,24 @@ class MainMapsActivity : AppCompatActivity(), LocationListener {
         //UI COMPONENTS
         rssiProgressBarr = findViewById(R.id.rssi_progress_bar)
 
+        //PERMISSION
+        internetPermissions()
+        if(locationPermission()){
+            enableLocationOnDevice()
+        }
+
+        setProvider()
+
+        Configuration.getInstance().load(applicationContext, androidx.preference.PreferenceManager.getDefaultSharedPreferences(applicationContext))
+
         //CONFIG
         ConfigManager.init(this)
-        myBluetoothManager = MyBluetoothManager(this)
+
         deviceName = ConfigManager.getConfigString(ROBOT_DEVICE_NAME)
+        MyBluetoothService.setServiceHandler(bluetoothMessageHandler)
 
         //Handlers For LeScanner Rssi Messages
-        myBluetoothManager.rssiHandler = BluetoothSocketMessagesHandler().setCallbackForMessage(MESSAGE_RSSI) {string ->
+        myBluetoothManager?.rssiHandler = BluetoothSocketMessagesHandler().setCallbackForMessage(MESSAGE_RSSI) {string ->
             updateRSSIValue(string?.toInt())
             Debugger.printDebug("RSSI Handler", "Recived RSSI Message - Updated RSSI Progress Bar")
         }
@@ -126,7 +139,7 @@ class MainMapsActivity : AppCompatActivity(), LocationListener {
             Debugger.printDebug("Maps-Activity", "Received Error Message: Socket Closed!")
             sendBroadcast(Intent().setAction(SOCKET_CLOSED_ACTION))
             MyBluetoothService.restartConnection() }
-        MyBluetoothService.setServiceHandler(bluetoothMessageHandler)
+
 
         //RECEIVER FOR ROBOT FOUND to get RSSI
         this.registerReceiver(ActionHandler(BluetoothDevice.ACTION_ACL_CONNECTED){context, intent ->
@@ -143,18 +156,19 @@ class MainMapsActivity : AppCompatActivity(), LocationListener {
         }.createBroadcastReceiver(), IntentFilter(BluetoothDevice.ACTION_ACL_CONNECTED))
 
 
-        //PERMISSION
-        internetPermissions()
-        locationPermission()
-        setProvider()
-        enableLocationOnDevice()
-        Configuration.getInstance().load(applicationContext, androidx.preference.PreferenceManager.getDefaultSharedPreferences(applicationContext))
 
         bottomPadInit()
 
         map = startMap()
 
-        startBluetoothActivity()
+        //Check Bluetooth Permission and start BluetoothActivity
+        if(bluetoothPermission()){
+            //init BluetoothManager
+            myBluetoothManager = MyBluetoothManager(this)
+            startBluetoothActivity(initRegisterForBluetoothActivityResult())
+        }else{
+            bluetoothActivityLauncher = initRegisterForBluetoothActivityResult()
+        }
     }
 
     private fun uuidInit() : UUID {
@@ -165,8 +179,7 @@ class MainMapsActivity : AppCompatActivity(), LocationListener {
             UUID.fromString(uuidString)
     }
 
-    //TODO(Search Device of LeScan by MacAddress - becouse we just have the device connected, returning in maps Activity)
-    private fun startBluetoothActivity() {
+    private fun initRegisterForBluetoothActivityResult(): ActivityResultLauncher<Intent> {
         val startBluetoothActivityForResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
             if (result.resultCode == Activity.RESULT_OK) {
                 Debugger.printDebug( "Bluetooth Activity Returned")
@@ -174,18 +187,23 @@ class MainMapsActivity : AppCompatActivity(), LocationListener {
                 val resultMap : MutableMap<String,String?> = DeviceInfoIntentResult.getDeviceResult(intent)
                 //deviceName = resultMap[RESULT_DEVICE_NAME_CODE]
                 //HANDLE RESULT FROM THE BLUETOOTH ACTIVITY
-                myBluetoothManager.bluetoothLeScanner = myBluetoothManager.bluetoothAdapter.bluetoothLeScanner
+                myBluetoothManager!!.bluetoothLeScanner = myBluetoothManager!!.bluetoothAdapter.bluetoothLeScanner
                 //Debugger.printDebug("MAPS Activity", "DeviceName: $deviceName")
                 if (deviceName != null) {
                     Debugger.printDebug("MAPS Activity", "Starting LeScan")
-                    myBluetoothManager.leScan(deviceName!!)
+                    myBluetoothManager?.leScan(deviceName!!)
                 }else{
 
                 }
             }
         }
+        return startBluetoothActivityForResult
+    }
+
+    //TODO(Search Device of LeScan by MacAddress - becouse we just have the device connected, returning in maps Activity)
+    private fun startBluetoothActivity(activityResoultLauncher :ActivityResultLauncher<Intent>) {
         val intent = Intent(this, BluetoothConnectionActivity::class.java)
-        startBluetoothActivityForResult.launch(intent)
+        bluetoothActivityLauncher?.launch(intent)
     }
 
 
@@ -218,24 +236,7 @@ class MainMapsActivity : AppCompatActivity(), LocationListener {
         val sheetBehavior = BottomSheetBehavior.from(bottomPad)
 
         sheetBehavior.isHideable = false
-        sheetBehavior.setBottomSheetCallback(
-            object : BottomSheetCallback() {
-                override fun onStateChanged(bottomSheet: View, newState: Int) {
-                    when (newState) {
-                        BottomSheetBehavior.STATE_HIDDEN -> {}
-                        BottomSheetBehavior.STATE_EXPANDED -> {
-                            //bottomSheetArrowImageView.setImageResource(R.drawable.icn_chevron_down)
-                        }
-                        BottomSheetBehavior.STATE_COLLAPSED -> {
-                            //bottomSheetArrowImageView.setImageResource(R.drawable.icn_chevron_up)
-                        }
-                        BottomSheetBehavior.STATE_DRAGGING -> {}
-                        BottomSheetBehavior.STATE_SETTLING -> {}//bottomSheetArrowImageView.setImageResource( R.drawable.icn_chevron_up )
-                    }
-                }
 
-                override fun onSlide(bottomSheet: View, slideOffset: Float) {}
-            })
     }
 
 
@@ -289,8 +290,12 @@ class MainMapsActivity : AppCompatActivity(), LocationListener {
             permissionsRequest(this, permissions, 4)
     }
 
-    private fun locationPermission(){
-        permissionCheck(PermissionType.Location, this)
+    private fun locationPermission(): Boolean{
+        return permissionCheck(PermissionType.Location, this)
+    }
+
+    private fun bluetoothPermission(): Boolean {
+        return permissionCheck(PermissionType.Bluetooth, this)
     }
 
     private fun setProvider(){
@@ -328,15 +333,22 @@ class MainMapsActivity : AppCompatActivity(), LocationListener {
         MyBluetoothService.sendMsg("Ciao")
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        when (requestCode) {
-            LocationRequest.PRIORITY_HIGH_ACCURACY -> {
-                if (resultCode == Activity.RESULT_OK) {
-                    Debugger.printDebug("Status: ","On")
-                } else {
-                    Log.e("Status: ","Off")
-                }
+
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        when(requestCode){
+            PermissionType.Bluetooth.ordinal -> {
+                myBluetoothManager = MyBluetoothManager(this)
+                startBluetoothActivity(bluetoothActivityLauncher!!)
+            }
+
+            PermissionType.Location.ordinal -> {
+
             }
         }
     }
