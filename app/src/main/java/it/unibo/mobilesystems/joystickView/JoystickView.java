@@ -1,5 +1,16 @@
 package it.unibo.mobilesystems.joystickView;
 
+/**
+ *
+ *
+ *
+ * !!CLASS FILE FROM THE [https://github.com/controlwear/virtual-joystick-android] PUBLIC GIT REPO !!
+ *
+ *
+ *
+ * **/
+
+//https://github.com/controlwear/virtual-joystick-android
 
 import android.content.Context;
 import android.content.res.TypedArray;
