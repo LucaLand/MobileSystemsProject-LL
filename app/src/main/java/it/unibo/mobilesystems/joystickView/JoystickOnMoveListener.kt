@@ -1,10 +1,11 @@
 package it.unibo.mobilesystems.joystickView
 
-import it.unibo.kactor.MsgUtil
 import it.unibo.mobilesystems.bluetoothUtils.MyBluetoothService
 import it.unibo.mobilesystems.debugUtils.Debugger
+import it.unibo.mobilesystems.msgUtils.RobotMsgUtils
+import unibo.actor22comm.utils.CommUtils
 
-    enum class RobotMove{
+enum class RobotMove{
         FORWARD,
         BACKWARD,
         RIGHT,
@@ -25,7 +26,7 @@ class JoystickOnMoveListener : JoystickView.OnMoveListener {
             nextMove = angleToMove(angle)
         }
         if (moveState != nextMove) {
-            sendMsg(nextMove)
+            MyBluetoothService.sendMsg(RobotMsgUtils.cmdMsgFactory(nextMove))
             moveState = nextMove
         }
     }
@@ -40,17 +41,7 @@ class JoystickOnMoveListener : JoystickView.OnMoveListener {
         }
     }
 
-    private fun sendMsg(move: RobotMove){
-        Debugger.printDebug("Joystick SendMsg", "Sending Move: $move")
-        var msg = when(move){
-            RobotMove.FORWARD -> {MsgUtil.buildDispatch("BeautifulViewActivity","cmd", "cmd(w)", "basicrobot").toString()}
-            RobotMove.RIGHT -> {MsgUtil.buildDispatch("BeautifulViewActivity","cmd", "cmd(r)", "basicrobot").toString()}
-            RobotMove.LEFT -> {MsgUtil.buildDispatch("BeautifulViewActivity","cmd", "cmd(l)", "basicrobot").toString()}
-            RobotMove.BACKWARD -> {MsgUtil.buildDispatch("BeautifulViewActivity","cmd", "cmd(s)", "basicrobot").toString()}
-            RobotMove.HALT -> {MsgUtil.buildDispatch("BeautifulViewActivity","cmd", "cmd(h)", "basicrobot").toString()}
-        }
-        MyBluetoothService.sendMsg(msg)
-    }
+
 
 
 }

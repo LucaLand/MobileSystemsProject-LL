@@ -14,9 +14,9 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.view.isGone
-import androidx.core.view.isInvisible
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
+import it.unibo.mobilesystems.bluetoothUtils.DEVICE_RESULT_CODE
 import it.unibo.mobilesystems.bluetoothUtils.DeviceInfoIntentResult
 import it.unibo.mobilesystems.bluetoothUtils.MyBluetoothManager
 import it.unibo.mobilesystems.bluetoothUtils.MyBluetoothService
@@ -33,9 +33,12 @@ class BluetoothConnectionActivity : AppCompatActivity() {
     lateinit var myBluetoothManager: MyBluetoothManager
     var resultIntent = Intent()
 
+    var device : BluetoothDevice? = null
     var deviceName : String? = null
     var deviceAddress : String? = null
     var uuid : UUID? = null
+
+
 
     var researchDevice = true
 
@@ -60,12 +63,10 @@ class BluetoothConnectionActivity : AppCompatActivity() {
         registerReceiver(
             ActionHandler(ROBOT_FOUND_ACTION
             ) { context, intent ->
-                if (intent != null) {
-                    resultIntent = intent
-                }
+                device = intent?.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
                 myBluetoothManager.bluetoothAdapter.cancelDiscovery()
                 researchDevice = false
-                findViewById<LinearLayout>(R.id.deviceBox).addView(createDeviceTextView("DEVICE: ${deviceName}"))
+                findViewById<LinearLayout>(R.id.deviceBox).addView(createDeviceTextView("DEVICE: $deviceName"))
                 MyBluetoothService.setDevice(intent?.getStringExtra(RESULT_DEVICE_ADDRESS_CODE)!!, UUID.fromString(intent.getStringExtra(RESULT_DEVICE_UUID_CODE)))
                 MyBluetoothService.startSocketConnection()
             }.createBroadcastReceiver(), IntentFilter(ROBOT_FOUND_ACTION)
@@ -98,7 +99,6 @@ class BluetoothConnectionActivity : AppCompatActivity() {
         myBluetoothManager.bluetoothEnable()?.let { requestBluettothEnable(it) }
         MyBluetoothService.setServiceBluetoothAdapter(myBluetoothManager.bluetoothAdapter)
 
-        var device : BluetoothDevice? = null
         if(uuid != null) {
             if (deviceName != null) {
                 Debugger.printDebug("BLUETOOTH ACTIVITY", "Trying connection with DeviceName")
@@ -109,7 +109,7 @@ class BluetoothConnectionActivity : AppCompatActivity() {
             if(device != null){
                 Debugger.printDebug("BLUETOOTH ACTIVITY", "Device is Already Paired!")
                 findViewById<LinearLayout>(R.id.deviceBox).addView(createDeviceTextView("DEVICE: ${deviceName}"))
-                MyBluetoothService.setDevice(device.address, uuid!!)
+                MyBluetoothService.setDevice(device!!.address, uuid!!)
                 MyBluetoothService.startSocketConnection()
             }else{
                 Debugger.printDebug("BLUETOOTH ACTIVITY", "Device not Paired!")
@@ -138,8 +138,12 @@ class BluetoothConnectionActivity : AppCompatActivity() {
         progressBar.isVisible = true
     }
 
-    private fun setActivityResult(deviceName: String, macAddress: String, uuid: String){
-        resultIntent = DeviceInfoIntentResult.createIntentResult(deviceName, macAddress, uuid)
+    private fun setActivityResult(){
+        if(device != null) {
+            resultIntent =
+                DeviceInfoIntentResult.createIntentResult(device?.name!!, device?.address!!, uuid.toString())
+            resultIntent.putExtra(DEVICE_RESULT_CODE, device)
+        }
     }
 
 
@@ -173,6 +177,7 @@ class BluetoothConnectionActivity : AppCompatActivity() {
      * **/
     private fun connectionPhaseDone(){
         //MyBluetoothService.sendMsg("START- Are you ready gitRobot?")
+        setActivityResult()
         setResult(RESULT_OK, resultIntent)
         this.finish()
     }
