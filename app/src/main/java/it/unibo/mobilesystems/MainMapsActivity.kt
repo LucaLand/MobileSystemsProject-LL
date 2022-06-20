@@ -14,6 +14,8 @@ import android.location.LocationManager
 import android.os.Build
 import android.os.Bundle
 import android.view.View
+import android.view.animation.Animation
+import android.view.animation.AnimationUtils
 import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.activity.result.ActivityResult
@@ -21,6 +23,8 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.view.isGone
+import androidx.core.view.isVisible
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
@@ -31,6 +35,8 @@ import it.unibo.mobilesystems.bluetoothUtils.*
 import it.unibo.mobilesystems.databinding.ActivityMapsBinding
 import it.unibo.mobilesystems.debugUtils.Debugger
 import it.unibo.mobilesystems.fileUtils.ConfigManager
+import it.unibo.mobilesystems.joystickView.JoystickOnMoveListener
+import it.unibo.mobilesystems.joystickView.JoystickView
 import it.unibo.mobilesystems.permissionManager.PermissionType
 import it.unibo.mobilesystems.permissionManager.PermissionsManager.permissionCheck
 import it.unibo.mobilesystems.permissionManager.PermissionsManager.permissionsCheck
@@ -78,7 +84,9 @@ class MainMapsActivity : AppCompatActivity(), LocationListener {
     private lateinit var mLocationOverlay : MyLocationNewOverlay
     private lateinit var locationProvider: String
 
+    //UI COMPONENTS
     private lateinit var rssiProgressBarr : ProgressBar
+    private lateinit var joystickView: JoystickView
 
     private var deviceName: String? = null
 
@@ -91,6 +99,9 @@ class MainMapsActivity : AppCompatActivity(), LocationListener {
 
         //UI COMPONENTS
         rssiProgressBarr = findViewById(R.id.rssi_progress_bar)
+        joystickView = findViewById(R.id.joystickView)
+
+        joystickView.setOnMoveListener(JoystickOnMoveListener())
 
         //PERMISSION
         internetPermissions()
@@ -163,9 +174,6 @@ class MainMapsActivity : AppCompatActivity(), LocationListener {
             }
         }.createBroadcastReceiver(), IntentFilter(BluetoothDevice.ACTION_ACL_CONNECTED))
 
-
-
-        bottomPadInit()
 
         map = startMap()
 
@@ -241,12 +249,9 @@ class MainMapsActivity : AppCompatActivity(), LocationListener {
     }
 
     private fun bottomPadInit(){
-
         val bottomPad : ConstraintLayout = findViewById(R.id.bottom_sheet_layout)
         val sheetBehavior = BottomSheetBehavior.from(bottomPad)
-
         sheetBehavior.isHideable = false
-
     }
 
 
@@ -336,10 +341,17 @@ class MainMapsActivity : AppCompatActivity(), LocationListener {
     }
 
     fun bluetoothButton (view: View){
-        MyBluetoothService.sendMsg("Ciao")
+        //MyBluetoothService.sendMsg("Ciao")
+        if(joystickView.isGone){
+            Debugger.printDebug("JoystickView Enabled!")
+            joystickView.isGone = false
+            joystickView.startAnimation(AnimationUtils.makeInAnimation(applicationContext, false))
+        }else{
+            Debugger.printDebug("JoystickView Disabled!")
+            joystickView.startAnimation(AnimationUtils.makeOutAnimation(applicationContext, true))
+            joystickView.isGone = true
+        }
     }
-
-
 
     override fun onRequestPermissionsResult(
         requestCode: Int,
