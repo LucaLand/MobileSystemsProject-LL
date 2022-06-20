@@ -67,6 +67,7 @@ class MainMapsActivity : AppCompatActivity(), LocationListener {
 
     //TODO(LeScan non parte)
 
+    private var bluetoothReady: Boolean = false
     private val bluetoothMessageHandler: BluetoothSocketMessagesHandler = BluetoothSocketMessagesHandler()
     private var myBluetoothManager : MyBluetoothManager? = null
     private var bluetoothActivityLauncher : ActivityResultLauncher<Intent>? = null
@@ -131,11 +132,20 @@ class MainMapsActivity : AppCompatActivity(), LocationListener {
         bluetoothMessageHandler.setCallbackForMessage(MESSAGE_CONNECTION_TRUE) {
             Debugger.printDebug("Maps-Activity", "RECEIVED MESSAGE_CONNECTION_TRUE - Sent Socket Opened Action")
             sendBroadcast(Intent().setAction(SOCKET_OPENED_ACTION))
+            bluetoothReady = true
+            MyBluetoothService.enabled = true
+            updateRSSIValue(80)
         }
         bluetoothMessageHandler.setCallbackForMessage(MESSAGE_SOCKET_ERROR) {
             Debugger.printDebug("Maps-Activity", "Received Error Message: Socket Closed!")
             sendBroadcast(Intent().setAction(SOCKET_CLOSED_ACTION))
-            MyBluetoothService.restartConnection() }
+            bluetoothReady = false
+            MyBluetoothService.enabled = false
+            Toast.makeText(this, "DISCONNECTED!", 6 ).show()
+            updateRSSIValue(0)
+
+            MyBluetoothService.restartConnection()
+        }
 
 
         //RECEIVER FOR ROBOT FOUND to get RSSI
@@ -180,6 +190,8 @@ class MainMapsActivity : AppCompatActivity(), LocationListener {
         val startBluetoothActivityForResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
             if (result.resultCode == Activity.RESULT_OK) {
                 Debugger.printDebug( "Bluetooth Activity Returned")
+                bluetoothReady = true
+                MyBluetoothService.enabled = true
                 // Handle the Intent
                 val resultMap : MutableMap<String,String?> = DeviceInfoIntentResult.getDeviceResult(intent)
                 //deviceName = resultMap[RESULT_DEVICE_NAME_CODE]
@@ -365,7 +377,8 @@ class MainMapsActivity : AppCompatActivity(), LocationListener {
     }
 
     private fun sendMessage(s : String){
-        MyBluetoothService.sendMsg(s)
+        if(bluetoothReady)
+            MyBluetoothService.sendMsg(s)
     }
 
     private fun updateRSSIValue(rssiValue: Int?){

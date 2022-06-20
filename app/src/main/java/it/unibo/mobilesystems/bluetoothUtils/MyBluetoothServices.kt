@@ -31,7 +31,7 @@ private const val CLASS_NAME = "SERVICE-CLASS"
 object MyBluetoothService{
     private const val maximumConnectionRetry = 30
     lateinit var connectionThread: BluetoothSocketThread
-    var enabled = true
+    var enabled = false
     var numberOfConnectionTried: Int = 0
 
     lateinit var handler: Handler
@@ -83,7 +83,8 @@ object MyBluetoothService{
     }
 
     fun sendMsg(s : String){
-        connectionThread.write(s.toByteArray())
+        if(enabled)
+            connectionThread.write(s.toByteArray())
     }
 
 
@@ -173,7 +174,8 @@ object MyBluetoothService{
         fun write(bytes: ByteArray) {
             try {
                 mmOutStream.write(bytes)
-                Debugger.printDebug("Message Sent Correctly")
+                Debugger.printDebug("Sent Message: [${bytes.decodeToString()}]")
+                //Debugger.printDebug("Message Sent Correctly")
             } catch (e: IOException) {
                 Log.e(TAG, "Error occurred when sending data", e)
                 Debugger.printDebug("Message Send Error")
