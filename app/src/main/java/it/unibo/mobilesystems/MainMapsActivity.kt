@@ -17,10 +17,7 @@ import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.view.animation.AnimationUtils
-import android.widget.Button
-import android.widget.ProgressBar
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -68,6 +65,10 @@ const val ROBOT_FOUND_ACTION = "ROBOT_FOUND_ACTION"
 const val SOCKET_OPENED_ACTION = "SOCKET_OPENED_ACTION"
 const val SOCKET_CLOSED_ACTION = "SOCKET_CLOSED_ACTION"
 
+
+
+//TODO(Use the Gatt server disconnection to notice when the device disconnect - Send the socket error message or encapsulate all in a function)
+//TODO(Use the Osmdroid RoadMap to: -Search a point, -Get all the instruction, -Send command to the Robot to reach the destination)
 
 
 class MainMapsActivity : AppCompatActivity(), LocationListener {
