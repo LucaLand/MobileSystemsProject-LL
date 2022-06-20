@@ -6,7 +6,6 @@ import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import it.unibo.mobilesystems.debugUtils.Debugger
-import it.unibo.mobilesystems.debugUtils.DebuggerContextNameAnnotation
 
 
 // https://stackoverflow.com/questions/35484767/activitycompat-requestpermissions-not-showing-dialog-box
@@ -27,7 +26,6 @@ object PermissionsManager {
         return false
     }
 
-    //@DebuggerContextNameAnnotation("Permission Check")
     fun permissionsCheck(context: AppCompatActivity, permissions: Array<out String>) : Boolean{
         permissions.forEach { permission ->
             if(ActivityCompat.checkSelfPermission(context, permission) != PackageManager.PERMISSION_GRANTED) {
@@ -45,7 +43,7 @@ object PermissionsManager {
         ActivityCompat.requestPermissions(context, permissions, intCode)
     }
 
-    /** THE FUNCTION OnPermissionRequestResult IS OVERRIDED IN EVERY
+    /** TODO THE FUNCTION OnPermissionRequestResult IS OVERRIDED IN EVERY
      * ACTIVITY THAT NEED IT (CALLING THIS FUNC)                        */
     fun onPermissionsRequestResult(){
 
@@ -83,7 +81,7 @@ object PermissionsManager {
                 Manifest.permission.BLUETOOTH_SCAN,
                 Manifest.permission.BLUETOOTH_CONNECT
             )
-            if (ActivityCompat.checkSelfPermission(
+            return if (ActivityCompat.checkSelfPermission(
                     context,
                     Manifest.permission.BLUETOOTH_CONNECT
                 ) != PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(
@@ -93,10 +91,10 @@ object PermissionsManager {
             ) {
                 Debugger.printDebug("Bluetooth Permission: NOT GRANTED CORRECTLY [BLUETOOTH_CONNECT, BLUETOOTH_SCAN]")
                 permissionsRequest(context, permissions, PermissionType.Bluetooth.ordinal)
-                return false
+                false
             } else {
                 Debugger.printDebug("Bluetooth Permission: GRANTED CORRECTLY [BLUETOOTH_CONNECT, BLUETOOTH_SCAN]")
-                return true
+                true
             }
         }
         else {
@@ -114,7 +112,6 @@ object PermissionsManager {
             ) {
                 Debugger.printDebug("Bluetooth Permission NOT GRANTED CORRECTLY [BLUETOOTH, BLUETOOTH_ADMIN]")
                 permissionsRequest(context, permissions, PermissionType.Bluetooth.ordinal)
-                //permissionRequest(PermissionType.Bluetooth, context)
                 return false
             } else {
                 Debugger.printDebug("Bluetooth Permission GRANTED CORRECTLY [BLUETOOTH_CONNECT, BLUETOOTH_ADMIN]")
