@@ -7,6 +7,8 @@ import it.unibo.mobilesystems.RESULT_DEVICE_NAME_CODE
 import it.unibo.mobilesystems.RESULT_DEVICE_UUID_CODE
 import java.util.*
 
+
+const val DEVICE_RESULT_CODE = "DEVICE"
 object DeviceInfoIntentResult {
 
 

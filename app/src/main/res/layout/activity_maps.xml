@@ -45,7 +45,8 @@
             android:layout_marginStart="30dp"
             android:layout_marginBottom="40dp"
             android:clickable="true"
-            android:onClick="bluetoothButton"
+            android:onClick="joystickEnableButton"
+            android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="@+id/mapview"
             app:layout_constraintStart_toStartOf="parent"
             app:srcCompat="@android:drawable/stat_sys_data_bluetooth" />
@@ -77,8 +78,7 @@
             app:JV_buttonSizeRatio="25%"
             app:JV_enabled="true"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            tools:visibility="invisible" />
+            app:layout_constraintEnd_toEndOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

@@ -68,7 +68,7 @@ object MyBluetoothService{
         if(numberOfConnectionTried <= maximumConnectionRetry) {
             if (connectionThread.isAlive) {
                 if(connectionThread.socketCreated)
-                    connectionThread.cancel()
+                    //connectionThread.cancel()
                 connectionThread.interrupt()
             }
             connectionThread = BluetoothSocketThread(bluetoothAdapter, mac, uuid)
@@ -102,6 +102,7 @@ object MyBluetoothService{
         lateinit var mmBuffer: ByteArray
 
         var socketCreated = false
+        var writing: Boolean = false
 
         private fun initSocket(){
             bluetoothSocket = createSocket(bluetoothAdapter, mac, uuid)
@@ -118,7 +119,7 @@ object MyBluetoothService{
 
         @SuppressLint("MissingPermission")
         private fun connectToSocket(socket: BluetoothSocket): Boolean{
-            socketCreated = try{
+            return try{
                 socket.connect()
                 Debugger.printDebug("socket.connect()","CONNECTED TO SOCKET")
                 val sendMessage = handler.obtainMessage(MESSAGE_CONNECTION_TRUE)
@@ -130,7 +131,6 @@ object MyBluetoothService{
                 handler.sendMessage(writeErrorMsg)
                 false
             }
-            return socketCreated
         }
 
         private fun waitSomeTime(mills: Long){
@@ -141,23 +141,22 @@ object MyBluetoothService{
         }
 
         override fun run() {
-            connectionThread.waitSomeTime(5000) //3 second first time starts
+            connectionThread.waitSomeTime(6000) //6 second first time starts
             initSocket()
-            var res = connectToSocket(bluetoothSocket)
-            Debugger.printDebug("Initialized Socket: Now Listening...")
+            socketCreated = connectToSocket(bluetoothSocket)
             var numBytes: Int // bytes returned from read()
 
             // Keep listening to the InputStream until an exception occurs.
-            while (res) {
+            while (socketCreated) {
                 // Read from the InputStream.
                 numBytes = try {
+                    Debugger.printDebug("Initialized Socket: Now Listening...")
                     mmInStream.read(mmBuffer)
                 } catch (e: IOException) {
                     //Log.d(TAG, "Input stream was disconnected", e)
                     val writeErrorMsg = handler.obtainMessage(MESSAGE_SOCKET_ERROR)
                     handler.sendMessage(writeErrorMsg)
                     Debugger.printDebug("Input stream was disconnected IOException in Thread.run() - Thread Closed")
-                    socketCreated = false
                     break
                 }
 
@@ -168,31 +167,38 @@ object MyBluetoothService{
                 readMsg.sendToTarget()
 
             }
+            cancel()
+            Debugger.printDebug("THREAD", "Thread Ended!")
         }
 
         // Call this from the main activity to send data to the remote device.
         fun write(bytes: ByteArray) {
-            try {
-                mmOutStream.write(bytes)
-                Debugger.printDebug("Sent Message: [${bytes.decodeToString()}]")
-                //Debugger.printDebug("Message Sent Correctly")
-            } catch (e: IOException) {
-                Log.e(TAG, "Error occurred when sending data", e)
-                Debugger.printDebug("Message Send Error")
-                // Send a failure message back to the activity.
-                val writeErrorMsg = handler.obtainMessage(MESSAGE_TOAST)
-                val bundle = Bundle().apply {
-                    putString("MSG", "Couldn't send data to the other device")
+            if(!writing) {
+                writing = true
+                try {
+                    mmOutStream.write(bytes)
+                    Debugger.printDebug("Sent Message: [${bytes.decodeToString()}]")
+                    //Debugger.printDebug("Message Sent Correctly")
+                } catch (e: IOException) {
+                    Log.e(TAG, "Error occurred when sending data", e)
+                    Debugger.printDebug("Message Send Error")
+                    // Send a failure message back to the activity.
+                    val writeErrorMsg = handler.obtainMessage(MESSAGE_TOAST)
+                    val bundle = Bundle().apply {
+                        putString("MSG", "Couldn't send data to the other device")
+                    }
+                    writeErrorMsg.data = bundle
+                    handler.sendMessage(writeErrorMsg)
+                    writing = false
+                    return
                 }
-                writeErrorMsg.data = bundle
-                handler.sendMessage(writeErrorMsg)
-                return
+                // Share the sent message with the UI activity.
+                val writtenMsg = handler.obtainMessage(
+                    MESSAGE_WRITE, -1, -1, bytes.decodeToString()
+                ) //bytes.decodeToString()
+                writtenMsg.sendToTarget()
+                writing = false
             }
-
-            // Share the sent message with the UI activity.
-            val writtenMsg = handler.obtainMessage(
-                MESSAGE_WRITE, -1, -1, bytes.decodeToString()) //bytes.decodeToString()
-            writtenMsg.sendToTarget()
         }
 
         // Call this method from the main activity to shut down the connection.
