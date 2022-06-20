@@ -136,6 +136,7 @@ class MainMapsActivity : AppCompatActivity(), LocationListener {
             MyBluetoothService.enabled = true
             updateRSSIValue(80)
         }
+        //SOCKET CLOSED ACTION
         bluetoothMessageHandler.setCallbackForMessage(MESSAGE_SOCKET_ERROR) {
             Debugger.printDebug("Maps-Activity", "Received Error Message: Socket Closed!")
             sendBroadcast(Intent().setAction(SOCKET_CLOSED_ACTION))
@@ -210,9 +211,9 @@ class MainMapsActivity : AppCompatActivity(), LocationListener {
     }
 
     //TODO(Search Device of LeScan by MacAddress - becouse we just have the device connected, returning in maps Activity)
-    private fun startBluetoothActivity(activityResoultLauncher :ActivityResultLauncher<Intent>) {
+    private fun startBluetoothActivity(activityResultLauncher :ActivityResultLauncher<Intent>) {
         val intent = Intent(this, BluetoothConnectionActivity::class.java)
-        bluetoothActivityLauncher?.launch(intent)
+        activityResultLauncher?.launch(intent)
     }
 
 
