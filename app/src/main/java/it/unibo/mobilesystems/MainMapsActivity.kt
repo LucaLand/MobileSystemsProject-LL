@@ -69,9 +69,14 @@ const val SOCKET_CLOSED_ACTION = "SOCKET_CLOSED_ACTION"
 
 //TODO(Use the Gatt server disconnection to notice when the device disconnect - Send the socket error message or encapsulate all in a function)
 //TODO(Use the Osmdroid RoadMap to: -Search a point, -Get all the instruction, -Send command to the Robot to reach the destination)
+//TODO(Doubleclick on Joypad for "Impennata!")
+
+open class MainMapsActivity : AppCompatActivity(), LocationListener {
 
 
-class MainMapsActivity : AppCompatActivity(), LocationListener {
+    protected lateinit var mLocationOverlay : MyLocationNewOverlay
+    protected lateinit var map : MapView
+    protected lateinit var locationProvider: String
 
 
     private val bluetoothMessageHandler: BluetoothSocketMessagesHandler = BluetoothSocketMessagesHandler()
@@ -81,10 +86,6 @@ class MainMapsActivity : AppCompatActivity(), LocationListener {
     private var device : BluetoothDevice? = null
 
     private lateinit var binding: ActivityMapsBinding
-
-    private lateinit var map : MapView
-    private lateinit var mLocationOverlay : MyLocationNewOverlay
-    private lateinit var locationProvider: String
 
     //UI COMPONENTS
     private lateinit var rssiProgressBarr : ProgressBar
@@ -168,13 +169,15 @@ class MainMapsActivity : AppCompatActivity(), LocationListener {
             MyBluetoothService.restartConnection()
         }
 
+
+        //Map initialization
         map = startMap()
 
         //Check Bluetooth Permission and start BluetoothActivity
         if(bluetoothPermission()){
             //init BluetoothManager
             myBluetoothManager = MyBluetoothManager(this)
-            startBluetoothActivity(initRegisterForBluetoothActivityResult())
+            // TEST DEACTIVATED ------- startBluetoothActivity(initRegisterForBluetoothActivityResult())
         }else{
             bluetoothActivityLauncher = initRegisterForBluetoothActivityResult()
         }

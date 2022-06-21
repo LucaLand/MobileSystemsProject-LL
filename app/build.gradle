@@ -68,8 +68,16 @@ dependencies {
     implementation group: 'org.osmdroid', name: 'osmdroid-android', version: '6.1.13'
     implementation 'androidx.preference:preference:1.2.0'
 
+    // OSMDroid BonusPack Road Manager
+    implementation 'com.github.MKergall:osmbonuspack:6.9.0'
+
+
+
     implementation "androidx.activity:activity:1.4.0"
     implementation "androidx.fragment:fragment:1.4.1"
+    //implementation "androidx.core:core-ktx:1.8.0"
+    //implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.4.1"
+    implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.4.1"
 
 
 }
