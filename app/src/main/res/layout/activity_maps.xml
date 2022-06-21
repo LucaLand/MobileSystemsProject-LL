@@ -28,7 +28,7 @@
 
         <Button
             android:id="@+id/destinationGoButton"
-            android:layout_width="wrap_content"
+            android:layout_width="10dp"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="20dp"
             android:layout_marginVertical="5dp"

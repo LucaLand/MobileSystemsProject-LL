@@ -1,6 +1,7 @@
 package it.unibo.mobilesystems.geo
 
 import android.location.Address
+import android.location.Geocoder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
@@ -11,16 +12,10 @@ import org.osmdroid.bonuspack.location.NominatimPOIProvider
 import java.lang.Exception
 
 class Geocoder(
-    private val geocoderGraphHopper: GeocoderGraphHopper
+    private val geocoderGraphHopper: Geocoder
 ) {
 
-    private var job : Job? = null
-
     suspend fun getPlacesFromLocation(location : String) : Result<List<Address>> {
-        if(job != null) {
-            job!!.cancelAndJoin()
-        }
-
         return withContext(Dispatchers.IO) {
             return@withContext try {
                 Result.success(geocoderGraphHopper.getFromLocationName(location, 10))
