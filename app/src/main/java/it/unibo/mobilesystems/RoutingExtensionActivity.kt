@@ -8,6 +8,7 @@ import android.os.Bundle
 import com.google.android.gms.location.FusedLocationProviderClient
 import it.unibo.mobilesystems.debugUtils.Debugger
 import it.unibo.mobilesystems.geo.PathCalculator
+import it.unibo.mobilesystems.geo.PathViewModel
 import org.osmdroid.bonuspack.routing.OSRMRoadManager
 import org.osmdroid.bonuspack.routing.OSRMRoadManager.MEAN_BY_FOOT
 import org.osmdroid.bonuspack.routing.Road
@@ -17,7 +18,6 @@ import org.osmdroid.events.MapEventsReceiver
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.overlay.MapEventsOverlay
 import org.osmdroid.views.overlay.Marker
-import org.osmdroid.views.overlay.Overlay
 import org.osmdroid.views.overlay.Polyline
 
 
@@ -31,8 +31,10 @@ class RoutingExtensionActivity : MainMapsActivity(), MapEventsReceiver {
     protected lateinit var pathCalculator: PathCalculator
 
     private lateinit var roadManager: RoadManager
+    private lateinit var pathViewModel: PathViewModel
 
     private var destinationPoint: GeoPoint? = null
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,10 +48,7 @@ class RoutingExtensionActivity : MainMapsActivity(), MapEventsReceiver {
         map.getOverlays().add(0, mapEventsOverlay);
 
         pathCalculator = PathCalculator(roadManager)
-        pathCalculator.addOnPathCalculatedUiUpdate {
-            addRoadPolyLineToMap(it)
-            putNodeMarkers(it)
-        }
+        pathViewModel = PathViewModel(pathCalculator)
     }
 
     override fun onLocationChanged(p0: Location) {
@@ -60,7 +59,10 @@ class RoutingExtensionActivity : MainMapsActivity(), MapEventsReceiver {
     fun calculatePathToPoint(endPoint: GeoPoint){
         val startPoint = mLocationOverlay.myLocation
         if(startPoint != null){
-            pathCalculator.requestPathCalculation(startPoint, endPoint)
+            pathViewModel.asyncCalculatePath(startPoint, endPoint){
+                addRoadPolyLineToMap(it)
+                addNodeMarkers(it)
+            }
         }else{
             Debugger.printDebug(ACTIVITY_NAME, "MyPosition is Null - Cannot calculate the RoadPath")
         }
@@ -83,7 +85,7 @@ class RoutingExtensionActivity : MainMapsActivity(), MapEventsReceiver {
         map.invalidate()
     }
 
-    private fun putNodeMarkers(road: Road){
+    private fun addNodeMarkers(road: Road){
         val nodeIcon = applicationContext.getDrawable(R.drawable.marker_node)
         for (i in 0 until road.mNodes.size) {
             val node: RoadNode = road.mNodes[i]

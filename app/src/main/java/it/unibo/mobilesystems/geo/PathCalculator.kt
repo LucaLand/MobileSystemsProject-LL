@@ -1,18 +1,14 @@
 package it.unibo.mobilesystems.geo
 
-import androidx.lifecycle.LifecycleCoroutineScope
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.osmdroid.bonuspack.routing.Road
 import org.osmdroid.bonuspack.routing.RoadManager
 import org.osmdroid.util.GeoPoint
 
-class PathCalculator(
-    private val roadManager : RoadManager,
-    private val scope : CoroutineScope = GlobalScope,
-    private val mainDispatcher : CoroutineDispatcher = Dispatchers.Main
-) {
+class PathCalculator(private val roadManager : RoadManager) {
 
-    private val onPathCalculated = mutableListOf<(Road) -> Unit>()
+    /*private val onPathCalculated = mutableListOf<(Road) -> Unit>()
     private val onPathCalculatedUiUpdates = mutableListOf<(Road) -> Unit>()
 
     fun addOnPathCalculated(action : (Road) -> Unit) {
@@ -33,14 +29,20 @@ class PathCalculator(
                 }
             }
         }
-    }
+    }*/
 
-    private fun obtainRoad(startPoint: GeoPoint, endPoint: GeoPoint): Road{
-        var waypoints = ArrayList<GeoPoint>()
-        waypoints.add(startPoint)
-        waypoints.add(endPoint)
+    suspend fun calculateRoad(startPoint: GeoPoint, endPoint: GeoPoint): Result<Road>{
+        return withContext(Dispatchers.IO) {
+            val waypoints = ArrayList<GeoPoint>()
+            waypoints.add(startPoint)
+            waypoints.add(endPoint)
 
-        return roadManager.getRoad(waypoints)
+            return@withContext try {
+                Result.success(roadManager.getRoad(waypoints))
+            } catch (e : Exception) {
+                Result.failure(e)
+            }
+        }
     }
 
 }
