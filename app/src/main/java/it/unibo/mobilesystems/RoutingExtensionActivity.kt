@@ -27,6 +27,7 @@ import org.osmdroid.views.overlay.MapEventsOverlay
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Polyline
 import java.util.*
+import kotlin.math.atan2
 
 
 private const val API_KEY = "fe7f0195-208c-4692-84ff-f9e3ef1e8fcc"

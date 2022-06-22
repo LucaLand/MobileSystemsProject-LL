@@ -33,6 +33,15 @@ android {
     buildFeatures {
         viewBinding true
     }
+    packagingOptions {
+        pickFirst 'META-INF/AL2.0'
+        pickFirst 'META-INF/LGPL2.1'
+        pickFirst 'META-INF/LICENSE'
+        pickFirst 'META-INF/DEPENDENCIES'
+        pickFirst "META-INF/legal/*"
+        pickFirst "META-INF/legal/3rd-party/*"
+        pickFirst 'META-INF/*.properties'
+    }
 }
 
 
@@ -46,7 +55,7 @@ dependencies {
     implementation 'com.google.android.gms:play-services-tasks:18.0.1'
     implementation 'com.google.android.gms:play-services-location:19.0.1'
 
-    //Natali Libs
+    /* UNIBO **************************************************************************** */
     implementation files('libs/uniboInterfaces.jar')
     implementation files('libs/webForActors-1.0.jar')
     //implementation files('libs/it.unibo.qakactor-2.7.jar')
@@ -84,5 +93,23 @@ dependencies {
 
     /* COROUTINES *********************************************************************** */
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.2"
+
+    /* COAP ***************************************************************************** */
+    // https://mvnrepository.com/artifact/org.eclipse.californium/californium-core
+    implementation group: 'org.eclipse.californium', name: 'californium-core', version: '3.5.0'
+    // https://mvnrepository.com/artifact/org.eclipse.californium/californium-proxy
+    implementation group: 'org.eclipse.californium', name: 'californium-proxy', version: '2.0.0-M12'
+
+    /* MQTT ***************************************************************************** */
+    // https://mvnrepository.com/artifact/org.eclipse.paho/org.eclipse.paho.client.mqttv3
+    implementation group: 'org.eclipse.paho', name: 'org.eclipse.paho.client.mqttv3', version: '1.2.5'
+
+    /* CLASSGRAPH *********************************************************************** */
+    // https://mvnrepository.com/artifact/io.github.classgraph/classgraph
+    implementation group: 'io.github.classgraph', name: 'classgraph', version: '4.8.147'
+
+
+    //Resolving guava conflict...
+    implementation 'com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava'
 
 }
