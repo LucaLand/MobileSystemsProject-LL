@@ -81,7 +81,7 @@ class RoutingExtensionActivity : MainMapsActivity(), MapEventsReceiver {
         addCompassToMap()
         enableMapRotation()
         InstructionsTranslator.setAppCompactActivity(this)
-        mLocationManager.requestLocationUpdates(locationProvider, 500, 0.5F, this)
+        mLocationManager.requestLocationUpdates(mLocationProvider, 500, 0.5F, this)
 
         roadManager = GraphHopperRoadManager(API_KEY, false)
 

@@ -76,7 +76,7 @@ open class MainMapsActivity : AppCompatActivity(), LocationListener {
 
     protected lateinit var mLocationOverlay : MyLocationNewOverlay
     protected lateinit var map : MapView
-    protected lateinit var locationProvider: String
+    protected lateinit var mLocationProvider: String
 
 
     private val bluetoothMessageHandler: BluetoothSocketMessagesHandler = BluetoothSocketMessagesHandler()
@@ -210,7 +210,7 @@ open class MainMapsActivity : AppCompatActivity(), LocationListener {
         mLocationOverlay.enableMyLocation()
         map.overlays.add(this.mLocationOverlay)
 
-        Debugger.printDebug("LocationProvider: $locationProvider ${mLocationOverlay.myLocationProvider}")
+        Debugger.printDebug("LocationProvider: $mLocationProvider ${mLocationOverlay.myLocationProvider}")
 
         //ITALY Center GeoPoint
         map.controller.setCenter(GeoPoint(42.820897, 12.532178))
@@ -281,7 +281,7 @@ open class MainMapsActivity : AppCompatActivity(), LocationListener {
 
     private fun setProvider(){
         //Set Provider
-        locationProvider = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        mLocationProvider = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             LocationManager.FUSED_PROVIDER
         }else{
             LocationManager.NETWORK_PROVIDER //locationManager.getBestProvider()
