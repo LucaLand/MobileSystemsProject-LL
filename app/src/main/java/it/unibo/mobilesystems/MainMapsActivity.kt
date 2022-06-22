@@ -29,7 +29,12 @@ import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
 import com.google.android.gms.tasks.Task
 import com.google.android.material.bottomsheet.BottomSheetBehavior
+import io.github.classgraph.ClassGraph
 import it.unibo.kactor.MsgUtil
+import it.unibo.kactor.launchQak
+import it.unibo.kactor.sysUtil
+import it.unibo.mobilesystems.actors.LocationManagerActor
+import it.unibo.mobilesystems.actors.launchQakWithBuildTimeScan
 import it.unibo.mobilesystems.bluetoothUtils.*
 import it.unibo.mobilesystems.databinding.ActivityMapsBinding
 import it.unibo.mobilesystems.debugUtils.Debugger
@@ -42,6 +47,7 @@ import it.unibo.mobilesystems.permissionManager.PermissionType
 import it.unibo.mobilesystems.permissionManager.PermissionsManager.permissionCheck
 import it.unibo.mobilesystems.permissionManager.PermissionsManager.permissionsCheck
 import it.unibo.mobilesystems.permissionManager.PermissionsManager.permissionsRequest
+import kotlinx.coroutines.runBlocking
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
@@ -100,6 +106,12 @@ open class MainMapsActivity : AppCompatActivity(), LocationListener {
         super.onCreate(savedInstanceState)
         binding = ActivityMapsBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        //QActor
+        runBlocking {
+            sysUtil.ioEnabled = false
+            launchQakWithBuildTimeScan()
+        }
 
         //UI COMPONENTS
         rssiProgressBarr = findViewById(R.id.rssi_progress_bar)
@@ -177,7 +189,7 @@ open class MainMapsActivity : AppCompatActivity(), LocationListener {
         if(bluetoothPermission()){
             //init BluetoothManager
             myBluetoothManager = MyBluetoothManager(this)
-            startBluetoothActivity(initRegisterForBluetoothActivityResult())
+            //startBluetoothActivity(initRegisterForBluetoothActivityResult())
         }else{
             bluetoothActivityLauncher = initRegisterForBluetoothActivityResult()
         }

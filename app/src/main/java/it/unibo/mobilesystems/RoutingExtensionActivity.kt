@@ -30,6 +30,7 @@ import org.osmdroid.views.overlay.compass.CompassOverlay
 import org.osmdroid.views.overlay.compass.InternalCompassOrientationProvider
 import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
 import java.util.*
+import kotlin.math.atan2
 
 
 const val CMD_TRASLATOR_DATA_FILE_NAME = "traslation.dataset"
