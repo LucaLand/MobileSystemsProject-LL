@@ -106,7 +106,7 @@ class RoutingExtensionActivity : MainMapsActivity(), MapEventsReceiver {
                     (it as Button).text = "Stop!"
                 }
             }else{
-                it.setBackgroundColor(Color.MAGENTA)
+                it.setBackgroundColor(Color.parseColor("#FFBB86FC"))
                 (it as Button).text = "Go!"
                 removeOverlaysByID("Luca")
                 isNavigating = false

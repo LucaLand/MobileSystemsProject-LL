@@ -39,6 +39,7 @@
                 android:layout_marginHorizontal="2dp"
                 android:layout_marginVertical="5dp"
                 android:layout_weight="1"
+                android:backgroundTint="#FFBB86FC"
                 android:text="Search" />
 
             <Button
@@ -48,6 +49,7 @@
                 android:layout_marginHorizontal="2dp"
                 android:layout_marginVertical="5dp"
                 android:layout_weight="1"
+                android:backgroundTint="#FFBB86FC"
                 android:text="Go!" />
         </LinearLayout>
     </LinearLayout>
@@ -118,6 +120,7 @@
             android:layout_marginStart="20dp"
             android:layout_marginTop="10dp"
             android:layout_marginEnd="20dp"
+            android:backgroundTint="#FFBB86FC"
             android:onClick="myPositionButton"
             android:text="MyPosition"
             app:layout_constraintEnd_toEndOf="parent"
