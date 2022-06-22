@@ -53,7 +53,7 @@ dependencies {
     implementation 'com.google.android.material:material:1.6.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'com.google.android.gms:play-services-tasks:18.0.1'
-    implementation 'com.google.android.gms:play-services-location:19.0.1'
+    implementation 'com.google.android.gms:play-services-location:20.0.0'
 
     /* UNIBO **************************************************************************** */
     implementation files('libs/uniboInterfaces.jar')
@@ -107,6 +107,10 @@ dependencies {
     /* CLASSGRAPH *********************************************************************** */
     // https://mvnrepository.com/artifact/io.github.classgraph/classgraph
     implementation group: 'io.github.classgraph', name: 'classgraph', version: '4.8.147'
+
+    /* KOTLIN *************************************************************************** */
+    // https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-reflect
+    implementation group: 'org.jetbrains.kotlin', name: 'kotlin-reflect', version: '1.7.0'
 
 
     //Resolving guava conflict...
