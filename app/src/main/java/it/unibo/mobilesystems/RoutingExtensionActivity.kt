@@ -108,6 +108,7 @@ class RoutingExtensionActivity : MainMapsActivity(), MapEventsReceiver {
             }else{
                 it.setBackgroundColor(Color.MAGENTA)
                 (it as Button).text = "Go!"
+                removeOverlaysByID("Luca")
                 isNavigating = false
             }
         }
@@ -279,18 +280,20 @@ class RoutingExtensionActivity : MainMapsActivity(), MapEventsReceiver {
         }
     }
 
-    private fun addRoadPolyLineToMap(road: Road){
-        val roadOverlay = RoadManager.buildRoadOverlay(road)
-        roadOverlay.id = "Luca"
-
+    private fun removeOverlaysByID(id: String){
         map.overlays.removeIf {
-            if(it is Marker && it.id == "Luca")
+            if(it is Marker && it.id == id)
                 return@removeIf true
-            if(it is Polyline && it.id == "Luca")
+            if(it is Polyline && it.id == id)
                 return@removeIf true
             return@removeIf false
         }
+    }
 
+    private fun addRoadPolyLineToMap(road: Road){
+        removeOverlaysByID("Luca")
+        val roadOverlay = RoadManager.buildRoadOverlay(road)
+        roadOverlay.id = "Luca"
 
         map.overlays.add(roadOverlay)
         map.invalidate()
