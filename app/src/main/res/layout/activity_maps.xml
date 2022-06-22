@@ -10,13 +10,13 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="vertical">
 
         <AutoCompleteTextView
             android:id="@+id/destinationEditText"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="10dp"
+            android:layout_marginHorizontal="5dp"
             android:layout_marginVertical="5dp"
             android:layout_weight="1"
             android:height="48dp"
@@ -26,14 +26,29 @@
             android:inputType="textPersonName"
             android:textSize="16sp" />
 
-        <Button
-            android:id="@+id/destinationGoButton"
-            android:layout_width="10dp"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="20dp"
-            android:layout_marginVertical="5dp"
-            android:layout_weight="1"
-            android:text="Go!" />
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/destinationSearchButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="2dp"
+                android:layout_marginVertical="5dp"
+                android:layout_weight="1"
+                android:text="Search" />
+
+            <Button
+                android:id="@+id/destinationGoButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="2dp"
+                android:layout_marginVertical="5dp"
+                android:layout_weight="1"
+                android:text="Go!" />
+        </LinearLayout>
     </LinearLayout>
 
     <androidx.constraintlayout.widget.ConstraintLayout
