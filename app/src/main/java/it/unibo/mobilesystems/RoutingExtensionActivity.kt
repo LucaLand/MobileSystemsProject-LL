@@ -2,6 +2,7 @@ package it.unibo.mobilesystems
 
 
 
+import android.content.Context
 import android.graphics.Color
 import android.location.Address
 import android.location.Location
@@ -75,10 +76,12 @@ class RoutingExtensionActivity : MainMapsActivity(), MapEventsReceiver {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        mLocationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
         addCompassToMap()
         enableMapRotation()
         InstructionsTranslator.setAppCompactActivity(this)
+        mLocationManager.requestLocationUpdates(locationProvider, 500, 0.5F, this)
 
         roadManager = GraphHopperRoadManager(API_KEY, false)
 
@@ -258,6 +261,7 @@ class RoutingExtensionActivity : MainMapsActivity(), MapEventsReceiver {
 
     override fun onLocationChanged(p0: Location) {
         super.onLocationChanged(p0)
+        Debugger.printDebug(TAG, "Location Has Changed [$p0]")
         if(road != null){
             //TODO(NOT yet implemented!)
         }
