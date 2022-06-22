@@ -2,13 +2,13 @@ package it.unibo.mobilesystems
 
 
 
+import android.graphics.Color
 import android.location.Address
 import android.location.Location
 import android.location.LocationManager
 import android.os.Bundle
 import android.view.View
 import android.widget.*
-import androidx.core.widget.doOnTextChanged
 import com.google.android.gms.location.FusedLocationProviderClient
 import it.unibo.mobilesystems.debugUtils.Debugger
 import it.unibo.mobilesystems.geo.Geocoder
@@ -16,22 +16,21 @@ import it.unibo.mobilesystems.geo.GeocoderViewModel
 import it.unibo.mobilesystems.geo.PathCalculator
 import it.unibo.mobilesystems.geo.PathViewModel
 import it.unibo.mobilesystems.utils.hideKeyboard
-import org.osmdroid.bonuspack.location.GeocoderGraphHopper
-import org.osmdroid.bonuspack.location.GeocoderNominatim
-import org.osmdroid.bonuspack.location.NominatimPOIProvider
 import org.osmdroid.bonuspack.routing.*
-import org.osmdroid.bonuspack.routing.OSRMRoadManager.MEAN_BY_FOOT
 import org.osmdroid.events.MapEventsReceiver
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.overlay.MapEventsOverlay
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Polyline
+import org.osmdroid.views.overlay.compass.CompassOverlay
+import org.osmdroid.views.overlay.compass.InternalCompassOrientationProvider
+import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
 import java.util.*
 
 
 private const val API_KEY = "fe7f0195-208c-4692-84ff-f9e3ef1e8fcc"
 
-private const val ACTIVITY_NAME = "RoadRouting Activity"
+private const val CLASS_TAG = "RoadRouting Activity"
 class RoutingExtensionActivity : MainMapsActivity(), MapEventsReceiver {
 
 
@@ -40,7 +39,11 @@ class RoutingExtensionActivity : MainMapsActivity(), MapEventsReceiver {
     protected lateinit var locationService: FusedLocationProviderClient
     protected lateinit var pathCalculator: PathCalculator
 
-    private var road : Road? = null
+
+
+
+    private lateinit var mCompassOverlay: CompassOverlay
+    private lateinit var mRotatioGestureOverlay: RotationGestureOverlay
 
     private lateinit var roadManager: RoadManager
     private lateinit var pathViewModel: PathViewModel
@@ -56,9 +59,20 @@ class RoutingExtensionActivity : MainMapsActivity(), MapEventsReceiver {
     lateinit var goButton: Button
     lateinit var searchButton : Button
 
+
+    //Vars
+    private var isNavigating: Boolean = false
+    private var road : Road? = null
+
+    private var destMarker : Marker? = null //To delete from the map when a new destination is selected
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        //mLocationManager =
+
+        addCompassToMap()
+        enableMapRotation()
+
         roadManager = GraphHopperRoadManager(API_KEY, false)
 
         //Initialized as going always on foot
@@ -84,18 +98,29 @@ class RoutingExtensionActivity : MainMapsActivity(), MapEventsReceiver {
         searchButton = findViewById(R.id.destinationSearchButton)
 
         goButton.setOnClickListener {
-            goOnDest()
-            hideKeyboard(applicationContext, it)
+            if(!isNavigating) {
+                if(goOnDest()) {
+                    isNavigating = true
+                    hideKeyboard(applicationContext, it)
+                    it.setBackgroundColor(Color.RED)
+                    (it as Button).text = "Stop!"
+                }
+            }else{
+                it.setBackgroundColor(Color.MAGENTA)
+                (it as Button).text = "Go!"
+                isNavigating = false
+            }
         }
         searchButton.setOnClickListener {
+            it.isEnabled = false
             geocoderViewModel.asyncGetPlacesFromLocation(destinationEditText.text.toString())
             hideKeyboard(applicationContext, it)
         }
 
-
-
+        //Callback when search ends
         geocoderViewModel.addUpdateUiOnResult { result ->
             result.onSuccess { addressList ->
+                searchButton.isEnabled = true
                 if(addressList.isNotEmpty()) {
                     destinationEditText.setAdapter(ArrayAdapter(this, android.R.layout.simple_list_item_1, addressList.map {
                         var str = ""
@@ -104,13 +129,31 @@ class RoutingExtensionActivity : MainMapsActivity(), MapEventsReceiver {
                         }
                         return@map str
                     }))
-                    destinationEditText.showDropDown()
-                    Debugger.printDebug(ACTIVITY_NAME, "Finished Address Search!")
 
-                    destinationEditText.setText(addressToString(addressList[0]))
-                    val destPoint = GeoPoint(addressList[0].latitude, addressList[0].longitude)
-                    focusOnGeoPoint(destPoint)
+                    //Show Search List
+                    destinationEditText.showDropDown()
+                    Debugger.printDebug(CLASS_TAG, "Finished Address Search!")
+
                 }
+            }
+            result.onFailure {
+                searchButton.isEnabled = false
+                Debugger.printDebug(CLASS_TAG, "Failed Address Search Request!")
+            }
+        }
+
+
+        destinationEditText.onItemClickListener = object : AdapterView.OnItemClickListener {
+            override fun onItemClick(
+                parent: AdapterView<*>?,
+                view: View?,
+                position: Int,
+                id: Long
+            ) {
+                //Set destination
+                val addressList = geocoderViewModel.lastrResult.getOrThrow()
+                selectedDestAddress(addressList[position])
+                Debugger.printDebug(CLASS_TAG, "Item Selected: [$position]")
             }
         }
         /** AutoComplete text Code (some problems: -slow update; -Not working selecting item)**/
@@ -146,39 +189,34 @@ class RoutingExtensionActivity : MainMapsActivity(), MapEventsReceiver {
             }
         }
 
-        destinationEditText.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(
-                parent: AdapterView<*>?,
-                view: View?,
-                position: Int,
-                id: Long
-            ) {
 
-                //destinationEditText.setText(destinationEditText.adapter.getItem(position).toString())
-                val addr = geocoderViewModel.lastrResult.getOrThrow()[position]
-                val selectedPosition = GeoPoint(addr.latitude, addr.longitude)
-                map.controller.zoomTo(15, 500)
-                map.controller.animateTo(selectedPosition)
-                addMarker(selectedPosition, "Destination")
-                Debugger.printDebug(ACTIVITY_NAME, "Address Selected (${selectedPosition.longitude}, ${selectedPosition.latitude})")
-                this@RoutingExtensionActivity.destinationPoint = selectedPosition
-            }
-
-            override fun onNothingSelected(parent: AdapterView<*>?) {
-
-            }
-        }
          */
 
     }
 
-    private fun focusOnGeoPoint(selectedPosition: GeoPoint) {
+    private fun enableMapRotation() {
+        mRotatioGestureOverlay = RotationGestureOverlay(map)
+        mRotatioGestureOverlay.isEnabled = true
+        map.setMultiTouchControls(true)
+        map.overlays.add(mRotatioGestureOverlay)
+    }
 
-        map.controller.zoomTo(15, 500)
+    private fun selectedDestAddress(address: Address) {
+        destinationEditText.setText(addressToString(address))
+        val destPoint = GeoPoint(address.latitude, address.longitude)
+        setDestinationPoint(destPoint)
+    }
+
+    private fun setDestinationPoint(destPoint: GeoPoint) {
+        destinationPoint = destPoint
+        addDestMarker(destPoint, "Destination")
+        focusOnGeoPoint(destPoint, 20)
+    }
+
+    private fun focusOnGeoPoint(selectedPosition: GeoPoint, zoom: Int) {
+        map.controller.zoomTo(zoom, 500)
         map.controller.animateTo(selectedPosition)
-        addMarker(selectedPosition, "Destination")
-        Debugger.printDebug(ACTIVITY_NAME, "Address Selected (${selectedPosition.longitude}, ${selectedPosition.latitude})")
-        this@RoutingExtensionActivity.destinationPoint = selectedPosition
+        Debugger.printDebug(CLASS_TAG, "Point Focused (${selectedPosition.longitude}, ${selectedPosition.latitude})")
     }
 
     private fun addressToString(addr : Address): String {
@@ -189,20 +227,24 @@ class RoutingExtensionActivity : MainMapsActivity(), MapEventsReceiver {
         return str + addr.getAddressLine(addr.maxAddressLineIndex)
     }
 
-    private fun goOnDest() {
-        if(destinationPoint != null && mLocationOverlay.myLocation != null) {
+    private fun goOnDest(): Boolean {
+       return if(destinationPoint != null && mLocationOverlay.myLocation != null) {
             calculatePathToPoint(destinationPoint!!)
-            map.controller.zoomTo(18, 400)
+            focusOnGeoPoint(mLocationOverlay.myLocation, 20)
             mLocationOverlay.enableFollowLocation()
-            mLocationOverlay.enableAutoStop = false
+
+            //Map orientation (not working)
             val dlat = mLocationOverlay.myLocation.latitude - destinationPoint!!.latitude
             val dlon = mLocationOverlay.myLocation.longitude - destinationPoint!!.longitude
             val angle = atan2(dlat, dlon).toFloat()
             map.setMapOrientation(angle, true)
             map.invalidate()
+            true
         }
-        else
+        else {
             Toast.makeText(this, "Insert Destination!! or Position is Null", 4).show()
+            false
+        }
     }
 
     override fun onLocationChanged(p0: Location) {
@@ -223,7 +265,7 @@ class RoutingExtensionActivity : MainMapsActivity(), MapEventsReceiver {
                     road.mNodes.forEach { node ->
                         str += "${node.mInstructions}\n"
                     }
-                    Debugger.printDebug(ACTIVITY_NAME, str)
+                    Debugger.printDebug(CLASS_TAG, str)
                     this.road = road
                 }
                 it.onFailure {
@@ -233,7 +275,7 @@ class RoutingExtensionActivity : MainMapsActivity(), MapEventsReceiver {
 
             }
         }else{
-            Debugger.printDebug(ACTIVITY_NAME, "MyPosition is Null - Cannot calculate the RoadPath")
+            Debugger.printDebug(CLASS_TAG, "MyPosition is Null - Cannot calculate the RoadPath")
         }
     }
 
@@ -272,15 +314,17 @@ class RoutingExtensionActivity : MainMapsActivity(), MapEventsReceiver {
         }
     }
 
-    private fun addMarker(point: GeoPoint, title: String){
-        val nodeIcon = applicationContext.getDrawable(R.drawable.marker_node)
+    private fun addDestMarker(point: GeoPoint, title: String){
+        val nodeIcon = applicationContext.getDrawable(R.drawable.marker_destination)
         val nodeMarker = Marker(map)
         nodeMarker.id = "Luca"
         nodeMarker.position = point
         nodeMarker.icon = nodeIcon
         nodeMarker.title = title
 
+        map.overlays.remove(destMarker)
         map.overlays.add(nodeMarker)
+        destMarker = nodeMarker
         map.invalidate()
     }
 
@@ -298,11 +342,17 @@ class RoutingExtensionActivity : MainMapsActivity(), MapEventsReceiver {
     }
 
     override fun longPressHelper(p: GeoPoint?): Boolean {
-        return if(p != null){
+        return if(p != null && !isNavigating){
             destinationPoint = p
             calculatePathToPoint(p)
             true
         }else
             false
+    }
+
+    private fun addCompassToMap(){
+        mCompassOverlay = CompassOverlay(applicationContext, InternalCompassOrientationProvider(applicationContext), map)
+        mCompassOverlay.enableCompass()
+        map.overlays.add(mCompassOverlay)
     }
 }
