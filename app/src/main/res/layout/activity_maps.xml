@@ -114,7 +114,7 @@
             app:srcCompat="@android:drawable/stat_sys_data_bluetooth" />
 
         <Button
-            android:id="@+id/button2"
+            android:id="@+id/myPositionButton"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="20dp"
@@ -123,9 +123,22 @@
             android:backgroundTint="#FFBB86FC"
             android:onClick="myPositionButton"
             android:text="MyPosition"
+            android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/myPositionFloatingButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:layout_marginBottom="30dp"
+            android:clickable="true"
+            android:onClick="myPositionButton"
+            app:layout_constraintBottom_toBottomOf="@+id/mapview"
+            app:layout_constraintStart_toStartOf="parent"
+            app:srcCompat="@drawable/round_navigation_white_48" />
 
         <it.unibo.mobilesystems.joystickView.JoystickView
             android:id="@+id/joystickView"
