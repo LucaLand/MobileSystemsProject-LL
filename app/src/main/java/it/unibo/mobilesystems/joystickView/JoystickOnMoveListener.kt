@@ -2,16 +2,11 @@ package it.unibo.mobilesystems.joystickView
 
 import it.unibo.mobilesystems.bluetoothUtils.MyBluetoothService
 import it.unibo.mobilesystems.debugUtils.Debugger
+import it.unibo.mobilesystems.msgUtils.RobotMove
 import it.unibo.mobilesystems.msgUtils.RobotMsgUtils
 import unibo.actor22comm.utils.CommUtils
 
-enum class RobotMove{
-        FORWARD,
-        BACKWARD,
-        RIGHT,
-        LEFT,
-        HALT
-    }
+
 
 
 class JoystickOnMoveListener : JoystickView.OnMoveListener {

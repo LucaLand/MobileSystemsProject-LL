@@ -36,7 +36,7 @@ import it.unibo.mobilesystems.debugUtils.Debugger
 import it.unibo.mobilesystems.fileUtils.ConfigManager
 import it.unibo.mobilesystems.joystickView.JoystickOnMoveListener
 import it.unibo.mobilesystems.joystickView.JoystickView
-import it.unibo.mobilesystems.joystickView.RobotMove
+import it.unibo.mobilesystems.msgUtils.RobotMove
 import it.unibo.mobilesystems.msgUtils.RobotMsgUtils
 import it.unibo.mobilesystems.permissionManager.PermissionType
 import it.unibo.mobilesystems.permissionManager.PermissionsManager.permissionCheck

@@ -10,11 +10,14 @@ import android.os.Bundle
 import android.view.View
 import android.widget.*
 import com.google.android.gms.location.FusedLocationProviderClient
+import it.unibo.mobilesystems.bluetoothUtils.MyBluetoothService
 import it.unibo.mobilesystems.debugUtils.Debugger
 import it.unibo.mobilesystems.geo.Geocoder
 import it.unibo.mobilesystems.geo.GeocoderViewModel
 import it.unibo.mobilesystems.geo.PathCalculator
 import it.unibo.mobilesystems.geo.PathViewModel
+import it.unibo.mobilesystems.msgUtils.InstructionsTranslator
+import it.unibo.mobilesystems.msgUtils.RobotMsgUtils
 import it.unibo.mobilesystems.utils.hideKeyboard
 import org.osmdroid.bonuspack.routing.*
 import org.osmdroid.events.MapEventsReceiver
@@ -28,9 +31,12 @@ import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
 import java.util.*
 
 
-private const val API_KEY = "fe7f0195-208c-4692-84ff-f9e3ef1e8fcc"
+const val CMD_TRASLATOR_DATA_FILE_NAME = "traslation.dataset"
 
-private const val CLASS_TAG = "RoadRouting Activity"
+
+
+private const val API_KEY = "fe7f0195-208c-4692-84ff-f9e3ef1e8fcc"
+private const val TAG = "RoadRouting Activity"
 class RoutingExtensionActivity : MainMapsActivity(), MapEventsReceiver {
 
 
@@ -72,6 +78,7 @@ class RoutingExtensionActivity : MainMapsActivity(), MapEventsReceiver {
 
         addCompassToMap()
         enableMapRotation()
+        InstructionsTranslator.setAppCompactActivity(this)
 
         roadManager = GraphHopperRoadManager(API_KEY, false)
 
@@ -114,6 +121,7 @@ class RoutingExtensionActivity : MainMapsActivity(), MapEventsReceiver {
         }
         searchButton.setOnClickListener {
             it.isEnabled = false
+            it.setBackgroundColor(Color.LTGRAY)
             geocoderViewModel.asyncGetPlacesFromLocation(destinationEditText.text.toString())
             hideKeyboard(applicationContext, it)
         }
@@ -133,13 +141,13 @@ class RoutingExtensionActivity : MainMapsActivity(), MapEventsReceiver {
 
                     //Show Search List
                     destinationEditText.showDropDown()
-                    Debugger.printDebug(CLASS_TAG, "Finished Address Search!")
+                    Debugger.printDebug(TAG, "Finished Address Search!")
 
                 }
             }
             result.onFailure {
                 searchButton.isEnabled = false
-                Debugger.printDebug(CLASS_TAG, "Failed Address Search Request!")
+                Debugger.printDebug(TAG, "Failed Address Search Request!")
             }
         }
 
@@ -154,7 +162,7 @@ class RoutingExtensionActivity : MainMapsActivity(), MapEventsReceiver {
                 //Set destination
                 val addressList = geocoderViewModel.lastrResult.getOrThrow()
                 selectedDestAddress(addressList[position])
-                Debugger.printDebug(CLASS_TAG, "Item Selected: [$position]")
+                Debugger.printDebug(TAG, "Item Selected: [$position]")
             }
         }
         /** AutoComplete text Code (some problems: -slow update; -Not working selecting item)**/
@@ -217,7 +225,7 @@ class RoutingExtensionActivity : MainMapsActivity(), MapEventsReceiver {
     private fun focusOnGeoPoint(selectedPosition: GeoPoint, zoom: Int) {
         map.controller.zoomTo(zoom, 500)
         map.controller.animateTo(selectedPosition)
-        Debugger.printDebug(CLASS_TAG, "Point Focused (${selectedPosition.longitude}, ${selectedPosition.latitude})")
+        Debugger.printDebug(TAG, "Point Focused (${selectedPosition.longitude}, ${selectedPosition.latitude})")
     }
 
     private fun addressToString(addr : Address): String {
@@ -262,11 +270,15 @@ class RoutingExtensionActivity : MainMapsActivity(), MapEventsReceiver {
                 it.onSuccess { road ->
                     addRoadPolyLineToMap(road)
                     addNodeMarkers(road)
+
+                    //TEST Print of all Road Node instructions
                     var str = "Road:\n"
                     road.mNodes.forEach { node ->
                         str += "${node.mInstructions}\n"
                     }
-                    Debugger.printDebug(CLASS_TAG, str)
+                    Debugger.printDebug(TAG, str)
+
+
                     this.road = road
                 }
                 it.onFailure {
@@ -276,7 +288,7 @@ class RoutingExtensionActivity : MainMapsActivity(), MapEventsReceiver {
 
             }
         }else{
-            Debugger.printDebug(CLASS_TAG, "MyPosition is Null - Cannot calculate the RoadPath")
+            Debugger.printDebug(TAG, "MyPosition is Null - Cannot calculate the RoadPath")
         }
     }
 

@@ -2,8 +2,11 @@ package it.unibo.mobilesystems.fileUtils
 
 import android.os.Environment
 import androidx.appcompat.app.AppCompatActivity
+import it.unibo.kactor.MsgUtil
 import it.unibo.mobilesystems.debugUtils.Debugger
 import it.unibo.mobilesystems.debugUtils.DebuggerContextNameAnnotation
+import it.unibo.mobilesystems.msgUtils.RobotMove
+import it.unibo.mobilesystems.msgUtils.RobotMsgUtils
 import java.io.*
 import java.util.*
 
@@ -36,6 +39,45 @@ object FileSupport {
         }
         return mutableMap
     }
+
+
+    fun readStringTranslationFileData(fileName: String, app: AppCompatActivity): MutableMap<String, RobotMove>{
+        val mutableMap = mutableMapOf<String, RobotMove>()
+        val bufferReaderFile = openAssetFileBuffer(fileName, app)
+        try {
+            bufferReaderFile?.use { r ->
+                r.readLines().forEach {
+                    if(!it.contains("//")) {
+                        val key = it.split("-->")[0].trim()
+                        val valueStr = it.split("-->")[1].trim()
+                        val value = RobotMsgUtils.stringToRobotMove(valueStr)
+                        Debugger.printDebug(
+                            "readStringTranslationFileData",
+                            "Key: $key || Value: $value"
+                        )
+                        if(value != null)
+                            mutableMap[key] = value
+                    }
+                }
+            }
+        } catch (e: FileNotFoundException) {
+            Debugger.printDebug("FileNotFoundException: $fileName")
+            throw e
+            //e.printStackTrace();
+        } catch (e: IOException) {
+            Debugger.printDebug("IOException: $fileName")
+            throw e
+            //e.printStackTrace();
+        }
+        if(mutableMap.isEmpty())
+            throw IOException("No Map in the File!")
+
+        return mutableMap
+    }
+
+
+
+
 
 
     @Throws(FileNotFoundException::class)

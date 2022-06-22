@@ -83,6 +83,7 @@ object MyBluetoothService{
     }
 
     fun sendMsg(s : String){
+        Debugger.printDebug(TAG, "Trying Send: msg[$s]")
         if(enabled)
             connectionThread.write(s.toByteArray())
     }
@@ -143,7 +144,7 @@ object MyBluetoothService{
         override fun run() {
             connectionThread.waitSomeTime(5000) //3 second first time starts
             initSocket()
-            var res = connectToSocket(bluetoothSocket)
+            val res = connectToSocket(bluetoothSocket)
             Debugger.printDebug("Initialized Socket: Now Listening...")
             var numBytes: Int // bytes returned from read()
 
