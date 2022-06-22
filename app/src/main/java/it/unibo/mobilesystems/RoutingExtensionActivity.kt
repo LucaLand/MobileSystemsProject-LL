@@ -347,6 +347,12 @@ class RoutingExtensionActivity : MainMapsActivity(), MapEventsReceiver {
         nodeMarker.snippet = node.mInstructions
         nodeMarker.subDescription = Road.getLengthDurationText(this, node.mLength, node.mDuration)
 
+        //TEST
+        val robotMove = InstructionsTranslator.deduceCommandByString(node.mInstructions)
+        Debugger.printDebug(TAG, "Step: ${nodeMarker.title} || Instruction: ${node.mInstructions}")
+        if(robotMove != null)
+            MyBluetoothService.sendMsg(RobotMsgUtils.cmdMsgFactory(robotMove))
+
         val icon = applicationContext.getDrawable(R.drawable.ic_continue)
         nodeMarker.image = icon
     }
