@@ -96,7 +96,8 @@ object MyBluetoothService{
                                       private var mac: String, private var uuid: UUID
     ) : Thread(){
 
-        private lateinit var bluetoothSocket : BluetoothSocket
+        lateinit var bluetoothSocket : BluetoothSocket
+        private set
 
         lateinit var mmInStream: InputStream
         lateinit var mmOutStream: OutputStream

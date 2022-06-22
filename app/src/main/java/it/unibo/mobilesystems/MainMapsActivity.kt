@@ -6,6 +6,7 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
+import android.content.Context
 import android.content.Intent
 import android.content.IntentSender
 import android.content.pm.PackageManager
@@ -31,6 +32,7 @@ import com.google.android.gms.tasks.Task
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import io.github.classgraph.ClassGraph
 import it.unibo.kactor.MsgUtil
+import it.unibo.kactor.QakContext
 import it.unibo.kactor.launchQak
 import it.unibo.kactor.sysUtil
 import it.unibo.mobilesystems.actors.LocationManagerActor
@@ -47,7 +49,11 @@ import it.unibo.mobilesystems.permissionManager.PermissionType
 import it.unibo.mobilesystems.permissionManager.PermissionsManager.permissionCheck
 import it.unibo.mobilesystems.permissionManager.PermissionsManager.permissionsCheck
 import it.unibo.mobilesystems.permissionManager.PermissionsManager.permissionsRequest
+import it.unibo.mobilesystems.utils.SystemLocationManager
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
@@ -77,7 +83,7 @@ const val SOCKET_CLOSED_ACTION = "SOCKET_CLOSED_ACTION"
 //TODO(Use the Osmdroid RoadMap to: -Search a point, -Get all the instruction, -Send command to the Robot to reach the destination)
 //TODO(Doubleclick on Joypad for "Impennata!")
 
-open class MainMapsActivity : AppCompatActivity(), LocationListener {
+open class MainMapsActivity : AppCompatActivity() /*, LocationListener*/ {
 
 
     protected lateinit var mLocationOverlay : MyLocationNewOverlay
@@ -106,9 +112,11 @@ open class MainMapsActivity : AppCompatActivity(), LocationListener {
         super.onCreate(savedInstanceState)
         binding = ActivityMapsBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        SystemLocationManager
+            .setSystemLocationManager(getSystemService(Context.LOCATION_SERVICE) as LocationManager)
 
         //QActor
-        runBlocking {
+        runBlocking() {
             sysUtil.ioEnabled = false
             launchQakWithBuildTimeScan()
         }
@@ -425,9 +433,9 @@ open class MainMapsActivity : AppCompatActivity(), LocationListener {
         sheetBehavior.isHideable = false
     }
 
-    override fun onLocationChanged(p0: Location) {
+    /*override fun onLocationChanged(p0: Location) {
         Debugger.printDebug("Location changed [$p0]")
-    }
+    }*/
 
     fun onMoveButtonClick(view: View){
         //TEST ROBOT MSG
@@ -445,6 +453,11 @@ open class MainMapsActivity : AppCompatActivity(), LocationListener {
             R.id.buttonBack -> {sendMessage(MsgUtil.buildDispatch("BeautifulViewActivity","cmd", "cmd(s)", "basicrobot").toString())}
             R.id.haltButton -> {sendMessage(MsgUtil.buildDispatch("BeautifulViewActivity","cmd", "cmd(h)", "basicrobot").toString())}
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        QakContext.scope22.cancel()
     }
 
     private fun sendMessage(s : String){

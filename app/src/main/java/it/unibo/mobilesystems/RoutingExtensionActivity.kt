@@ -11,6 +11,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.*
 import com.google.android.gms.location.FusedLocationProviderClient
+import it.unibo.mobilesystems.actors.LocationManagerActor
 import it.unibo.mobilesystems.bluetoothUtils.MyBluetoothService
 import it.unibo.mobilesystems.debugUtils.Debugger
 import it.unibo.mobilesystems.geo.Geocoder
@@ -20,6 +21,7 @@ import it.unibo.mobilesystems.geo.PathViewModel
 import it.unibo.mobilesystems.msgUtils.InstructionsTranslator
 import it.unibo.mobilesystems.msgUtils.RobotMsgUtils
 import it.unibo.mobilesystems.utils.hideKeyboard
+import kotlinx.coroutines.runBlocking
 import org.osmdroid.bonuspack.routing.*
 import org.osmdroid.events.MapEventsReceiver
 import org.osmdroid.util.GeoPoint
@@ -41,9 +43,6 @@ private const val API_KEY = "fe7f0195-208c-4692-84ff-f9e3ef1e8fcc"
 private const val TAG = "RoadRouting Activity"
 class RoutingExtensionActivity : MainMapsActivity(), MapEventsReceiver {
 
-
-
-    protected lateinit var mLocationManager: LocationManager
     protected lateinit var locationService: FusedLocationProviderClient
     protected lateinit var pathCalculator: PathCalculator
 
@@ -77,12 +76,11 @@ class RoutingExtensionActivity : MainMapsActivity(), MapEventsReceiver {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        mLocationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
         addCompassToMap()
         enableMapRotation()
         InstructionsTranslator.setAppCompactActivity(this)
-        mLocationManager.requestLocationUpdates(mLocationProvider, 500, 0.5F, this)
+        //mLocationManager.requestLocationUpdates(mLocationProvider, 500, 0.5F, this)
 
         roadManager = GraphHopperRoadManager(API_KEY, false)
 
@@ -260,13 +258,13 @@ class RoutingExtensionActivity : MainMapsActivity(), MapEventsReceiver {
         }
     }
 
-    override fun onLocationChanged(p0: Location) {
+    /*override fun onLocationChanged(p0: Location) {
         super.onLocationChanged(p0)
         Debugger.printDebug(TAG, "Location Has Changed [$p0]")
         if(road != null){
             //TODO(NOT yet implemented!)
         }
-    }
+    }*/
 
     fun calculatePathToPoint(endPoint: GeoPoint){
         val startPoint = mLocationOverlay.myLocation
