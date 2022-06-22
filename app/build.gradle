@@ -49,7 +49,8 @@ dependencies {
     //Natali Libs
     implementation files('libs/uniboInterfaces.jar')
     implementation files('libs/webForActors-1.0.jar')
-    implementation files('libs/it.unibo.qakactor-2.7.jar')
+    //implementation files('libs/it.unibo.qakactor-2.7.jar')
+    implementation files('libs/it.unibo.qakactor-3.0.jar')
     implementation files('libs/unibonoawtsupports.jar')
     implementation files('libs/unibo.actor22-1.1.jar')
 
