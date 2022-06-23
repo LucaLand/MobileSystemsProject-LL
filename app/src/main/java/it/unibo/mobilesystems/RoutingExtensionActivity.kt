@@ -11,6 +11,12 @@ import android.os.Bundle
 import android.view.View
 import android.widget.*
 import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.gson.Gson
+import it.unibo.kactor.ActorBasicFsm
+import it.unibo.kactor.MsgUtil
+import it.unibo.kactor.QakContext
+import it.unibo.mobilesystems.actors.GIT_BERTO_ACTOR_NAME
+import it.unibo.mobilesystems.actors.GitBertoActor
 import it.unibo.mobilesystems.actors.LocationManagerActor
 import it.unibo.mobilesystems.bluetoothUtils.MyBluetoothService
 import it.unibo.mobilesystems.debugUtils.Debugger
@@ -60,6 +66,9 @@ class RoutingExtensionActivity : MainMapsActivity(), MapEventsReceiver {
 
     private var destinationPoint: GeoPoint? = null
 
+    private lateinit var gitBertoActor : ActorBasicFsm
+    private val gson = Gson()
+
 
     //UI Components
     lateinit var destinationEditText: AutoCompleteTextView
@@ -105,6 +114,7 @@ class RoutingExtensionActivity : MainMapsActivity(), MapEventsReceiver {
         destinationEditText = findViewById(R.id.destinationEditText)
         goButton = findViewById(R.id.destinationGoButton)
         searchButton = findViewById(R.id.destinationSearchButton)
+        gitBertoActor = QakContext.getActor(GIT_BERTO_ACTOR_NAME) as ActorBasicFsm
 
         goButton.setOnClickListener {
             if(!isNavigating) {
@@ -112,6 +122,10 @@ class RoutingExtensionActivity : MainMapsActivity(), MapEventsReceiver {
                     isNavigating = true
                     hideKeyboard(applicationContext, it)
                     it.setBackgroundColor(Color.RED)
+                    runBlocking {
+                        Debugger.printDebug(ACTIVITY_SERVICE, gson.toJson(road))
+                        MsgUtil.sendMsg("beginTrip", gson.toJson(road), gitBertoActor)
+                    }
                     (it as Button).text = "Stop!"
                 }
             }else{
@@ -119,6 +133,9 @@ class RoutingExtensionActivity : MainMapsActivity(), MapEventsReceiver {
                 (it as Button).text = "Go!"
                 removeOverlaysByID("Luca")
                 isNavigating = false
+                runBlocking{
+                    MsgUtil.sendMsg("stopTrip", "stop", gitBertoActor)
+                }
             }
         }
         searchButton.setOnClickListener {
@@ -165,6 +182,12 @@ class RoutingExtensionActivity : MainMapsActivity(), MapEventsReceiver {
                 val addressList = geocoderViewModel.lastrResult.getOrThrow()
                 selectedDestAddress(addressList[position])
                 Debugger.printDebug(TAG, "Item Selected: [$position]")
+                if(destinationPoint == null)
+                    Toast.makeText(applicationContext, "No destination!", 3).show()
+                else {
+                    calculatePathToPoint(destinationPoint!!)
+                    focusOnGeoPoint(destinationPoint!!, 16)
+                }
             }
         }
         /** AutoComplete text Code (some problems: -slow update; -Not working selecting item)**/
@@ -221,7 +244,6 @@ class RoutingExtensionActivity : MainMapsActivity(), MapEventsReceiver {
     private fun setDestinationPoint(destPoint: GeoPoint) {
         destinationPoint = destPoint
         addDestMarker(destPoint, "Destination")
-        focusOnGeoPoint(destPoint, 20)
     }
 
     private fun focusOnGeoPoint(selectedPosition: GeoPoint, zoom: Int) {
@@ -240,8 +262,8 @@ class RoutingExtensionActivity : MainMapsActivity(), MapEventsReceiver {
 
     private fun goOnDest(): Boolean {
        return if(destinationPoint != null && mLocationOverlay.myLocation != null) {
-            calculatePathToPoint(destinationPoint!!)
-            focusOnGeoPoint(mLocationOverlay.myLocation, 20)
+            //calculatePathToPoint(destinationPoint!!)
+            focusOnGeoPoint(mLocationOverlay.myLocation, 19)
             mLocationOverlay.enableFollowLocation()
 
             //Map orientation (not working)
@@ -378,5 +400,9 @@ class RoutingExtensionActivity : MainMapsActivity(), MapEventsReceiver {
         mCompassOverlay = CompassOverlay(applicationContext, InternalCompassOrientationProvider(applicationContext), map)
         mCompassOverlay.enableCompass()
         map.overlays.add(mCompassOverlay)
+    }
+
+    fun pauseButton(view: View){
+        Debugger.printDebug(ACTIVITY_SERVICE, "pause/resume")
     }
 }

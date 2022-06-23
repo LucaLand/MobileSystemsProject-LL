@@ -197,7 +197,7 @@ open class MainMapsActivity : AppCompatActivity() /*, LocationListener*/ {
         if(bluetoothPermission()){
             //init BluetoothManager
             myBluetoothManager = MyBluetoothManager(this)
-            //startBluetoothActivity(initRegisterForBluetoothActivityResult())
+            startBluetoothActivity(initRegisterForBluetoothActivityResult())
         }else{
             bluetoothActivityLauncher = initRegisterForBluetoothActivityResult()
         }

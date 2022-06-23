@@ -3,12 +3,14 @@ package it.unibo.mobilesystems.actors
 import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Build
+import android.os.Parcel
 import com.google.gson.Gson
 import it.unibo.kactor.QActorBasicFsm
 import it.unibo.kactor.annotations.Initial
 import it.unibo.kactor.annotations.QActor
 import it.unibo.kactor.annotations.State
 import it.unibo.mobilesystems.debugUtils.Debugger
+import it.unibo.mobilesystems.geo.KLocation
 import it.unibo.mobilesystems.utils.SystemLocationManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -30,13 +32,13 @@ class LocationManagerActor() : QActorBasicFsm() {
         locationListener = LocationListener { location ->
             this@LocationManagerActor.actor.scope.launch {
                 Debugger.printDebug(name, actorStringln("Location: $location"))
-                emit event LOCATION_EVENT_NAME withContent gson.toJson(location)
+                emit event LOCATION_EVENT_NAME withContent gson.toJson(KLocation(location))
             }
         }
         Debugger.printDebug(name, actorStringln("waiting for location manager..."))
         withContext(Dispatchers.Main) {
             SystemLocationManager.getSystemLocationManager().requestLocationUpdates(getLocationProvider(), 500,
-                0.5F, locationListener)
+                0.1F, locationListener)
         }
         Debugger.printDebug(name, actorStringln("Started"))
     }
