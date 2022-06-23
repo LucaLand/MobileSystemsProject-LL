@@ -10,14 +10,14 @@ import android.location.LocationManager
 import android.os.Bundle
 import android.view.View
 import android.widget.*
+import androidx.core.view.isVisible
 import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.gson.Gson
 import it.unibo.kactor.ActorBasicFsm
 import it.unibo.kactor.MsgUtil
 import it.unibo.kactor.QakContext
-import it.unibo.mobilesystems.actors.GIT_BERTO_ACTOR_NAME
-import it.unibo.mobilesystems.actors.GitBertoActor
-import it.unibo.mobilesystems.actors.LocationManagerActor
+import it.unibo.mobilesystems.actors.*
 import it.unibo.mobilesystems.bluetoothUtils.MyBluetoothService
 import it.unibo.mobilesystems.debugUtils.Debugger
 import it.unibo.mobilesystems.geo.Geocoder
@@ -66,7 +66,10 @@ class RoutingExtensionActivity : MainMapsActivity(), MapEventsReceiver {
 
     private var destinationPoint: GeoPoint? = null
 
+    //Actors
     private lateinit var gitBertoActor : ActorBasicFsm
+    private lateinit var locationManagerActor : ActorBasicFsm
+
     private val gson = Gson()
 
 
@@ -74,11 +77,13 @@ class RoutingExtensionActivity : MainMapsActivity(), MapEventsReceiver {
     lateinit var destinationEditText: AutoCompleteTextView
     lateinit var goButton: Button
     lateinit var searchButton : Button
+    lateinit var pauseButton : FloatingActionButton
 
 
     //Vars
     private var isNavigating: Boolean = false
     private var road : Road? = null
+    private var tripPaused = false
 
     private var destMarker : Marker? = null //To delete from the map when a new destination is selected
 
@@ -98,7 +103,7 @@ class RoutingExtensionActivity : MainMapsActivity(), MapEventsReceiver {
         roadManager.addRequestOption("optimize=true")
 
         val mapEventsOverlay = MapEventsOverlay(this)
-        map.getOverlays().add(0, mapEventsOverlay)
+        map.overlays.add(0, mapEventsOverlay)
 
         pathCalculator = PathCalculator(roadManager)
         pathViewModel = PathViewModel(pathCalculator)
@@ -114,28 +119,41 @@ class RoutingExtensionActivity : MainMapsActivity(), MapEventsReceiver {
         destinationEditText = findViewById(R.id.destinationEditText)
         goButton = findViewById(R.id.destinationGoButton)
         searchButton = findViewById(R.id.destinationSearchButton)
+        pauseButton = findViewById(R.id.pauseButton)
+
         gitBertoActor = QakContext.getActor(GIT_BERTO_ACTOR_NAME) as ActorBasicFsm
+        locationManagerActor = QakContext.getActor(LOCATION_MANAGER_ACTOR_NAME) as ActorBasicFsm
 
         goButton.setOnClickListener {
             if(!isNavigating) {
+                //START NAVIGATION
+
                 if(goOnDest()) {
                     isNavigating = true
+                    tripPaused = false
                     hideKeyboard(applicationContext, it)
                     it.setBackgroundColor(Color.RED)
                     runBlocking {
-                        Debugger.printDebug(ACTIVITY_SERVICE, gson.toJson(road))
-                        MsgUtil.sendMsg("beginTrip", gson.toJson(road), gitBertoActor)
+                        MsgUtil.sendMsg(LMA_CMD_MESSAGE_NAME, ENABLE_LOCATION_MONITORING_ARG, locationManagerActor)
+                        MsgUtil.sendMsg(GA_BEGIN_TRIP_MESSAGE_NAME, gson.toJson(road), gitBertoActor)
                     }
                     (it as Button).text = "Stop!"
+                    pauseButton.isClickable = true
+                    pauseButton.isVisible = true
                 }
             }else{
+                //STOP NAVIGATION
+
                 it.setBackgroundColor(Color.parseColor("#FFBB86FC"))
                 (it as Button).text = "Go!"
                 removeOverlaysByID("Luca")
                 isNavigating = false
                 runBlocking{
-                    MsgUtil.sendMsg("stopTrip", "stop", gitBertoActor)
+                    MsgUtil.sendMsg(GA_STOP_TRIP_MESSAGE_NAME, "stop", gitBertoActor)
+                    MsgUtil.sendMsg(LMA_CMD_MESSAGE_NAME, DISABLE_LOCATION_MONITORING_ARG, locationManagerActor)
                 }
+                pauseButton.isClickable = false
+                pauseButton.isVisible = false
             }
         }
         searchButton.setOnClickListener {
@@ -171,14 +189,8 @@ class RoutingExtensionActivity : MainMapsActivity(), MapEventsReceiver {
         }
 
 
-        destinationEditText.onItemClickListener = object : AdapterView.OnItemClickListener {
-            override fun onItemClick(
-                parent: AdapterView<*>?,
-                view: View?,
-                position: Int,
-                id: Long
-            ) {
-                //Set destination
+        destinationEditText.onItemClickListener =
+            AdapterView.OnItemClickListener { parent, view, position, id -> //Set destination
                 val addressList = geocoderViewModel.lastrResult.getOrThrow()
                 selectedDestAddress(addressList[position])
                 Debugger.printDebug(TAG, "Item Selected: [$position]")
@@ -189,7 +201,6 @@ class RoutingExtensionActivity : MainMapsActivity(), MapEventsReceiver {
                     focusOnGeoPoint(destinationPoint!!, 16)
                 }
             }
-        }
         /** AutoComplete text Code (some problems: -slow update; -Not working selecting item)**/
         /*
         geocoderViewModel.addUpdateUiOnResult { result ->
@@ -403,6 +414,26 @@ class RoutingExtensionActivity : MainMapsActivity(), MapEventsReceiver {
     }
 
     fun pauseButton(view: View){
-        Debugger.printDebug(ACTIVITY_SERVICE, "pause/resume")
+        view as FloatingActionButton
+        if(isNavigating) {
+            if(tripPaused) {
+                //RESUME
+                Debugger.printDebug(ACTIVITY_SERVICE, "resuming trip")
+                runBlocking {
+                    MsgUtil.sendMsg(LMA_CMD_MESSAGE_NAME, ENABLE_LOCATION_MONITORING_ARG, locationManagerActor)
+                    MsgUtil.sendMsg(GA_RESUME_TRIP_MESSAGE_NAME, "", gitBertoActor)
+                }
+                view.setImageResource(android.R.drawable.ic_media_pause)
+            } else {
+                //PAUSE
+                Debugger.printDebug(ACTIVITY_SERVICE, "pausing trip")
+                runBlocking {
+                    MsgUtil.sendMsg(GA_PAUSE_TRIP_MESSAGE_NAME, "", gitBertoActor)
+                    MsgUtil.sendMsg(LMA_CMD_MESSAGE_NAME, DISABLE_LOCATION_MONITORING_ARG, locationManagerActor)
+                }
+                view.setImageResource(android.R.drawable.ic_media_play)
+            }
+            tripPaused = !tripPaused
+        }
     }
 }

@@ -11,8 +11,6 @@ import android.content.Intent
 import android.content.IntentSender
 import android.content.pm.PackageManager
 import android.graphics.Color
-import android.location.Location
-import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Build
 import android.os.Bundle
@@ -30,12 +28,9 @@ import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
 import com.google.android.gms.tasks.Task
 import com.google.android.material.bottomsheet.BottomSheetBehavior
-import io.github.classgraph.ClassGraph
 import it.unibo.kactor.MsgUtil
 import it.unibo.kactor.QakContext
-import it.unibo.kactor.launchQak
 import it.unibo.kactor.sysUtil
-import it.unibo.mobilesystems.actors.LocationManagerActor
 import it.unibo.mobilesystems.actors.launchQakWithBuildTimeScan
 import it.unibo.mobilesystems.bluetoothUtils.*
 import it.unibo.mobilesystems.databinding.ActivityMapsBinding
@@ -49,11 +44,9 @@ import it.unibo.mobilesystems.permissionManager.PermissionType
 import it.unibo.mobilesystems.permissionManager.PermissionsManager.permissionCheck
 import it.unibo.mobilesystems.permissionManager.PermissionsManager.permissionsCheck
 import it.unibo.mobilesystems.permissionManager.PermissionsManager.permissionsRequest
-import it.unibo.mobilesystems.utils.SystemLocationManager
-import kotlinx.coroutines.Dispatchers
+import it.unibo.mobilesystems.utils.ApplicationVals
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
@@ -110,10 +103,13 @@ open class MainMapsActivity : AppCompatActivity() /*, LocationListener*/ {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Debugger.printDebug("MainMapsActivity", "onCreate")
         binding = ActivityMapsBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        SystemLocationManager
-            .setSystemLocationManager(getSystemService(Context.LOCATION_SERVICE) as LocationManager)
+
+        //Setting application vals...
+        ApplicationVals.systemLocationManager.set(getSystemService(Context.LOCATION_SERVICE) as LocationManager)
+        ApplicationVals.fusedLocationServices.set(LocationServices.getFusedLocationProviderClient(applicationContext))
 
         //QActor
         runBlocking() {
@@ -197,7 +193,7 @@ open class MainMapsActivity : AppCompatActivity() /*, LocationListener*/ {
         if(bluetoothPermission()){
             //init BluetoothManager
             myBluetoothManager = MyBluetoothManager(this)
-            startBluetoothActivity(initRegisterForBluetoothActivityResult())
+            //startBluetoothActivity(initRegisterForBluetoothActivityResult())
         }else{
             bluetoothActivityLauncher = initRegisterForBluetoothActivityResult()
         }

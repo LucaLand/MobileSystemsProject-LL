@@ -21,6 +21,11 @@ const val ARRIVED_EVENT_NAME = "arrived"
 const val GOAL_OK_DIST = 2
 const val GIT_BERTO_ACTOR_NAME = "gitbertoactor"
 
+const val GA_BEGIN_TRIP_MESSAGE_NAME = "beginTrip"
+const val GA_STOP_TRIP_MESSAGE_NAME = "stopTrip"
+const val GA_PAUSE_TRIP_MESSAGE_NAME = "pauseTrip"
+const val GA_RESUME_TRIP_MESSAGE_NAME = "resumeTrip"
+
 @QActor(GIT_BERTO_CTX_NAME, GIT_BERTO_ACTOR_NAME)
 class GitBertoActor() : QActorBasicFsm() {
 
@@ -40,7 +45,7 @@ class GitBertoActor() : QActorBasicFsm() {
     }
 
     @State
-    @WhenDispatch("work2beginTrip", "beginTrip", "beginTrip")
+    @WhenDispatch("work2beginTrip", "beginTrip", GA_BEGIN_TRIP_MESSAGE_NAME)
     suspend fun work() {
         Debugger.printDebug(name, actorStringln("idle"))
     }
@@ -97,7 +102,8 @@ class GitBertoActor() : QActorBasicFsm() {
 
     @State
     @WhenEvent("followTheRoad2CheckCurrentPosition", "checkCurrentPosition", LOCATION_EVENT_NAME)
-    @WhenDispatch("followTheRoad2Work", "stopTrip", "stopTrip")
+    @WhenDispatch("followTheRoad2Work", "stopTrip", GA_STOP_TRIP_MESSAGE_NAME)
+    @WhenDispatch("followTheRoad2Pause", "pauseTrip", GA_PAUSE_TRIP_MESSAGE_NAME)
     suspend fun followTheRoad() {
         Debugger.printDebug(name, "following the road...")
         MyBluetoothService.sendMsg(RobotMsgUtils.cmdMsgFactory(RobotMove.FORWARD))
@@ -121,7 +127,8 @@ class GitBertoActor() : QActorBasicFsm() {
 
     @State
     @WhenEvent("checkAgain", "checkCurrentPosition", LOCATION_EVENT_NAME)
-    @WhenDispatch("followTheRoad2Work", "stopTrip", "stopTrip")
+    @WhenDispatch("followTheRoad2Work", "stopTrip", GA_STOP_TRIP_MESSAGE_NAME)
+    @WhenDispatch("checkCurrentPosition2Pause", "pauseTrip", GA_PAUSE_TRIP_MESSAGE_NAME)
     @EpsilonMove("checkCurrentPosition2GoalDone", "goalDone")
     suspend fun checkCurrentPosition() {
         Debugger.printDebug(name, actorStringln("currentMsg: $currentMsg"))
@@ -159,6 +166,13 @@ class GitBertoActor() : QActorBasicFsm() {
         MyBluetoothService.sendMsg(RobotMsgUtils.cmdMsgFactory(RobotMove.HALT))
         goals.clear()
         nextMoveType = RobotMove.HALT
+    }
+
+    @State
+    @WhenDispatch("pauseTrip2FollowTheRoad", "followTheRoad", GA_RESUME_TRIP_MESSAGE_NAME)
+    @WhenDispatch("pauseTrip2StopTrip", "stopTrip", GA_STOP_TRIP_MESSAGE_NAME)
+    suspend fun pauseTrip() {
+        Debugger.printDebug(name, actorStringln("trip paused"))
     }
 
 }

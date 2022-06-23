@@ -1,6 +1,7 @@
 package it.unibo.mobilesystems.geo
 
 import android.location.Location
+import org.osmdroid.util.GeoPoint
 
 data class KLocation(
     val latitude : Double,
@@ -19,4 +20,8 @@ data class KLocation(
         location.accuracy, location.bearing, location.bearingAccuracyDegrees, location.speed,
         location.speedAccuracyMetersPerSecond, location.time, location.verticalAccuracyMeters
     )
+
+    fun toGeopoint() : GeoPoint {
+        return GeoPoint(latitude, longitude, altitude)
+    }
 }
