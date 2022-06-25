@@ -1,4 +1,4 @@
-package it.unibo.mobilesystems.bluetoothUtils
+package it.unibo.mobilesystems.bluetooth
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
@@ -28,6 +28,7 @@ const val MESSAGE_CONNECTION_TRUE = 74
 
 
 private const val CLASS_NAME = "SERVICE-CLASS"
+@Deprecated("Old bluetooth system")
 object MyBluetoothService{
     private const val maximumConnectionRetry = 30
     lateinit var connectionThread: BluetoothSocketThread

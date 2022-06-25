@@ -2,11 +2,8 @@ package it.unibo.mobilesystems
 
 
 
-import android.content.Context
 import android.graphics.Color
 import android.location.Address
-import android.location.Location
-import android.location.LocationManager
 import android.os.Bundle
 import android.view.View
 import android.widget.*
@@ -18,7 +15,7 @@ import it.unibo.kactor.ActorBasicFsm
 import it.unibo.kactor.MsgUtil
 import it.unibo.kactor.QakContext
 import it.unibo.mobilesystems.actors.*
-import it.unibo.mobilesystems.bluetoothUtils.MyBluetoothService
+import it.unibo.mobilesystems.bluetooth.MyBluetoothService
 import it.unibo.mobilesystems.debugUtils.Debugger
 import it.unibo.mobilesystems.geo.Geocoder
 import it.unibo.mobilesystems.geo.GeocoderViewModel

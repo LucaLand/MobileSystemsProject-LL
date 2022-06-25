@@ -1,10 +1,9 @@
 package it.unibo.mobilesystems.actors
 
-import android.location.Location
 import com.google.gson.Gson
 import it.unibo.kactor.QActorBasicFsm
 import it.unibo.kactor.annotations.*
-import it.unibo.mobilesystems.bluetoothUtils.MyBluetoothService
+import it.unibo.mobilesystems.bluetooth.MyBluetoothService
 import it.unibo.mobilesystems.debugUtils.Debugger
 import it.unibo.mobilesystems.geo.KLocation
 import it.unibo.mobilesystems.msgUtils.InstructionsTranslator

@@ -1,7 +1,8 @@
 package it.unibo.mobilesystems.actors
 
-import android.content.res.Resources
 import it.unibo.kactor.launchQak
+import it.unibo.mobilesystems.bluetooth.QakBluetoothConnection
+import it.unibo.mobilesystems.utils.atomicNullableVar
 
 suspend fun launchQakWithBuildTimeScan() {
     launchQak("ann_class_names" to mutableListOf(
@@ -10,6 +11,8 @@ suspend fun launchQakWithBuildTimeScan() {
         GitBertoActor::class.qualifiedName!!
     ))
 }
+
+val qakBluetoothConnection = atomicNullableVar<QakBluetoothConnection>()
 
 fun String.removeFirstAndLast() : String {
     return this.substring(1, this.length - 1)

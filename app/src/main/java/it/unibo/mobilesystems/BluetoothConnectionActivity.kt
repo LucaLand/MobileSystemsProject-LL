@@ -16,10 +16,10 @@ import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
-import it.unibo.mobilesystems.bluetoothUtils.DEVICE_RESULT_CODE
-import it.unibo.mobilesystems.bluetoothUtils.DeviceInfoIntentResult
-import it.unibo.mobilesystems.bluetoothUtils.MyBluetoothManager
-import it.unibo.mobilesystems.bluetoothUtils.MyBluetoothService
+import it.unibo.mobilesystems.bluetooth.DEVICE_RESULT_CODE
+import it.unibo.mobilesystems.bluetooth.DeviceInfoIntentResult
+import it.unibo.mobilesystems.bluetooth.MyBluetoothManager
+import it.unibo.mobilesystems.bluetooth.MyBluetoothService
 import it.unibo.mobilesystems.debugUtils.Debugger
 import it.unibo.mobilesystems.fileUtils.ConfigManager
 import it.unibo.mobilesystems.receivers.ActionHandler

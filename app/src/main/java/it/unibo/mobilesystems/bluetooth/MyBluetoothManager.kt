@@ -1,15 +1,11 @@
-package it.unibo.mobilesystems.bluetoothUtils
+package it.unibo.mobilesystems.bluetooth
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
-import android.bluetooth.le.BluetoothLeScanner
-import android.bluetooth.le.ScanCallback
-import android.bluetooth.le.ScanResult
 import android.content.Intent
 import android.content.IntentFilter
-import android.os.Handler
 import androidx.appcompat.app.AppCompatActivity
 import it.unibo.mobilesystems.ROBOT_FOUND_ACTION
 import it.unibo.mobilesystems.debugUtils.Debugger
@@ -19,13 +15,11 @@ import java.util.*
 
 const val MESSAGE_RSSI = 147
 
-class MyBluetoothManager(val acitivity: AppCompatActivity) {
+@Deprecated("Old bluetooth system")
+class MyBluetoothManager(private val activity: AppCompatActivity) {
 
     private var bluetoothManager: BluetoothManager? = null
     lateinit var bluetoothAdapter: BluetoothAdapter
-    lateinit var bluetoothLeScanner: BluetoothLeScanner
-
-    var rssiHandler : BluetoothSocketMessagesHandler? = null
 
     var pairedDevicesList : Set<BluetoothDevice>? = null
     var foundedDevices : Set<BluetoothDevice>? = null
@@ -45,7 +39,7 @@ class MyBluetoothManager(val acitivity: AppCompatActivity) {
     /** PUBLIC FUNCTIONS **/
 
     fun bluetoothInit(): Boolean {
-        bluetoothManager = acitivity.getSystemService(BluetoothManager::class.java)
+        bluetoothManager = activity.getSystemService(BluetoothManager::class.java)
         return if(bluetoothManager != null) {
             bluetoothAdapter = bluetoothManager!!.adapter
             true
@@ -77,13 +71,13 @@ class MyBluetoothManager(val acitivity: AppCompatActivity) {
         }else{
             Debugger.printDebug("Bluetooth State: ENABLED")
             bluetoothAdapter.enable()
-            bluetoothLeScanner = bluetoothAdapter.bluetoothLeScanner
+            //bluetoothLeScanner = bluetoothAdapter.bluetoothLeScanner
             null
         }
     }
 
     @SuppressLint("MissingPermission")
-    fun connectToDevice(deviceNameOrAddress: String, uuid: UUID): BluetoothDevice?{
+    fun connectToDevice(deviceNameOrAddress: String, uuid: UUID): BluetoothDevice? {
         val device = isDevicePaired(deviceNameOrAddress)
         if(device == null)
             searchAndConnect(deviceNameOrAddress, uuid)
@@ -122,11 +116,11 @@ class MyBluetoothManager(val acitivity: AppCompatActivity) {
         val actionHandlerList = mutableListOf(deviceFoundHandler)
         //Unregister the previous
         if(receiver!=null){
-            this.acitivity.unregisterReceiver(receiver)
+            this.activity.unregisterReceiver(receiver)
         }
         //Save and register the new
         receiver = BluetoothActionReceiver(actionHandlerList)
-        this.acitivity.registerReceiver(receiver, IntentFilter())
+        this.activity.registerReceiver(receiver, IntentFilter())
     }
 
     private fun searchAndConnect(deviceNameOrAddress: String, uuid: UUID){
@@ -155,7 +149,7 @@ class MyBluetoothManager(val acitivity: AppCompatActivity) {
             intent?.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
         if(device?.name == this.deviceNameOrAddress || device?.address == this.deviceNameOrAddress) {
             Debugger.printDebug("DEVICE FOUND! - ${device.name} || [${device.address}]")
-            this.acitivity.sendBroadcast(DeviceInfoIntentResult.createIntentResult(device).setAction(
+            this.activity.sendBroadcast(DeviceInfoIntentResult.createIntentResult(device).setAction(
                 ROBOT_FOUND_ACTION))
             //tryDeviceConnection(device, this.deviceUUID)
         }
@@ -169,42 +163,9 @@ class MyBluetoothManager(val acitivity: AppCompatActivity) {
             Debugger.printDebug("DEVICE FOUND! - ${device.name} || ${device.address} || [RSSI:$deviceRSSI]")
             val extras = mutableMapOf<String,String>()
             extras[BluetoothDevice.EXTRA_DEVICE] = deviceRSSI.toString()
-            this.acitivity.sendBroadcast(DeviceInfoIntentResult.createIntentResult(device, extras).setAction(
+            this.activity.sendBroadcast(DeviceInfoIntentResult.createIntentResult(device, extras).setAction(
                 ROBOT_FOUND_ACTION))
         }
     }
-
-    private val SCAN_PERIOD: Long = 10000
-    private var scanning = false
-
-    fun leScan(deviceName: String){
-        val leScanCallback: ScanCallback = object : ScanCallback() {
-            override fun onScanResult(callbackType: Int, result: ScanResult) {
-                super.onScanResult(callbackType, result)
-                if(result.device.name == deviceName && rssiHandler != null){
-                    val msg = rssiHandler!!.obtainMessage(MESSAGE_RSSI, result.rssi)
-                    Debugger.printDebug("leScan()", "LeScan found: ${result.device.name} - Address: ${result.device.address} - [RSSI: ${result.rssi}")
-                    Debugger.printDebug("leScan()", "Sending RSSI Message to Handler")
-                    msg.sendToTarget()
-                }
-            }
-        }
-
-        if (!scanning && rssiHandler != null) { // Stops scanning after a pre-defined scan period.
-            rssiHandler!!.postDelayed({
-                scanning = false
-                bluetoothLeScanner.stopScan(leScanCallback)
-            }, SCAN_PERIOD)
-            scanning = true
-            Debugger.printDebug("leScan()", "Started LeScan")
-            bluetoothLeScanner.startScan(leScanCallback)
-        } else {
-            scanning = false
-            bluetoothLeScanner.stopScan(leScanCallback)
-        }
-    }
-
-
-
 
 }

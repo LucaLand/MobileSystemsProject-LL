@@ -1,12 +1,8 @@
 package it.unibo.mobilesystems.joystickView
 
-import it.unibo.mobilesystems.bluetoothUtils.MyBluetoothService
-import it.unibo.mobilesystems.debugUtils.Debugger
+import it.unibo.mobilesystems.bluetooth.MyBluetoothService
 import it.unibo.mobilesystems.msgUtils.RobotMove
 import it.unibo.mobilesystems.msgUtils.RobotMsgUtils
-import unibo.actor22comm.utils.CommUtils
-
-
 
 
 class JoystickOnMoveListener : JoystickView.OnMoveListener {

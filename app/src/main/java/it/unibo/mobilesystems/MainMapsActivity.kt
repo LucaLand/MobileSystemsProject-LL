@@ -31,20 +31,20 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import it.unibo.kactor.MsgUtil
 import it.unibo.kactor.QakContext
 import it.unibo.kactor.sysUtil
+import it.unibo.mobilesystems.actors.GattActor
 import it.unibo.mobilesystems.actors.launchQakWithBuildTimeScan
-import it.unibo.mobilesystems.bluetoothUtils.*
+import it.unibo.mobilesystems.bluetooth.*
 import it.unibo.mobilesystems.databinding.ActivityMapsBinding
 import it.unibo.mobilesystems.debugUtils.Debugger
 import it.unibo.mobilesystems.fileUtils.ConfigManager
 import it.unibo.mobilesystems.joystickView.JoystickOnMoveListener
 import it.unibo.mobilesystems.joystickView.JoystickView
-import it.unibo.mobilesystems.msgUtils.RobotMove
-import it.unibo.mobilesystems.msgUtils.RobotMsgUtils
 import it.unibo.mobilesystems.permissionManager.PermissionType
 import it.unibo.mobilesystems.permissionManager.PermissionsManager.permissionCheck
 import it.unibo.mobilesystems.permissionManager.PermissionsManager.permissionsCheck
 import it.unibo.mobilesystems.permissionManager.PermissionsManager.permissionsRequest
 import it.unibo.mobilesystems.utils.ApplicationVals
+import it.unibo.mobilesystems.utils.atomicNullableVar
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.runBlocking
 import org.osmdroid.config.Configuration
@@ -124,8 +124,6 @@ open class MainMapsActivity : AppCompatActivity() /*, LocationListener*/ {
 
         joystickView.setOnMoveListener(JoystickOnMoveListener())
 
-
-
         //PERMISSION
         internetPermissions()
         if(locationPermission()){
@@ -139,12 +137,6 @@ open class MainMapsActivity : AppCompatActivity() /*, LocationListener*/ {
         deviceName = ConfigManager.getConfigString(ROBOT_DEVICE_NAME)
 
         MyBluetoothService.setServiceHandler(bluetoothMessageHandler)
-
-        //Handlers For LeScanner Rssi Messages
-        myBluetoothManager?.rssiHandler = BluetoothSocketMessagesHandler().setCallbackForMessage(MESSAGE_RSSI) {string ->
-            updateRSSIValue(string?.toInt())
-            Debugger.printDebug("RSSI Handler", "Recived RSSI Message - Updated RSSI Progress Bar")
-        }
 
         //Handlers For Socket Messages
         bluetoothMessageHandler.setCallbackForMessage(MESSAGE_READ) { string ->
@@ -167,8 +159,12 @@ open class MainMapsActivity : AppCompatActivity() /*, LocationListener*/ {
 
             MyBluetoothService.enabled = true
             joystickEnable(true)
-            if(device != null)
-                gatt = device?.connectGatt(applicationContext, false, GattCallBack({int ->  updateRSSIValue(int)}))
+            if(device != null) {
+                val gattCallback = LambdaGattCallback()
+                gattCallback.addOnRssiReaded(true, this::updateRssiUi)
+                gatt = device!!.connectGatt(applicationContext, false, gattCallback)
+                GattActor.gattDescriptor = atomicNullableVar(GattDescriptor(gatt!!, gattCallback))
+            }
             //updateRSSIValue(80)
         }
 
@@ -339,6 +335,36 @@ open class MainMapsActivity : AppCompatActivity() /*, LocationListener*/ {
 
     }
 
+    /*
+    private fun updateRSSIValue(gatt : BluetoothGatt, rssiValue : Int, status : Int) {
+        Debugger.printDebug("UI", "Updated RSSI [$rssiValue]")
+        var color : Int = Color.GRAY
+        when(rssiValue){
+            in 61..100 -> {
+                color = Color.GREEN
+                MyBluetoothService.enabled = true
+                joystickEnable(true)
+            }
+            //in 41..79 -> rssiProgressBarr.setBackgroundColor(Color.YELLOW)
+            in 20..60 -> {
+                MyBluetoothService.sendMsg(RobotMsgUtils.cmdMsgFactory(RobotMove.HALT))
+                MyBluetoothService.enabled = false
+                //Toast.makeText(this, "Low Connection!!", 3)
+                joystickEnable(false)
+            }
+        }
+
+        //Set Color
+        rssiProgressBarr.setBackgroundColor(color)
+        rssiTextView.setBackgroundColor(color)
+
+
+        val meter = ((10.0.pow((( (-5) - (rssiValue - 100) )/40.0)))*100.0).toInt()
+        //Set RSSI and print
+        rssiTextView.text = "$rssiValue ($meter cm)"
+        rssiProgressBarr.setProgress(rssiValue, true)
+    }
+
     private fun updateRSSIValue(rssiValue: Int?){
         if (rssiValue != null) {
             Debugger.printDebug("UI", "Updated RSSI [$rssiValue]")
@@ -368,6 +394,26 @@ open class MainMapsActivity : AppCompatActivity() /*, LocationListener*/ {
             rssiTextView.text = "$rssiValue ($meter cm)"
             rssiProgressBarr.setProgress(rssiValue, true)
         }
+    }*/
+
+    fun updateRssiUi(gatt : BluetoothGatt, rssi : Int, status : Int) {
+        var color : Int = Color.GRAY
+        when(rssi) {
+            in 61..100 -> {
+                color = Color.GREEN
+                joystickEnable(true)
+            }
+            in 20..60 -> {
+                color = Color.GRAY
+                joystickEnable(false)
+            }
+        }
+        rssiProgressBarr.setBackgroundColor(color)
+        rssiTextView.setBackgroundColor(color)
+        val meter = ((10.0.pow((( (-5) - (rssi - 100) )/40.0)))*100.0).toInt()
+        //Set RSSI and print
+        rssiTextView.text = "$rssi ($meter cm)"
+        rssiProgressBarr.setProgress(rssi, true)
     }
 
     /**
@@ -413,7 +459,9 @@ open class MainMapsActivity : AppCompatActivity() /*, LocationListener*/ {
                 device = intent?.getParcelableExtra<BluetoothDevice>(DEVICE_RESULT_CODE)
 
                 //GATT CONNECTION
-                gatt = device?.connectGatt(applicationContext, false, GattCallBack({int ->  updateRSSIValue(int)}))
+                val lambdaGattCallback = LambdaGattCallback(QakContext.scope22)
+                lambdaGattCallback.addOnRssiReaded(true, this::updateRssiUi)
+                gatt = device?.connectGatt(applicationContext, false, lambdaGattCallback)
             }
         }
         return startBluetoothActivityForResult
