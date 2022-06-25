@@ -13,11 +13,15 @@ class BluetoothSocketViewModel(
     private val serviceUuid : String
 ) : ViewModel() {
 
-    fun connectSocket(onSocketConnected : suspend (BluetoothSocket) -> Unit) {
+    fun connectSocket(onSocketConnected : suspend (Result<BluetoothSocket>) -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
             val socket = device.createRfcommSocketToServiceRecord(UUID.fromString(serviceUuid))
-            socket.connect()
-            onSocketConnected(socket)
+            try {
+                socket.connect()
+                onSocketConnected(Result.success(socket))
+            } catch (e : Exception) {
+                onSocketConnected(Result.failure(e))
+            }
         }
     }
 

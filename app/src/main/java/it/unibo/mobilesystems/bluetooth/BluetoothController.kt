@@ -113,7 +113,8 @@ class BluetoothController(
                     device ->
                 if(device.address == options.address) {
                     options.whenFound(device)
-                    activity.runOnUiThread { this@BluetoothController.stopDiscoveringDevices() }
+                    if(options.disableDiscoveryAfterFound)
+                        activity.runOnUiThread { this@BluetoothController.stopDiscoveringDevices() }
                 }
             }
 
@@ -121,7 +122,8 @@ class BluetoothController(
                     device ->
                 if(device.name == options.name) {
                     options.whenFound(device)
-                    activity.runOnUiThread { this@BluetoothController.stopDiscoveringDevices() }
+                    if(options.disableDiscoveryAfterFound)
+                        activity.runOnUiThread { this@BluetoothController.stopDiscoveringDevices() }
                 }
             }
 
@@ -129,7 +131,8 @@ class BluetoothController(
                     device ->
                 if(device.address == options.address || device.name == options.name) {
                     options.whenFound(device)
-                    activity.runOnUiThread { this@BluetoothController.stopDiscoveringDevices() }
+                    if(options.disableDiscoveryAfterFound)
+                        activity.runOnUiThread { this@BluetoothController.stopDiscoveringDevices() }
                 }
             }
 
@@ -137,19 +140,30 @@ class BluetoothController(
                     device ->
                 if(device.address == options.address && device.name == options.name) {
                     options.whenFound(device)
-                    activity.runOnUiThread { this@BluetoothController.stopDiscoveringDevices() }
+                    if(options.disableDiscoveryAfterFound)
+                        activity.runOnUiThread { this@BluetoothController.stopDiscoveringDevices() }
                 }
+            }
+
+            DiscoverySearchType.FIND_FIRST_OFFERING_SERVICE -> {
+                    device ->
+                if(device.uuids.find { it.uuid == options.uuid } != null) {
+                    options.whenFound(device)
+                    if(options.disableDiscoveryAfterFound)
+                        activity.runOnUiThread { this@BluetoothController.stopDiscoveringDevices() }
+                }
+
             }
         }
     }
 
     fun asyncConnect(device: BluetoothDevice, uuid: String,
-                     onSocketConnection : suspend (BluetoothSocket) -> Unit) {
+                     onSocketConnection : suspend (Result<BluetoothSocket>) -> Unit) {
         BluetoothSocketViewModel(device, uuid).connectSocket(onSocketConnection)
     }
 
     fun asyncDiscoverySearchAndConnect(address: String, uuid : String,
-                     onSocketConnection : suspend (BluetoothSocket) -> Unit) {
+                     onSocketConnection : suspend (Result<BluetoothSocket>) -> Unit) {
         asyncDiscoverySearch {
             findFirstThatHasAddress(address)
             whenFound { device ->
@@ -177,6 +191,14 @@ class BluetoothController(
 
     fun getPairedDevice(address: String, name : String) : Optional<BluetoothDevice> {
         return Optional.ofNullable(bluetoothAdapter!!.bondedDevices.find { it.address == address && it.name == name })
+    }
+
+    fun getPairedDevicesOfferingService(uuidString: String) : Set<BluetoothDevice> {
+        val uuid = UUID.fromString(uuidString)
+        return bluetoothAdapter!!.bondedDevices.filter {
+                device ->
+            device.uuids.find { devUuid -> devUuid.uuid == uuid } != null
+        }.toSet()
     }
 
     fun isAddressOfPairedDevice(address : String) : Boolean {

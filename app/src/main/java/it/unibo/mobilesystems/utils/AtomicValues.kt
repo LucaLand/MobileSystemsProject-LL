@@ -3,57 +3,67 @@ package it.unibo.mobilesystems.utils
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
+data class MutableNullableVar<T>(
+    var value : T?
+)
+
+data class MutableVar<T>(
+    var value : T
+)
+
 interface AtomicNullableVar<T> {
     suspend fun set(value : T?)
     suspend fun get() : T?
-    suspend fun withValue(action : (T?) -> Unit)
-    suspend fun <R> map(mapper : (T?) -> R) : R
+    suspend fun withValue(action : MutableNullableVar<T>.(T?) -> Unit)
+    suspend fun <R> map(mapper : MutableNullableVar<T>.(T?) -> R) : R
 }
 
 interface AtomicVar<T> {
     suspend fun set(value : T)
     suspend fun get() : T
-    suspend fun withValue(action : (T) -> Unit)
-    suspend fun <R> map(mapper : (T) -> R) : R
+    suspend fun withValue(action : MutableVar<T>.(T) -> Unit)
+    suspend fun <R> map(mapper : MutableVar<T>.(T) -> R) : R
 }
 
 class AtomicNullableSharedMemoryVar<T> (
-    private var value : T? = null
+    value : T? = null
 ) : AtomicNullableVar<T> {
 
     private val mutex = Mutex()
+    private var mutNullVar = MutableNullableVar(value)
 
     override suspend fun set(value : T?) {
         mutex.withLock {
-            this.value = value
+            this.mutNullVar.value = value
         }
     }
 
     override suspend fun get() : T? {
         mutex.withLock {
-            return this.value
+            return this.mutNullVar.value
         }
     }
 
-    override suspend fun withValue(action : (T?) -> Unit) {
+    override suspend fun withValue(action : MutableNullableVar<T>.(T?) -> Unit) {
         mutex.withLock{
-            action(this.value)
+            mutNullVar.action(mutNullVar.value)
         }
     }
 
-    override suspend fun <R> map(mapper : (T?) -> R) : R {
+    override suspend fun <R> map(mapper : MutableNullableVar<T>.(T?) -> R) : R {
         return mutex.withLock {
-            mapper(this.value)
+            mutNullVar.mapper(mutNullVar.value)
         }
     }
 
 }
 
 class AtomicSharedMemoryVar<T>(
-    private var value : T
+    var value : T
 ) : AtomicVar<T> {
 
     private val mutex = Mutex()
+    private val mutVar = MutableVar(value)
 
     override suspend fun set(value : T) {
         mutex.withLock {
@@ -67,15 +77,15 @@ class AtomicSharedMemoryVar<T>(
         }
     }
 
-    override suspend fun withValue(action : (T) -> Unit) {
+    override suspend fun withValue(action : MutableVar<T>.(T) -> Unit) {
         mutex.withLock{
-            action(this.value)
+            this.mutVar.action(mutVar.value)
         }
     }
 
-    override suspend fun <R> map(mapper : (T) -> R) : R {
+    override suspend fun <R> map(mapper : MutableVar<T>.(T) -> R) : R {
         return mutex.withLock {
-            mapper(this.value)
+            this.mutVar.mapper(mutVar.value)
         }
     }
 

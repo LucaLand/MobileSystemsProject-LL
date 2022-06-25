@@ -22,8 +22,10 @@ class QakBluetoothConnection(
     private lateinit var input : BufferedReader
     private lateinit var output : BufferedWriter
 
-    private constructor(name : String, bluetoothDevice: BluetoothDevice, bluetoothSocket: BluetoothSocket) : this(
-        name, bluetoothDevice, null) {
+    constructor(name : String, bluetoothDevice: BluetoothDevice, bluetoothSocket: BluetoothSocket,
+                        uuid : String? = null
+    ) : this(
+        name, bluetoothDevice, uuid) {
         if(!bluetoothSocket.isConnected)
             throw IllegalArgumentException("socket not connected")
         this.bluetoothSocket = bluetoothSocket
@@ -133,6 +135,10 @@ fun BluetoothDevice.createQakConnection(name : String, uuid : String,
     withConnection(conn)
 
     return conn
+}
+
+fun BluetoothSocket.qakConnection(name : String) : QakBluetoothConnection {
+    return QakBluetoothConnection(name, this.remoteDevice, this)
 }
 
 fun BluetoothDevice.openQakConnection(name : String, uuid: String) : QakBluetoothConnection {

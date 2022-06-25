@@ -1,6 +1,7 @@
 package it.unibo.mobilesystems.bluetooth
 
 import android.bluetooth.BluetoothDevice
+import java.util.*
 
 class DiscoverySearchOptionsImpl() : DiscoverySearchOptions {
 
@@ -11,6 +12,12 @@ class DiscoverySearchOptionsImpl() : DiscoverySearchOptions {
     lateinit var name : String
         private set
     lateinit var address : String
+        private set
+    lateinit var uuid : UUID
+        private set
+    lateinit var uuidString: String
+        private set
+    var disableDiscoveryAfterFound = true
         private set
 
     override fun findFirstThatHasName(name : String) {
@@ -35,8 +42,22 @@ class DiscoverySearchOptionsImpl() : DiscoverySearchOptions {
         this.name = name
     }
 
+    override fun findFirstThatOffersService(uuid: String) {
+        searcType = DiscoverySearchType.FIND_FIRST_OFFERING_SERVICE
+        this.uuid = UUID.fromString(uuid)
+        this.uuidString = uuid
+    }
+
     override fun whenFound(action : (BluetoothDevice) -> Unit) {
         this.whenFound = action
+    }
+
+    override fun continueDiscoveryAfterFound() {
+        this.disableDiscoveryAfterFound = false
+    }
+
+    override fun disableDiscoveryWhenFound() {
+        this.disableDiscoveryAfterFound = true
     }
 
 }
