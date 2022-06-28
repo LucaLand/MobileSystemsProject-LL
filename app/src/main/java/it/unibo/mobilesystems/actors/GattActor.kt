@@ -3,6 +3,7 @@ package it.unibo.mobilesystems.actors
 import android.bluetooth.BluetoothGatt
 import com.google.gson.Gson
 import it.unibo.kactor.QActorBasicFsm
+import it.unibo.kactor.IQActorBasic.*
 import it.unibo.kactor.annotations.*
 import it.unibo.mobilesystems.bluetooth.GattDescriptor
 import it.unibo.mobilesystems.debugUtils.Debugger
@@ -61,7 +62,7 @@ class GattActor : QActorBasicFsm() {
     @State
     @Initial
     @EpsilonMove("start2idle", "idle")
-    suspend fun start() {
+    suspend fun begin() {
         Debugger.printDebug(name, actorStringln("started"))
         updateGatt()
     }

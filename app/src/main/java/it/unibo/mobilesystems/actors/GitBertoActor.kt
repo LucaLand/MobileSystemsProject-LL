@@ -3,6 +3,7 @@ package it.unibo.mobilesystems.actors
 import com.google.gson.Gson
 import it.unibo.kactor.QActorBasicFsm
 import it.unibo.kactor.annotations.*
+import it.unibo.kactor.IQActorBasic.*
 import it.unibo.mobilesystems.bluetooth.MyBluetoothService
 import it.unibo.mobilesystems.debugUtils.Debugger
 import it.unibo.mobilesystems.geo.KLocation
@@ -39,7 +40,7 @@ class GitBertoActor() : QActorBasicFsm() {
     @State
     @Initial
     @EpsilonMove("start2work", "work")
-    suspend fun start() {
+    suspend fun begin() {
         Debugger.printDebug(name, actorStringln("started"))
     }
 

@@ -5,6 +5,7 @@ import com.google.android.gms.location.*
 import com.google.gson.Gson
 import it.unibo.kactor.QActorBasicFsm
 import it.unibo.kactor.annotations.*
+import it.unibo.kactor.IQActorBasic.*
 import it.unibo.mobilesystems.debugUtils.Debugger
 import it.unibo.mobilesystems.geo.KLocation
 import it.unibo.mobilesystems.utils.ApplicationVals
@@ -31,7 +32,7 @@ class LocationManagerActor() : QActorBasicFsm() {
     }
 
     private val gson = Gson()
-    private val fusedLocationClient = ApplicationVals.fusedLocationServices.get()
+    private lateinit var fusedLocationClient : FusedLocationProviderClient
     private val locationCallback = object : LocationCallback() {
         override fun onLocationResult(p0: LocationResult) {
             Debugger.printDebug(name, actorStringln("LocationResult : $p0"))
@@ -47,9 +48,16 @@ class LocationManagerActor() : QActorBasicFsm() {
 
     @State
     @Initial
-    @EpsilonMove("begin2idle", "idle")
+    @WhenDispatch("begin2getLocationClient", "getLocationClient", "updateLocationClient")
     suspend fun begin() {
-        Debugger.printDebug(name, actorStringln("started"))
+        Debugger.printDebug(name, actorStringln("started. Waiting for location client..."))
+    }
+
+    @State
+    @EpsilonMove("getLocationClient2idle", "idle")
+    suspend fun getLocationClient() {
+        fusedLocationClient = ApplicationVals.fusedLocationServices.get()
+        Debugger.printDebug(name, actorStringln("location client: $fusedLocationClient"))
     }
 
     @State

@@ -9,7 +9,6 @@ import android.bluetooth.BluetoothGatt
 import android.content.Context
 import android.content.Intent
 import android.content.IntentSender
-import android.content.pm.PackageManager
 import android.graphics.Color
 import android.location.LocationManager
 import android.os.Build
@@ -23,19 +22,19 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isGone
+import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
 import com.google.android.gms.tasks.Task
 import com.google.android.material.bottomsheet.BottomSheetBehavior
-import it.unibo.kactor.MsgUtil
+import it.unibo.kactor.*
 import it.unibo.kactor.QakContext
-import it.unibo.kactor.sysUtil
-import it.unibo.mobilesystems.actors.GATT_ACTOR_NAME
-import it.unibo.mobilesystems.actors.GattActor
-import it.unibo.mobilesystems.actors.UPDATE_GATT_DESCRIPTOR_MSG_NAME
-import it.unibo.mobilesystems.actors.launchQakWithBuildTimeScan
+import it.unibo.kactor.annotations.*
+import it.unibo.kactor.annotations.State
+import it.unibo.kactor.model.TransientStartMode
+import it.unibo.mobilesystems.actors.*
 import it.unibo.mobilesystems.bluetooth.*
 import it.unibo.mobilesystems.databinding.ActivityMapsBinding
 import it.unibo.mobilesystems.debugUtils.Debugger
@@ -51,6 +50,8 @@ import it.unibo.mobilesystems.utils.ExitCodes
 import it.unibo.mobilesystems.utils.OkDialogFragment
 import it.unibo.mobilesystems.utils.atomicNullableVar
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
@@ -80,8 +81,11 @@ const val SOCKET_CLOSED_ACTION = "SOCKET_CLOSED_ACTION"
 //TODO(Use the Gatt server disconnection to notice when the device disconnect - Send the socket error message or encapsulate all in a function)
 //TODO(Use the Osmdroid RoadMap to: -Search a point, -Get all the instruction, -Send command to the Robot to reach the destination)
 //TODO(Doubleclick on Joypad for "Impennata!")
-
-open class MainMapsActivity : AppCompatActivity() /*, LocationListener*/ {
+@QActor(GIT_BERTO_CTX_NAME)
+@CustomScope("MAIN")
+@StartMode(TransientStartMode.MANUAL)
+open class MainMapsActivity : AppCompatActivity(),
+    IQActorBasicFsm by qakActorFsm(MainMapsActivity::class.java, DEFAULT_PARAMS) /*, LocationListener*/ {
 
     companion object {
         const val ACTIVITY_NAME = "MAIN_ACTIVITY"
@@ -104,18 +108,26 @@ open class MainMapsActivity : AppCompatActivity() /*, LocationListener*/ {
     private lateinit var rssiTextView: TextView
 
     private var deviceName: String? = null
+    private lateinit var locationManagerActor: ActorBasic
 
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setInstanceAndStart(this)
         Debugger.printDebug("MainMapsActivity", "onCreate")
         binding = ActivityMapsBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        //Actors
+        locationManagerActor = QakContext.getActor(LOCATION_MANAGER_ACTOR_NAME)!!
+
         //Setting application vals...
         ApplicationVals.systemLocationManager.set(getSystemService(Context.LOCATION_SERVICE) as LocationManager)
         ApplicationVals.fusedLocationServices.set(LocationServices.getFusedLocationProviderClient(applicationContext))
+        lifecycleScope.launch {
+            MsgUtil.sendMsg("updateLocationClient", "update", locationManagerActor )
+        }
 
         //UI COMPONENTS
         rssiProgressBarr = findViewById(R.id.rssi_progress_bar)
@@ -135,17 +147,25 @@ open class MainMapsActivity : AppCompatActivity() /*, LocationListener*/ {
         map = startMap()
 
         //QActor
-        Debugger.printDebug(ACTIVITY_NAME, "starting QAK actors...")
+        /*Debugger.printDebug(ACTIVITY_NAME, "starting QAK actors...")
         runBlocking {
             sysUtil.ioEnabled = false
             launchQakWithBuildTimeScan()
-        }
+        }*/
         Debugger.printDebug(ACTIVITY_NAME, "QAK actor started")
 
         //Launch activity for bluetooth connection
         Debugger.printDebug(ACTIVITY_NAME, "Starting bluetooth activity for connection")
         startBluetoothActivity(
             initRegisterForBluetoothActivityResult(this::onBluetoothActivityResult))
+
+    }
+
+    @State
+    @Initial
+    suspend fun begin() {
+        actorPrintln("STARTED")
+        Toast.makeText(this, "TOAST FROM ACTOR :)", 3).show()
 
     }
 
@@ -477,6 +497,7 @@ open class MainMapsActivity : AppCompatActivity() /*, LocationListener*/ {
 
     override fun onDestroy() {
         super.onDestroy()
+        APP_SCOPE.cancel()
         QakContext.scope22.cancel()
     }
 

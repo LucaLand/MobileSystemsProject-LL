@@ -10,6 +10,10 @@ import android.widget.Toast.LENGTH_SHORT
 import androidx.activity.result.ActivityResult
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
+import it.unibo.kactor.annotations.QActor
+import it.unibo.kactor.annotations.StartMode
+import it.unibo.kactor.model.TransientStartMode
+import it.unibo.mobilesystems.actors.GIT_BERTO_CTX_NAME
 import it.unibo.mobilesystems.actors.qakBluetoothConnection
 import it.unibo.mobilesystems.bluetooth.*
 import it.unibo.mobilesystems.debugUtils.Debugger
