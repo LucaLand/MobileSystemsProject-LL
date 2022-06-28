@@ -7,9 +7,11 @@ import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothSocket
 import android.content.Intent
 import android.content.IntentFilter
+import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import it.unibo.mobilesystems.debugUtils.Debugger
 import java.io.IOException
 import java.util.*
 
@@ -27,6 +29,7 @@ class BluetoothController(
         private set
     var isDiscovering = false
         private set
+    private var isBluetoothSetupRequested = false
 
     init {
         var isBluetoothSupported = false
@@ -53,20 +56,25 @@ class BluetoothController(
             throw IllegalStateException("bluetooth is not set up")
     }
 
-    fun setupBluetooth() {
-        checkSetupOrThrow()
-
-        if(!bluetoothAdapter!!.isEnabled) {
-            val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
-            //activity.startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT, bundle)
-            bluetoothEnableActivityResultLancher = activity.registerForActivityResult(
-                ActivityResultContracts.StartActivityForResult()
-            ) {
-                when (it.resultCode) {
-                    Activity.RESULT_OK -> isBluetoothSetup = true
+    fun asyncSetupBluetooth(onBluetoothSetup : (ActivityResult) -> Unit) {
+        if(!isBluetoothSetup && !isBluetoothSetupRequested) {
+            isBluetoothSetupRequested = true
+            if(!bluetoothAdapter!!.isEnabled) {
+                val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+                //activity.startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT, bundle)
+                bluetoothEnableActivityResultLancher = activity.registerForActivityResult(
+                    ActivityResultContracts.StartActivityForResult()
+                ) {
+                    when (it.resultCode) {
+                        Activity.RESULT_OK -> this@BluetoothController.isBluetoothSetup = true
+                    }
+                    onBluetoothSetup(it)
                 }
+                bluetoothEnableActivityResultLancher.launch(enableBtIntent)
+            } else {
+                isBluetoothSetup = true
+                onBluetoothSetup(ActivityResult(Activity.RESULT_OK, null))
             }
-            bluetoothEnableActivityResultLancher.launch(enableBtIntent)
         }
     }
 

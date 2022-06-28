@@ -1,23 +1,25 @@
 package it.unibo.mobilesystems
 
+import android.app.Activity
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothSocket
 import android.content.Intent
 import android.os.Bundle
 import android.widget.*
 import android.widget.Toast.LENGTH_SHORT
+import androidx.activity.result.ActivityResult
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import it.unibo.mobilesystems.actors.qakBluetoothConnection
 import it.unibo.mobilesystems.bluetooth.*
 import it.unibo.mobilesystems.debugUtils.Debugger
 import it.unibo.mobilesystems.fileUtils.ConfigManager
-import it.unibo.mobilesystems.utils.ExitCodes
+import it.unibo.mobilesystems.permissionManager.PermissionType
+import it.unibo.mobilesystems.permissionManager.PermissionsManager
 import it.unibo.mobilesystems.utils.OkDialogFragment
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.*
-import kotlin.system.exitProcess
 
 class BluetoothConnectionActivity : AppCompatActivity() {
 
@@ -28,7 +30,7 @@ class BluetoothConnectionActivity : AppCompatActivity() {
     lateinit var startButton : Button
     lateinit var progressBar: ProgressBar
 
-    private val bluetoothController = BluetoothController(this)
+    private lateinit var bluetoothController : BluetoothController
     var resultIntent = Intent()
 
     var device : BluetoothDevice? = null
@@ -40,6 +42,8 @@ class BluetoothConnectionActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_bluetooth_conncection)
+
+        bluetoothController = BluetoothController(this)
 
         /** UI ITEM - Init**/
         startButton = findViewById(R.id.StartButton)
@@ -55,29 +59,44 @@ class BluetoothConnectionActivity : AppCompatActivity() {
         deviceName = ConfigManager.getConfigString(ROBOT_DEVICE_NAME)
         deviceAddress = ConfigManager.getConfigString(ROBOT_DEVICE_ADDRESS)
 
-        trySetupBluetoothOrClose()
-        setupConnection()   //Search first into already paired device
-                            //then, if no device is found, start a bluetooth discovery.
-                            //All is done asynchronously
+        Debugger.printDebug(ACTIVITY_NAME, "setting up bluetooth")
+        trySetupBluetoothOrClose{ setupResult ->
+            Debugger.printDebug(ACTIVITY_NAME, "bluetooth setup result: $setupResult")
+            if(setupResult.resultCode == Activity.RESULT_CANCELED) {
+                Debugger.printDebug(ACTIVITY_NAME, "setup bluetooth failed")
+                finishAffinity()
+            }
 
+            Debugger.printDebug(ACTIVITY_NAME, "bluetooth setup completed")
+            setupConnection()   //Search first into already paired device
+            //then, if no device is found, start a bluetooth discovery.
+            //All is done asynchronously
+            Toast.makeText(applicationContext,
+                "Searching GitBerto via Bluetooth",
+                LENGTH_SHORT
+            )
+            Debugger.printDebug(ACTIVITY_NAME, "started connection mechanism")
+        }
     }
 
-    private fun trySetupBluetoothOrClose() {
+    private fun trySetupBluetoothOrClose(onBluetoothSetup : (ActivityResult) -> Unit) {
         try {
-            bluetoothController.setupBluetooth()
+            PermissionsManager.permissionCheck(PermissionType.Bluetooth, this)
+            bluetoothController.asyncSetupBluetooth(onBluetoothSetup)
         } catch (e : Exception) {
             OkDialogFragment("Unable to setup bluetooth: ${e.localizedMessage}") {
-                finish()
-                exitProcess(ExitCodes.BLUEOOTH_NOT_SUPPORTED)
+                e.printStackTrace()
+                Debugger.printDebug(ACTIVITY_NAME, "setup bluetooth failed due to exception: ${e.localizedMessage}")
+                finishAffinity()
             }.show(supportFragmentManager, OkDialogFragment.TAG)
         }
     }
 
     private fun checkUUIDPresentOrClose() {
-        if(uuid == null) {
+        if(uuidString == null) {
             OkDialogFragment("Unable to search for QAK service: missing UUID") {
-                finish()
-                exitProcess(ExitCodes.MISSING_UUID)
+                Debugger.printDebug(ACTIVITY_NAME, "unable to get the UUID of the QAK service")
+                finishAffinity()
             }.show(supportFragmentManager, OkDialogFragment.TAG)
         }
     }
@@ -86,6 +105,7 @@ class BluetoothConnectionActivity : AppCompatActivity() {
         progressBar.animate()
         //Search for device
         val devices = bluetoothController.getPairedDevicesOfferingService(uuidString!!)
+        Debugger.printDebug(ACTIVITY_NAME, "found previously paired device: $device")
         pairedDeviceConnectIterationOrSearchForDevices(devices.iterator()) //call searchForDevice when finished
     }
 
@@ -163,7 +183,7 @@ class BluetoothConnectionActivity : AppCompatActivity() {
      * **/
     private fun connectionPhaseDone(){
         //MyBluetoothService.sendMsg("START- Are you ready gitRobot?")
-        //setActivityResult()
+        setActivityResult()
         setResult(RESULT_OK, resultIntent)
         this.finish()
     }

@@ -1,6 +1,7 @@
 package it.unibo.mobilesystems.utils
 
 object ExitCodes {
-    val BLUEOOTH_NOT_SUPPORTED = 1
-    val MISSING_UUID = 2
+    const val BLUETOOTH_NOT_SUPPORTED = 1
+    const val BLUETOOTH_NOT_ACTIVATED = 2
+    const val MISSING_UUID = 2
 }
