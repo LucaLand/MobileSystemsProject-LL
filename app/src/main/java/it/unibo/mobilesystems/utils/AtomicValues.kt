@@ -59,7 +59,7 @@ class AtomicNullableSharedMemoryVar<T> (
 }
 
 class AtomicSharedMemoryVar<T>(
-    var value : T
+    value : T
 ) : AtomicVar<T> {
 
     private val mutex = Mutex()
@@ -67,13 +67,13 @@ class AtomicSharedMemoryVar<T>(
 
     override suspend fun set(value : T) {
         mutex.withLock {
-            this.value = value
+            this.mutVar.value = value
         }
     }
 
     override suspend fun get() : T {
         mutex.withLock {
-            return this.value
+            return this.mutVar.value
         }
     }
 

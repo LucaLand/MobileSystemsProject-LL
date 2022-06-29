@@ -66,7 +66,7 @@ abstract class ActorAppCompactActivity : AppCompatActivity(), IQActorBasicFsm {
      * ```
      * @param update the block that has to be called to update the ui
      */
-    protected suspend fun updateUi(update : () -> Unit) {
+    protected suspend fun updateUi(update : suspend () -> Unit) {
         withContext(Dispatchers.Main) {
             update()
         }

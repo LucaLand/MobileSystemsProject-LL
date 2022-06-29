@@ -1,31 +1,38 @@
 package it.unibo.mobilesystems
 
-import android.app.Activity
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothSocket
 import android.content.Intent
 import android.os.Bundle
 import android.widget.*
 import android.widget.Toast.LENGTH_SHORT
-import androidx.activity.result.ActivityResult
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
-import it.unibo.kactor.annotations.QActor
-import it.unibo.kactor.annotations.StartMode
+import it.unibo.kactor.IQActorBasic.*
+import it.unibo.kactor.IQActorBasicFsm
+import it.unibo.kactor.annotations.*
 import it.unibo.kactor.model.TransientStartMode
-import it.unibo.mobilesystems.actors.GIT_BERTO_CTX_NAME
-import it.unibo.mobilesystems.actors.qakBluetoothConnection
+import it.unibo.kactor.qakActorFsm
+import it.unibo.mobilesystems.actors.*
 import it.unibo.mobilesystems.bluetooth.*
 import it.unibo.mobilesystems.debugUtils.Debugger
 import it.unibo.mobilesystems.fileUtils.ConfigManager
-import it.unibo.mobilesystems.permissionManager.PermissionType
-import it.unibo.mobilesystems.permissionManager.PermissionsManager
+import it.unibo.mobilesystems.utils.AdapterDialog
 import it.unibo.mobilesystems.utils.OkDialogFragment
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import java.io.IOException
 import java.util.*
+import kotlin.jvm.optionals.getOrNull
 
-class BluetoothConnectionActivity : AppCompatActivity() {
+private const val SETUP_BT_CMD = "setupBluetooth"
+private const val BEGIN_CONNECTION_CMD = "beginConnection"
+
+@QActor(GIT_BERTO_CTX_NAME)
+@StartMode(TransientStartMode.MANUAL)
+class BluetoothConnectionActivity : ActorAppCompactActivity(),
+    IQActorBasicFsm by qakActorFsm(BluetoothConnectionActivity::class.java, Dispatchers.Default, DEFAULT_PARAMS) {
 
     companion object {
         val ACTIVITY_NAME = "BLUETOOTH_ACTIVITY"
@@ -33,6 +40,7 @@ class BluetoothConnectionActivity : AppCompatActivity() {
 
     lateinit var startButton : Button
     lateinit var progressBar: ProgressBar
+    lateinit var mainTextView : TextView
 
     private lateinit var bluetoothController : BluetoothController
     var resultIntent = Intent()
@@ -43,13 +51,17 @@ class BluetoothConnectionActivity : AppCompatActivity() {
     var uuidString : String? = null
     var uuid : UUID? = null
 
+    val channel = Channel<Unit>()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Debugger.printDebug(ACTIVITY_NAME, "onCreate")
         setContentView(R.layout.activity_bluetooth_conncection)
 
         bluetoothController = BluetoothController(this)
 
         /** UI ITEM - Init**/
+        mainTextView = findViewById(R.id.mainTextView)
         startButton = findViewById(R.id.StartButton)
         progressBar = findViewById(R.id.progressBar2)
         startButton.setOnClickListener { connectionPhaseDone() }
@@ -62,38 +74,143 @@ class BluetoothConnectionActivity : AppCompatActivity() {
         uuid = UUID.fromString(uuidString)
         deviceName = ConfigManager.getConfigString(ROBOT_DEVICE_NAME)
         deviceAddress = ConfigManager.getConfigString(ROBOT_DEVICE_ADDRESS)
+        Debugger.printDebug(ACTIVITY_NAME, "bluetooth supported: ${bluetoothController.isBluetoothSupported}")
 
-        Debugger.printDebug(ACTIVITY_NAME, "setting up bluetooth")
-        trySetupBluetoothOrClose{ setupResult ->
-            Debugger.printDebug(ACTIVITY_NAME, "bluetooth setup result: $setupResult")
-            if(setupResult.resultCode == Activity.RESULT_CANCELED) {
-                Debugger.printDebug(ACTIVITY_NAME, "setup bluetooth failed")
-                finishAffinity()
+        bluetoothController.setupBluetooth {
+            lifecycleLaunch {
+                autoMsg(SETUP_BT_CMD, "setup")
+                Debugger.printDebug(ACTIVITY_NAME, "autoMsg: $SETUP_BT_CMD")
             }
+        }
+        Debugger.printDebug(ACTIVITY_NAME, "onCreate - finished")
+    }
 
-            Debugger.printDebug(ACTIVITY_NAME, "bluetooth setup completed")
-            setupConnection()   //Search first into already paired device
-            //then, if no device is found, start a bluetooth discovery.
-            //All is done asynchronously
-            Toast.makeText(applicationContext,
-                "Searching GitBerto via Bluetooth",
-                LENGTH_SHORT
-            )
-            Debugger.printDebug(ACTIVITY_NAME, "started connection mechanism")
+    /* ACTOR PART *********************************************************************** */
+    private var connectedDevice : BluetoothDevice? = null
+    private var connectedSocket : BluetoothSocket? = null
+    private var stringifier : (BluetoothDevice) -> String = {
+        "${it.name} [${it.address}]"
+    }
+
+    private lateinit var adapterDialog : AdapterDialog<BluetoothDevice>
+
+    @OptIn(ExperimentalStdlibApi::class)
+    @State
+    @Initial
+    @WhenDispatch("idle2setupBluetooth", "setupBluetooth", SETUP_BT_CMD)
+    suspend fun begin() {
+        Debugger.printDebug(name, actorStringln("-> BEGIN"))
+        if(deviceAddress != null)
+            device = bluetoothController.getPairedDeviceByAddress(deviceAddress!!).getOrNull()
+        updateUi {
+            adapterDialog = AdapterDialog(this, "Scanned Devices",
+                android.R.layout.simple_list_item_1, stringifier)
+            adapterDialog.androidDialog.setCancelable(false)
+            adapterDialog.androidDialog.setCanceledOnTouchOutside(false)
+        }
+        Debugger.printDebug(name, actorStringln("dialog for discovery set"))
+    }
+
+    @State
+    @EpsilonMove("afterSetup", "connectToSavedDevice")
+    suspend fun setupBluetooth() {
+        Debugger.printDebug(name, actorStringln("-> SETUP BLUETOOTH"))
+        updateUi {
+            progressBar.animate()
         }
     }
 
-    private fun trySetupBluetoothOrClose(onBluetoothSetup : (ActivityResult) -> Unit) {
-        try {
-            PermissionsManager.permissionCheck(PermissionType.Bluetooth, this)
-            bluetoothController.asyncSetupBluetooth(onBluetoothSetup)
-        } catch (e : Exception) {
-            OkDialogFragment("Unable to setup bluetooth: ${e.localizedMessage}") {
-                e.printStackTrace()
-                Debugger.printDebug(ACTIVITY_NAME, "setup bluetooth failed due to exception: ${e.localizedMessage}")
-                finishAffinity()
-            }.show(supportFragmentManager, OkDialogFragment.TAG)
+    @GuardFor("afterSetup", "unableToSetup")
+    fun checkBluetooth() : Boolean {
+        return bluetoothController.isBluetoothSetup
+    }
+
+    @State
+    suspend fun unableToSetup() {
+        Debugger.printDebug(name, actorStringln("-> UNABLE TO SETUP"))
+        updateUi {
+            mainTextView.text = "Unable to setup bluetooth"
         }
+    }
+
+    @State
+    @EpsilonMove("afterConnectionToSaved", "connected") //GUARDED, else: scenForNewOnes
+    suspend fun connectToSavedDevice() {
+        Debugger.printDebug(name, actorStringln("-> BEGIN CONNECTION [address: $deviceAddress, uuid: $uuidString"))
+
+        updateUi { if(!progressBar.isAnimating) progressBar.animate() }
+
+        //Attempt to connect to paired device
+        if(device != null && uuidString != null) {
+            Debugger.printDebug(name, "trying to connect with the last device...")
+            try {
+                connectedSocket = bluetoothController.connectToRfcommService(device!!, uuidString!!)
+                connectedDevice = device
+            } catch (ioe : IOException) {
+                Debugger.printDebug(name, actorStringln("connection with last device failed: ${ioe.localizedMessage}"))
+                updateUi {
+                    Toast.makeText(this,
+                        "Unable to connect with GitBerto [$deviceName:$deviceAddress]",
+                        Toast.LENGTH_LONG).show()
+                }
+            }
+        } else {
+            Debugger.printDebug(name, actorStringln("no device previously associated"))
+        }
+
+    }
+
+    @GuardFor("afterConnectionToSaved", "scanForNewOnes")
+    fun isConnected() : Boolean {
+        return connectedDevice != null
+    }
+
+    @State
+    @EpsilonMove("scanForNewOnes2connectToSavedDevice", "connectToSavedDevice")
+    suspend fun scanForNewOnes() {
+        Debugger.printDebug(name, actorStringln("-> SCAN FOR NEW ONES [isDiscovering: ${bluetoothController.isDiscovering.get()}]"))
+        var selectedDevice : BluetoothDevice? = null
+        val scannedDevice = mutableSetOf<BluetoothDevice>()
+        adapterDialog.clear()
+        while(selectedDevice == null) {
+            adapterDialog.addOnSelection {
+                selectedDevice = it
+                actorLaunch { bluetoothController.cancelDiscovery() }
+            }
+            updateUi {
+                adapterDialog.show()
+            }
+            bluetoothController.discoverDevices {
+                if(scannedDevice.add(it)) {
+                    adapterDialog.addItem(it)
+                }
+            }
+        }
+        Debugger.printDebug(name, actorStringln("device selection done: $selectedDevice"))
+        device = selectedDevice
+        deviceAddress = selectedDevice!!.address
+        deviceName = selectedDevice!!.name
+
+
+        //Then selectedDevice is not null
+        updateUi {
+            Toast.makeText(this,
+                "Trying to connect to ${selectedDevice!!.name}:${selectedDevice!!.address}",
+                Toast.LENGTH_LONG
+            )
+        }
+    }
+
+    @State
+    suspend fun connected() {
+        updateUi { mainTextView.text = "CONNECTED: $device" }
+        val gattCallback = LambdaGattCallback(APP_SCOPE)
+        val gatt = connectedDevice!!.connectGatt(applicationContext, false, gattCallback)
+        GattActor.gattDescriptor.set(GattDescriptor(gatt, gattCallback))
+        send dispatch UPDATE_GATT_DESCRIPTOR_MSG_NAME to GATT_ACTOR_NAME withContent "update"
+        delay(500)
+        send dispatch DO_POLLING_MSG_NAME to GATT_ACTOR_NAME withContent "polling"
+        onConnectionSucceeded(connectedDevice!!, connectedSocket!!)
     }
 
     private fun checkUUIDPresentOrClose() {
@@ -105,61 +222,6 @@ class BluetoothConnectionActivity : AppCompatActivity() {
         }
     }
 
-    private fun setupConnection() {
-        progressBar.animate()
-        //Search for device
-        val devices = bluetoothController.getPairedDevicesOfferingService(uuidString!!)
-        Debugger.printDebug(ACTIVITY_NAME, "found previously paired device: $device")
-        pairedDeviceConnectIterationOrSearchForDevices(devices.iterator()) //call searchForDevice when finished
-    }
-
-    private fun pairedDeviceConnectIterationOrSearchForDevices(iterator : Iterator<BluetoothDevice>) {
-        if(iterator.hasNext()) {
-            val device = iterator.next()
-            Debugger.printDebug(ACTIVITY_NAME, "paired device iteration [device: $device]")
-            bluetoothController.asyncConnect(device, uuidString!!) { connectResult ->
-                Debugger.printDebug(ACTIVITY_NAME, "connection result: $connectResult [device: $device]")
-                if(connectResult.isSuccess) { //Device connected
-                    onConnectionSucceeded(device, connectResult.getOrThrow())
-                } else { //Device not connected
-                    withContext(Dispatchers.Main) {
-                        Toast.makeText(applicationContext,
-                            "connection failed with paired device [${device.address}:${device.name}]: ${
-                                connectResult.exceptionOrNull()?.localizedMessage}",
-                            LENGTH_SHORT
-                        )
-                    }
-                    pairedDeviceConnectIterationOrSearchForDevices(iterator)
-                }
-            }
-        } else { //Finished iteration
-            searchForDevice()
-        }
-    }
-
-    private fun searchForDevice() {
-        Debugger.printDebug("searching for available bluetooth devices")
-
-        bluetoothController.asyncDiscoverySearch {
-            findFirstThatOffersService(uuidString!!)
-            whenFound { device ->
-                Debugger.printDebug(ACTIVITY_NAME, "found compatible device: $device")
-                bluetoothController.asyncConnect(device, uuidString!!) { connectResult ->
-                    Debugger.printDebug(ACTIVITY_NAME, "connection result: $connectResult [device: $device]")
-                    if(connectResult.isSuccess) {
-                        onConnectionSucceeded(device, connectResult.getOrThrow())
-                    } else {
-                        continueDiscoveryAfterFound()
-                        Toast.makeText(applicationContext,
-                            "connection failed with found device [${device.address}:${device.name}]: ${
-                                connectResult.exceptionOrNull()?.localizedMessage}",
-                            LENGTH_SHORT
-                        )
-                    }
-                }
-            }
-        }
-    }
 
     //Executed asynchronously when connection succeeded
     private suspend fun onConnectionSucceeded(device : BluetoothDevice, socket : BluetoothSocket) {

@@ -7,6 +7,7 @@ import it.unibo.kactor.parameters.mutableParameterMap
 import it.unibo.kactor.utils.addAnnotatedClassesParams
 import it.unibo.kactor.utils.addBlockIOParam
 import it.unibo.kactor.utils.addSystemScope
+import it.unibo.mobilesystems.BluetoothConnectionActivity
 import it.unibo.mobilesystems.MainMapsActivity
 import it.unibo.mobilesystems.bluetooth.QakBluetoothConnection
 import it.unibo.mobilesystems.utils.atomicNullableVar
@@ -22,7 +23,9 @@ val DEFAULT_PARAMS = mutableParameterMap()
         ContextConfiguration::class.java,
         LocationManagerActor::class.java,
         GitBertoActor::class.java,
-        MainMapsActivity::class.java)
+        MainMapsActivity::class.java,
+        BluetoothConnectionActivity::class.java
+    )
     .addSystemScope(APP_SCOPE)
     .apply {
         CUSTOM_SCOPES["MAIN"] = MainScope()

@@ -144,6 +144,7 @@ class GattActor : QActorBasicFsm() {
         return isPolling
     }
 
+    @State
     @EpsilonMove("afterUpdateGatt", "polling")     //GUARDED: if was polling
                                                                     //then return to poll
     suspend fun updateGatt() {

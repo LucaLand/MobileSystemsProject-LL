@@ -49,10 +49,7 @@ import it.unibo.mobilesystems.utils.ApplicationVals
 import it.unibo.mobilesystems.utils.ExitCodes
 import it.unibo.mobilesystems.utils.OkDialogFragment
 import it.unibo.mobilesystems.utils.atomicNullableVar
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
@@ -84,9 +81,9 @@ const val SOCKET_CLOSED_ACTION = "SOCKET_CLOSED_ACTION"
 @QActor(GIT_BERTO_CTX_NAME)
 //@CustomScope("MAIN")
 @StartMode(TransientStartMode.MANUAL)
-open class MainMapsActivity : ActorAppCompactActivity(), IQActorBasicFsm by qakActorFsm(MainMapsActivity::class.java, DEFAULT_PARAMS) {/*: AppCompatActivity(),
-    IQActorBasicFsm by qakActorFsm(MainMapsActivity::class.java, DEFAULT_PARAMS) /*, LocationListener*/ {
-*/
+open class MainMapsActivity : ActorAppCompactActivity(),
+    IQActorBasicFsm by qakActorFsm(MainMapsActivity::class.java,Dispatchers.Default, DEFAULT_PARAMS) {
+
     companion object {
         const val ACTIVITY_NAME = "MAIN_ACTIVITY"
     }
@@ -164,12 +161,6 @@ open class MainMapsActivity : ActorAppCompactActivity(), IQActorBasicFsm by qakA
     @Initial
     suspend fun begin() {
         actorPrintln("STARTED")
-        updateUi {
-            Toast.makeText(this, "TOAST FROM ACTOR :)", 3).show()
-        }
-        delay(3000)
-        Toast.makeText(this, "TOAST 2 FROM ACTOR :)", 3).show()
-
     }
 
     private fun onBluetoothActivityResult(result: ActivityResult) {
