@@ -11,29 +11,55 @@ import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import it.unibo.mobilesystems.debugUtils.Debugger
+import androidx.lifecycle.lifecycleScope
+import it.unibo.kactor.utils.LateSingleInit
+import it.unibo.kactor.utils.lateSingleInit
+import it.unibo.mobilesystems.utils.atomicVar
+import it.unibo.mobilesystems.utils.onMain
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.launch
 import java.io.IOException
 import java.util.*
 
 const val REQUEST_ENABLE_BT = 1
 
-class BluetoothController(
-    private val activity : AppCompatActivity
+/**
+ * A bluetooth controller that **must** be associated with an activity.
+ * **This class is not thread/coroutine safe** (apart for the methods
+ * [discoverDevices] and [cancelDiscovery] that can be invoked concurrently
+ * from multiple coroutines)
+ */
+class BluetoothController (
+    private val activity : AppCompatActivity,
+    private val scope : CoroutineScope = activity.lifecycleScope
 ) {
 
     private var bluetoothManager : BluetoothManager? = null
     private var bluetoothAdapter : BluetoothAdapter? = null
+    private val resultChan = Channel<Any>()
 
-    private val isBluetoothSupported : Boolean
+    /**
+     * Is `true` only if this device supports bluetooth
+     */
+    val isBluetoothSupported : Boolean
+
+    /**
+     * Is `true` if this controller has already setup the bluetooth
+     */
     var isBluetoothSetup = false
         private set
-    var isDiscovering = false
-        private set
+
+    /**
+     * Is `true` only if this controller is actually discovering bluetooth
+     * device
+     */
+    val isDiscovering = atomicVar(false)
     private var isBluetoothSetupRequested = false
 
     init {
         var isBluetoothSupported = false
-        bluetoothManager = activity.getSystemService(BluetoothManager::class.java)
+        onMain(scope) {bluetoothManager = activity.getSystemService(BluetoothManager::class.java)}
         if(bluetoothManager != null) {
             bluetoothAdapter = bluetoothManager!!.adapter
             if(bluetoothAdapter != null)
@@ -44,19 +70,41 @@ class BluetoothController(
 
     private lateinit var bluetoothEnableActivityResultLancher : ActivityResultLauncher<Intent>
     private val bluetoothDiscoveryBroadcastReceiver = BluetoothDiscoveryBroadcastReceiver()
+    private val controllerOnDeviceDiscovered : (BluetoothDevice) -> Unit = { device ->
+        scope.launch { resultChan.send(device) }
+    }
+    private val controllerOnDiscoveryFinished : () -> Unit = {
+        scope.launch { resultChan.send(BluetoothAdapter.ACTION_DISCOVERY_FINISHED) }
+    }
 
+    /**
+     * Checks if the device supports bluetooth or throws an exception if not
+     * @exception [IOException] if the device does not support bluetooth
+     */
     private fun checkSupportOrThrow() {
         if(!isBluetoothSupported)
             throw IOException("bluetooth not supported")
     }
 
+    /**
+     * Checks if the bluetooth has been setup by this controller and throws
+     * an exception if not. Notice that this method throws an exception also if
+     * this device does not support bluetooth
+     * @exception [IOException] if the device does not support bluetooth
+     * @exception [IllegalStateException] if the bluetooth has not been setup
+     */
     private fun checkSetupOrThrow() {
         checkSupportOrThrow()
         if(!isBluetoothSetup)
             throw IllegalStateException("bluetooth is not set up")
     }
 
-    fun asyncSetupBluetooth(onBluetoothSetup : (ActivityResult) -> Unit) {
+    /**
+     * Setup the bluetooth. The invocation of this method is required before
+     * calling other methods that requires bluetooth
+     * @return `true` if bluetooth has correctly been setup
+     */
+    suspend fun setupBluetooth() : Boolean {
         if(!isBluetoothSetup && !isBluetoothSetupRequested) {
             isBluetoothSetupRequested = true
             if(!bluetoothAdapter!!.isEnabled) {
@@ -64,42 +112,108 @@ class BluetoothController(
                 //activity.startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT, bundle)
                 bluetoothEnableActivityResultLancher = activity.registerForActivityResult(
                     ActivityResultContracts.StartActivityForResult()
-                ) {
-                    when (it.resultCode) {
-                        Activity.RESULT_OK -> this@BluetoothController.isBluetoothSetup = true
-                    }
-                    onBluetoothSetup(it)
+                ) { result ->
+                    scope.launch { resultChan.send(result) }
                 }
                 bluetoothEnableActivityResultLancher.launch(enableBtIntent)
             } else {
                 isBluetoothSetup = true
-                onBluetoothSetup(ActivityResult(Activity.RESULT_OK, null))
             }
         }
+        val res = resultChan.receive() as ActivityResult
+        isBluetoothSetup = res.resultCode == Activity.RESULT_OK
+        return isBluetoothSetup
     }
 
-    fun startAsyncDiscoveringDevices(onDeviceDiscovered : (BluetoothDevice) -> Unit) {
-        checkSetupOrThrow()
-        if(!isDiscovering) {
+    /**
+     * Discovers bluetooth devices and invoke [onDeviceDiscovered] when a device is found.
+     * This method waits until the discover is finished and returns the discovered devices
+     * @exception [IllegalStateException] if this controller is already discovering devices or if
+     * bluetooth has not been setup
+     * @exception [IOException] if bluetooth is not supported
+     * @param onDeviceDiscovered the action that will be invoked when a device is found
+     * @return a [Set] that contains all the discovered devices
+     */
+    suspend fun discoverDevices(onDeviceDiscovered : (BluetoothDevice) -> Unit) : Set<BluetoothDevice> {
+        isDiscovering.withValue {
+            if(this.value)
+                throw IllegalStateException("already discovering")
+            this.value = true
+        }
+
+        try {
+            checkSetupOrThrow()
             bluetoothDiscoveryBroadcastReceiver.addOnDeviceDiscovered(onDeviceDiscovered)
-            val filter = IntentFilter(BluetoothDevice.ACTION_FOUND)
-            activity.registerReceiver(bluetoothDiscoveryBroadcastReceiver, filter)
-            bluetoothAdapter!!.startDiscovery()
-            isDiscovering = true
+            bluetoothDiscoveryBroadcastReceiver.addOnDeviceDiscovered(controllerOnDeviceDiscovered)
+            bluetoothDiscoveryBroadcastReceiver.addOnDiscoveryFinished(controllerOnDiscoveryFinished)
+
+            onMain {
+                val actionFoundFilter = IntentFilter(BluetoothDevice.ACTION_FOUND)
+                activity.registerReceiver(bluetoothDiscoveryBroadcastReceiver, actionFoundFilter)
+                val discoveryFinishedFilter = IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)
+                activity.registerReceiver(bluetoothDiscoveryBroadcastReceiver, discoveryFinishedFilter)
+                bluetoothAdapter!!.startDiscovery()
+            }
+
+            val devices = mutableSetOf<BluetoothDevice>()
+            var res : Any
+            do {
+                res = resultChan.receive()
+                when(res) {
+                    is BluetoothDevice -> {
+                        devices.add(res)
+                    }
+                }
+
+            } while (res is String && res != BluetoothAdapter.ACTION_DISCOVERY_FINISHED)
+
+            bluetoothDiscoveryBroadcastReceiver.removeOnDeviceDiscovered(onDeviceDiscovered)
+            bluetoothDiscoveryBroadcastReceiver.removeOnDeviceDiscovered(controllerOnDeviceDiscovered)
+            bluetoothDiscoveryBroadcastReceiver.removeOnDiscoveryFinished(controllerOnDiscoveryFinished)
+            onMain {
+                activity.unregisterReceiver(bluetoothDiscoveryBroadcastReceiver)
+            }
+
+            return devices
+        } finally {
+            isDiscovering.set(false)
         }
     }
 
-    fun stopDiscoveringDevices() {
-        checkSetupOrThrow()
-        if(isDiscovering) {
-            activity.unregisterReceiver(bluetoothDiscoveryBroadcastReceiver)
-            bluetoothAdapter!!.cancelDiscovery()
-            bluetoothDiscoveryBroadcastReceiver.removeAllOnDeviceDiscovered()
-            isDiscovering = false
+    /**
+     * Cancels the running discovery of the devices.
+     * This method can be used concurrently while the [discoverDevices] method is running so, for
+     * example, it can be used to *stop* the device discovering when a certain device is found.
+     * If this method is called while [discoverDevices] is performing, then [discoverDevices] returns
+     * the list of the devices already discovered until [cancelDiscovery] is invoked
+     */
+    suspend fun cancelDiscovery() {
+        isDiscovering.withValue {
+            if(this.value)
+                onMain { bluetoothAdapter?.cancelDiscovery() }
         }
     }
 
-    fun asyncDiscoverySearch(searchOptBuilder: DiscoverySearchOptions.() -> Unit) {
+    /**
+     * Performs the research of one (or more) devices using the discovery and returns an [Optional]
+     * that represents the result. If it is empy, so no device with the passed parameters has been
+     * found. The parameters of the research can be set using [searchOptBuilder]
+     *
+     * For example, if you want to search for a device with `"myDeviceName"` name:
+     * ```
+     * bluetoothController.discoverySearch {
+     *      findFirstThatHasName("myDeviceName")
+     *      whenFound { device ->
+     *          show(device)
+     *      }
+     * }
+     * ```
+     * @exception [IOException] if the device does not support bluetooth
+     * @exception [IllegalStateException] if the bluetooth has not been setup
+     * @param searchOptBuilder a builder that can be used to set the parameter of the research
+     * @return an [Optional] that contains the found device or that is empty if not found
+     */
+    suspend fun discoverySearch(searchOptBuilder: DiscoverySearchOptions.() -> Unit) : Optional<BluetoothDevice> {
         checkSetupOrThrow()
         val options = DiscoverySearchOptionsImpl()
         options.searchOptBuilder()
@@ -109,11 +223,15 @@ class BluetoothController(
             throw IllegalArgumentException("search type not set")
         }
 
-        val callback = generateDiscoverySearchCallback(options)
-        startAsyncDiscoveringDevices(callback)
+        val foundDevice = lateSingleInit<BluetoothDevice>()
+        val callback = generateDiscoverySearchCallback(foundDevice, options)
+        discoverDevices(callback)
+        return Optional.ofNullable(foundDevice.getOrNull())
     }
 
-    private fun generateDiscoverySearchCallback(options: DiscoverySearchOptionsImpl) :
+    private suspend fun generateDiscoverySearchCallback(
+        discoveredDeviceContainer : LateSingleInit<BluetoothDevice>,
+        options: DiscoverySearchOptionsImpl) :
                 (BluetoothDevice) -> Unit {
         return when(options.searcType) {
 
@@ -121,8 +239,9 @@ class BluetoothController(
                     device ->
                 if(device.address == options.address) {
                     options.whenFound(device)
+                    discoveredDeviceContainer.set(device)
                     if(options.disableDiscoveryAfterFound)
-                        activity.runOnUiThread { this@BluetoothController.stopDiscoveringDevices() }
+                        scope.launch { this@BluetoothController.cancelDiscovery() }
                 }
             }
 
@@ -130,8 +249,9 @@ class BluetoothController(
                     device ->
                 if(device.name == options.name) {
                     options.whenFound(device)
+                    discoveredDeviceContainer.set(device)
                     if(options.disableDiscoveryAfterFound)
-                        activity.runOnUiThread { this@BluetoothController.stopDiscoveringDevices() }
+                        scope.launch { this@BluetoothController.cancelDiscovery() }
                 }
             }
 
@@ -139,8 +259,9 @@ class BluetoothController(
                     device ->
                 if(device.address == options.address || device.name == options.name) {
                     options.whenFound(device)
+                    discoveredDeviceContainer.set(device)
                     if(options.disableDiscoveryAfterFound)
-                        activity.runOnUiThread { this@BluetoothController.stopDiscoveringDevices() }
+                        scope.launch { this@BluetoothController.cancelDiscovery() }
                 }
             }
 
@@ -148,8 +269,9 @@ class BluetoothController(
                     device ->
                 if(device.address == options.address && device.name == options.name) {
                     options.whenFound(device)
+                    discoveredDeviceContainer.set(device)
                     if(options.disableDiscoveryAfterFound)
-                        activity.runOnUiThread { this@BluetoothController.stopDiscoveringDevices() }
+                        scope.launch { this@BluetoothController.cancelDiscovery() }
                 }
             }
 
@@ -157,27 +279,41 @@ class BluetoothController(
                     device ->
                 if(device.uuids.find { it.uuid == options.uuid } != null) {
                     options.whenFound(device)
+                    discoveredDeviceContainer.set(device)
                     if(options.disableDiscoveryAfterFound)
-                        activity.runOnUiThread { this@BluetoothController.stopDiscoveringDevices() }
+                        scope.launch { this@BluetoothController.cancelDiscovery() }
                 }
 
             }
         }
     }
 
-    fun asyncConnect(device: BluetoothDevice, uuid: String,
-                     onSocketConnection : suspend (Result<BluetoothSocket>) -> Unit) {
-        BluetoothSocketViewModel(device, uuid).connectSocket(onSocketConnection)
+    /**
+     * Performs a connection to the RFCOMM service offered by the device
+     * passed as param with the given [uuid]
+     * @exception [IOException] if the device does not support bluetooth or on error,
+     * for example Bluetooth not available, or insufficient permissions or connection fails
+     * @exception [IllegalStateException] if the bluetooth has not been setup
+     * @param device the remote device to connect to
+     * @param uuid a string that contains the `uuid` of the RFCOMM service
+     */
+    suspend fun connectToRfcommService(device: BluetoothDevice, uuid: String) : BluetoothSocket {
+        checkSetupOrThrow()
+        BluetoothSocketViewModel(device, uuid).connectToRfcommService{
+            resultChan.send(it)
+        }
+        return (resultChan.receive() as Result<BluetoothSocket>).getOrThrow()
     }
 
-    fun asyncDiscoverySearchAndConnect(address: String, uuid : String,
-                     onSocketConnection : suspend (Result<BluetoothSocket>) -> Unit) {
-        asyncDiscoverySearch {
+    suspend fun searchAndConnect(address: String, uuid : String) : Optional<BluetoothSocket> {
+        val discoverRes = discoverySearch {
             findFirstThatHasAddress(address)
-            whenFound { device ->
-                BluetoothSocketViewModel(device, uuid).connectSocket(onSocketConnection)
-            }
         }
+
+        if(!discoverRes.isPresent)
+            return Optional.empty()
+
+        return Optional.of(connectToRfcommService(discoverRes.get(), uuid))
     }
 
     /* BLUETOOTH UTILITY FUNCTION ******************************************************* */

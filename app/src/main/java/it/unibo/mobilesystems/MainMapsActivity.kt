@@ -82,11 +82,11 @@ const val SOCKET_CLOSED_ACTION = "SOCKET_CLOSED_ACTION"
 //TODO(Use the Osmdroid RoadMap to: -Search a point, -Get all the instruction, -Send command to the Robot to reach the destination)
 //TODO(Doubleclick on Joypad for "Impennata!")
 @QActor(GIT_BERTO_CTX_NAME)
-@CustomScope("MAIN")
+//@CustomScope("MAIN")
 @StartMode(TransientStartMode.MANUAL)
-open class MainMapsActivity : AppCompatActivity(),
+open class MainMapsActivity : ActorAppCompactActivity(), IQActorBasicFsm by qakActorFsm(MainMapsActivity::class.java, DEFAULT_PARAMS) {/*: AppCompatActivity(),
     IQActorBasicFsm by qakActorFsm(MainMapsActivity::class.java, DEFAULT_PARAMS) /*, LocationListener*/ {
-
+*/
     companion object {
         const val ACTIVITY_NAME = "MAIN_ACTIVITY"
     }
@@ -114,7 +114,6 @@ open class MainMapsActivity : AppCompatActivity(),
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setInstanceAndStart(this)
         Debugger.printDebug("MainMapsActivity", "onCreate")
         binding = ActivityMapsBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -165,7 +164,11 @@ open class MainMapsActivity : AppCompatActivity(),
     @Initial
     suspend fun begin() {
         actorPrintln("STARTED")
-        Toast.makeText(this, "TOAST FROM ACTOR :)", 3).show()
+        updateUi {
+            Toast.makeText(this, "TOAST FROM ACTOR :)", 3).show()
+        }
+        delay(3000)
+        Toast.makeText(this, "TOAST 2 FROM ACTOR :)", 3).show()
 
     }
 

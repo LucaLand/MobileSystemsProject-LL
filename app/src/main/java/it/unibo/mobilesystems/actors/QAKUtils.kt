@@ -27,13 +27,6 @@ val DEFAULT_PARAMS = mutableParameterMap()
     .apply {
         CUSTOM_SCOPES["MAIN"] = MainScope()
     }
-suspend fun launchQakWithBuildTimeScan() {
-    launchQak("ann_class_names" to mutableListOf(
-        ContextConfiguration::class.qualifiedName!!,
-        LocationManagerActor::class.qualifiedName!!,
-        GitBertoActor::class.qualifiedName!!
-    ))
-}
 
 val qakBluetoothConnection = atomicNullableVar<QakBluetoothConnection>()
 

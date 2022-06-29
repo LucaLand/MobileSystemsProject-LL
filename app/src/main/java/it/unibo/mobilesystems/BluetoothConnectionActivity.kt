@@ -139,6 +139,7 @@ class BluetoothConnectionActivity : AppCompatActivity() {
 
     private fun searchForDevice() {
         Debugger.printDebug("searching for available bluetooth devices")
+
         bluetoothController.asyncDiscoverySearch {
             findFirstThatOffersService(uuidString!!)
             whenFound { device ->

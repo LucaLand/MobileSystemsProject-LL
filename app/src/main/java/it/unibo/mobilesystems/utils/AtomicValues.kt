@@ -14,15 +14,15 @@ data class MutableVar<T>(
 interface AtomicNullableVar<T> {
     suspend fun set(value : T?)
     suspend fun get() : T?
-    suspend fun withValue(action : MutableNullableVar<T>.(T?) -> Unit)
-    suspend fun <R> map(mapper : MutableNullableVar<T>.(T?) -> R) : R
+    suspend fun withValue(action : suspend MutableNullableVar<T>.(T?) -> Unit)
+    suspend fun <R> map(mapper : suspend MutableNullableVar<T>.(T?) -> R) : R
 }
 
 interface AtomicVar<T> {
     suspend fun set(value : T)
     suspend fun get() : T
-    suspend fun withValue(action : MutableVar<T>.(T) -> Unit)
-    suspend fun <R> map(mapper : MutableVar<T>.(T) -> R) : R
+    suspend fun withValue(action : suspend MutableVar<T>.(T) -> Unit)
+    suspend fun <R> map(mapper : suspend MutableVar<T>.(T) -> R) : R
 }
 
 class AtomicNullableSharedMemoryVar<T> (
@@ -44,13 +44,13 @@ class AtomicNullableSharedMemoryVar<T> (
         }
     }
 
-    override suspend fun withValue(action : MutableNullableVar<T>.(T?) -> Unit) {
+    override suspend fun withValue(action : suspend MutableNullableVar<T>.(T?) -> Unit) {
         mutex.withLock{
             mutNullVar.action(mutNullVar.value)
         }
     }
 
-    override suspend fun <R> map(mapper : MutableNullableVar<T>.(T?) -> R) : R {
+    override suspend fun <R> map(mapper : suspend MutableNullableVar<T>.(T?) -> R) : R {
         return mutex.withLock {
             mutNullVar.mapper(mutNullVar.value)
         }
@@ -77,13 +77,13 @@ class AtomicSharedMemoryVar<T>(
         }
     }
 
-    override suspend fun withValue(action : MutableVar<T>.(T) -> Unit) {
+    override suspend fun withValue(action : suspend MutableVar<T>.(T) -> Unit) {
         mutex.withLock{
             this.mutVar.action(mutVar.value)
         }
     }
 
-    override suspend fun <R> map(mapper : MutableVar<T>.(T) -> R) : R {
+    override suspend fun <R> map(mapper : suspend MutableVar<T>.(T) -> R) : R {
         return mutex.withLock {
             this.mutVar.mapper(mutVar.value)
         }
