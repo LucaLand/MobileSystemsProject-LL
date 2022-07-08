@@ -23,6 +23,36 @@
 \usepackage[dvipsnames]{xcolor}
 \usepackage{listings}
 
+% CUSTOM COMMANDS ---------------------------------------------------------
+\newcommand{\gitberto}{\texttt{GitBerto}}
+
+%USER STORIES -------------------------------------------------------------
+\usepackage[framemethod=TikZ]{mdframed}
+\newcounter{userstories}[section]\setcounter{userstories}{0}
+\newcommand{\cus}{\arabic{section}.\arabic{userstories}}
+
+\newenvironment{userstory}[2][]{%
+	\refstepcounter{userstories}%
+	\ifstrempty{#1}%
+	{\mdfsetup{%
+			frametitle={%
+				\tikz[baseline=(current bounding box.east),outer sep=0pt]
+				\node[anchor=east,rectangle,fill=blue!20]
+				{\strut User Story~\cus};}}
+	}%
+	{\mdfsetup{%
+			frametitle={%
+				\tikz[baseline=(current bounding box.east),outer sep=0pt]
+				\node[anchor=east,rectangle,fill=blue!20]
+				{\strut User Story~\cus:~#1};}}%
+	}%
+	\mdfsetup{innertopmargin=10pt,linecolor=blue!20,%
+		linewidth=2pt,topline=true,%
+		frametitleaboveskip=\dimexpr-\ht\strutbox\relax
+	}
+	\begin{mdframed}[]\relax%
+		\label{#2}}{\end{mdframed}}
+
 %Setting listing
 \definecolor{mygreen}{rgb}{0,0.6,0}
 \definecolor{mygray}{rgb}{0.5,0.5,0.5}
@@ -67,6 +97,7 @@
 	\tableofcontents
 	
 	%Body -----------------------------------------------------------------------------------
+	\input{section/00_abstract.tex}
 	\input{section/01_introduction.tex}
 	%----------------------------------------------------------------------------------------
 	
