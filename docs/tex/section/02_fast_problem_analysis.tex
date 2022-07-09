@@ -55,11 +55,19 @@ Then, this socket can be used exactly as the internet protocol sockets in order 
 
 \begin{tcolorbox}
 	\begin{center}
-		\textbf{We have used \texttt{BluetoothSocket} implementation in order to create a bluetooth server on \texttt{Raspberry} that make it able to communicate with the device of the user.}
+		\textbf{We have used \texttt{BluetoothSocket} implementation in order to create a bluetooth server on \texttt{Raspberry} that make it able to communicate with the device of the user. No library or third-party components are needed in \texttt{Android}.}
 	\end{center}
 \end{tcolorbox}
 
+\subsection{Actor modeling}
 
+In the \textit{Mobile System} course we study the fundamentals of \texttt{Android} developing.
+We deeply analysed all components offered to the \texttt{Android} developer such as \href{https://developer.android.com/reference/android/app/Activity}{\texttt{Activity}}, \href{https://developer.android.com/guide/components/services}{Services}, \href{https://developer.android.com/reference/android/content/Intent}{\texttt{Intent}},
+\href{https://developer.android.com/guide/components/broadcasts}{\texttt{Broadcast Received}}, \href{https://developer.android.com/reference/android/os/AsyncTask}{\texttt{AsyncTask}} and so on and so forth\dots
 
+Now, we want to merge all of these concepts with the already mentioned \texttt{actor meta-modeling} and programming. For these purposes, as anticipated we have the \texttt{QA-System} that is well documented at the \texttt{Github} \href{https://htmlpreview.github.io/?https://github.com/anatali/issLab2022/blob/main/it.unibo.issLabStart/userDocs/Dispense/lezioni/html/QakIntro.html}{\texttt{repository}} of the corse of \textit{Ingegneria dei Sistemi Software}.
 
+Just to give a fast overview, \textbf{an actor is an active entity that receives messages thanks to a channel that it owns}. So, when an actor receives a message, it performs some action depending on the contents. The \texttt{QAK} system make easy to define and handle actors that are mapped into \texttt{Kotlin} \href{https://developer.android.com/kotlin/coroutines?gclsrc=ds&gclsrc=ds}{coroutines} and, in addition to this, the infrastructure fully support the concept of \textbf{actor as finite state machine} that change their internal state by receiving messages or \textit{events}.
+
+ 
 

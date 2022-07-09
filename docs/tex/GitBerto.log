@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.24 (MiKTeX 22.1) (preloaded format=pdflatex 2022.1.31)  9 JUL 2022 16:14
+This is pdfTeX, Version 3.141592653-2.6-1.40.24 (MiKTeX 22.1) (preloaded format=pdflatex 2022.1.31)  9 JUL 2022 16:39
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -975,7 +975,7 @@ LaTeX Font Info:    Font shape `T1/cmtt/bx/n' in size <12> not available
 
 pdfTeX warning: pdflatex.exe (file ./img/user_story_main.pdf): PDF inclusion: f
 ound PDF version <1.7>, but at most version <1.5> allowed
-<img/user_story_main.pdf, id=54, 488.78609pt x 450.72388pt>
+<img/user_story_main.pdf, id=59, 488.78609pt x 450.72388pt>
 File: img/user_story_main.pdf Graphic file (type pdf)
 <use img/user_story_main.pdf>
 Package pdftex.def Info: img/user_story_main.pdf  used on input line 25.
@@ -984,7 +984,7 @@ Package pdftex.def Info: img/user_story_main.pdf  used on input line 25.
 
 pdfTeX warning: pdflatex.exe (file ./img/coarse_architecture.pdf): PDF inclusio
 n: found PDF version <1.7>, but at most version <1.5> allowed
-<img/coarse_architecture.pdf, id=130, 434.58359pt x 248.8497pt>
+<img/coarse_architecture.pdf, id=135, 434.58359pt x 248.8497pt>
 File: img/coarse_architecture.pdf Graphic file (type pdf)
 <use img/coarse_architecture.pdf>
 Package pdftex.def Info: img/coarse_architecture.pdf  used on input line 48.
@@ -997,7 +997,7 @@ LaTeX Font Info:    Font shape `T1/cmtt/bx/n' in size <14.4> not available
 
 pdfTeX warning: pdflatex.exe (file ./img/kbluez_general_architecture.pdf): PDF 
 inclusion: found PDF version <1.7>, but at most version <1.5> allowed
-<img/kbluez_general_architecture.pdf, id=187, 621.28107pt x 467.82779pt>
+<img/kbluez_general_architecture.pdf, id=192, 621.28107pt x 467.82779pt>
 File: img/kbluez_general_architecture.pdf Graphic file (type pdf)
 <use img/kbluez_general_architecture.pdf>
 Package pdftex.def Info: img/kbluez_general_architecture.pdf  used on input lin
@@ -1010,7 +1010,7 @@ LaTeX Warning: `!h' float specifier changed to `!ht'.
 
 pdfTeX warning: pdflatex.exe (file ./img/uml_bluetooth_socket_interface.pdf): P
 DF inclusion: found PDF version <1.7>, but at most version <1.5> allowed
-<img/uml_bluetooth_socket_interface.pdf, id=189, 246.9225pt x 284.98468pt>
+<img/uml_bluetooth_socket_interface.pdf, id=194, 246.9225pt x 284.98468pt>
 File: img/uml_bluetooth_socket_interface.pdf Graphic file (type pdf)
 <use img/uml_bluetooth_socket_interface.pdf>
 Package pdftex.def Info: img/uml_bluetooth_socket_interface.pdf  used on input 
@@ -1023,17 +1023,22 @@ LaTeX Font Info:    Trying to load font information for T1+cmss on input line 5
 1.
 (C:\Users\Luca\AppData\Local\Programs\MiKTeX\tex/latex/base\t1cmss.fd
 File: t1cmss.fd 2019/12/16 v2.5j Standard LaTeX font definitions
-))
-[5] [6 <./img/kbluez_general_architecture.pdf> <./img/uml_bluetooth_socket_inte
-rface.pdf>] (GitBerto.aux)
+) [5]
+Overfull \hbox (23.33781pt too wide) in paragraph at lines 68--69
+[]\T1/cmr/m/n/12 Now, we want to merge all of these con-cepts with the al-ready
+ men-tioned \T1/cmtt/m/n/12 actor meta-modeling
+ []
+
+[6 <./img/kbluez_general_architecture.pdf> <./img/uml_bluetooth_socket_interfac
+e.pdf>]) [7] (GitBerto.aux)
 Package rerunfilecheck Info: File `GitBerto.out' has not changed.
-(rerunfilecheck)             Checksum: 2AEEC0F128B2C0ABBB13332BE6A4E445;1274.
+(rerunfilecheck)             Checksum: 78C0F132185903B3DF5B840DCA19D30F;1404.
  ) 
 Here is how much of TeX's memory you used:
- 27115 strings out of 478593
- 521053 string characters out of 2845076
+ 27122 strings out of 478593
+ 521175 string characters out of 2845076
  802536 words of memory out of 3000000
- 44810 multiletter control sequences out of 15000+600000
+ 44815 multiletter control sequences out of 15000+600000
  485480 words of font info for 59 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  83i,10n,88p,711b,1332s stack positions out of 5000i,500n,10000p,200000b,80000s
@@ -1059,9 +1064,9 @@ X/fonts/type1/public/cm-super/sfti1200.pfb><C:/Users/Luca/AppData/Local/Program
 s/MiKTeX/fonts/type1/public/cm-super/sftt1000.pfb><C:/Users/Luca/AppData/Local/
 Programs/MiKTeX/fonts/type1/public/cm-super/sftt1200.pfb><C:/Users/Luca/AppData
 /Local/Programs/MiKTeX/fonts/type1/public/cm-super/sftt1440.pfb>
-Output written on GitBerto.pdf (6 pages, 1248819 bytes).
+Output written on GitBerto.pdf (7 pages, 1255220 bytes).
 PDF statistics:
- 330 PDF objects out of 1000 (max. 8388607)
- 33 named destinations out of 1000 (max. 500000)
- 81 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 348 PDF objects out of 1000 (max. 8388607)
+ 35 named destinations out of 1000 (max. 500000)
+ 89 words of extra memory for PDF output out of 10000 (max. 10000000)
 
