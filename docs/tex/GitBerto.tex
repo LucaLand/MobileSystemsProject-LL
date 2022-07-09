@@ -22,9 +22,12 @@
 \usepackage{listings}
 \usepackage[dvipsnames]{xcolor}
 \usepackage{listings}
+\usepackage{gensymb}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{tcolorbox}
 
 % CUSTOM COMMANDS ---------------------------------------------------------
-\newcommand{\gitberto}{\texttt{GitBerto}}
+\newcommand{\gitberto}{\texttt{GitBerto }}
 
 %USER STORIES -------------------------------------------------------------
 \usepackage[framemethod=TikZ]{mdframed}
@@ -94,11 +97,13 @@
 
 \begin{document}
 	\maketitle
+	\input{section/00_abstract.tex}
 	\tableofcontents
+	\newpage
 	
 	%Body -----------------------------------------------------------------------------------
-	\input{section/00_abstract.tex}
 	\input{section/01_introduction.tex}
+	\input{section/02_fast_problem_analysis.tex}
 	%----------------------------------------------------------------------------------------
 	
 \end{document}
