@@ -100,6 +100,10 @@ Once the actor meta-model is well-developed, we can execute it using \texttt{QAK
 	
 \end{enumerate}
 
+In addition to this, notice that \textbf{\texttt{Android} classes are not compiled in \texttt{.class} but in \texttt{.dex}}, so the annotation scan that is present in the \texttt{QA-Extensions} does not work. To quickly resolve this problem, we choose to declare actor classes in a \textit{hard-coded} way inside the \href{https://github.com/LucaLand/MobileSystemsProject-LL/blob/0.9.1/app/src/main/java/it/unibo/mobilesystems/actors/QAKUtils.kt}{QAKUtils.kt}. Indeed, for extension purposes, the launcher developed in \texttt{QA-Extensions} let the developer to add some parameters, so it is easy to make additional extensions like this.
+
+In future development it is possible to use some more accurate mechanisms such as \href{https://github.com/classgraph/classgraph/wiki/Build-Time-Scanning}{\textit{build time scanning}} of the annotations. 
+
 \subsubsection{\texttt{Coroutines} in \texttt{Android} with \texttt{ViewModel}}
 
 As studied in \textit{Mobile System} course, if an \texttt{Android} developer has to perform a long \texttt{IO} operation inside ad \texttt{Activity}, he should use other components like \href{https://developer.android.com/reference/android/os/AsyncTask}{\texttt{AsyncTask}} that, in simple terms, creates a new thread for the \textit{long-time} operation, and \textit{after} calls a function in which the developer can put the \texttt{UI} updates.

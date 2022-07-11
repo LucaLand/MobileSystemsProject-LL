@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.24 (MiKTeX 22.1) (preloaded format=pdflatex 2022.1.31)  11 JUL 2022 23:19
+This is pdfTeX, Version 3.141592653-2.6-1.40.24 (MiKTeX 22.1) (preloaded format=pdflatex 2022.1.31)  11 JUL 2022 23:27
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1031,14 +1031,20 @@ Overfull \hbox (23.33781pt too wide) in paragraph at lines 70--71
  men-tioned \T1/cmtt/m/n/12 actor meta-modeling
  []
 
+
+Overfull \hbox (6.7981pt too wide) in paragraph at lines 103--104
+\T1/cmr/m/n/12 the []QAKU-tils.kt[]. In-deed, for ex-ten-sion pur-poses, the la
+uncher de-vel-oped in \T1/cmtt/m/n/12 QA-Extensions
+ []
+
 [7] [8]
 LaTeX Font Info:    Trying to load font information for TS1+cmss on input line 
-165.
+169.
  (C:\Users\Luca\AppData\Local\Programs\MiKTeX\tex/latex/base\ts1cmss.fd
 File: ts1cmss.fd 2019/12/16 v2.5j Standard LaTeX font definitions
 ) [9]
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <5> on input line 219.
+(Font)              <5> on input line 223.
 ) [10] (GitBerto.aux)
 Package rerunfilecheck Info: File `GitBerto.out' has not changed.
 (rerunfilecheck)             Checksum: 2C9D0A997B5F0CA9F01E3B00A7043167;2192.
@@ -1046,7 +1052,7 @@ Package rerunfilecheck Info: File `GitBerto.out' has not changed.
 Here is how much of TeX's memory you used:
  27360 strings out of 478593
  524941 string characters out of 2845076
- 843538 words of memory out of 3000000
+ 850538 words of memory out of 3000000
  44956 multiletter control sequences out of 15000+600000
  488726 words of font info for 64 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
@@ -1075,9 +1081,9 @@ Programs/MiKTeX/fonts/type1/public/cm-super/sfti1200.pfb><C:/Users/Luca/AppData
 /Local/Programs/MiKTeX/fonts/type1/public/cm-super/sftt1000.pfb><C:/Users/Luca/
 AppData/Local/Programs/MiKTeX/fonts/type1/public/cm-super/sftt1200.pfb><C:/User
 s/Luca/AppData/Local/Programs/MiKTeX/fonts/type1/public/cm-super/sftt1440.pfb>
-Output written on GitBerto.pdf (10 pages, 1334941 bytes).
+Output written on GitBerto.pdf (10 pages, 1336679 bytes).
 PDF statistics:
- 511 PDF objects out of 1000 (max. 8388607)
+ 514 PDF objects out of 1000 (max. 8388607)
  124 named destinations out of 1000 (max. 500000)
  113 words of extra memory for PDF output out of 10000 (max. 10000000)
 
