@@ -59,15 +59,166 @@ Then, this socket can be used exactly as the internet protocol sockets in order 
 	\end{center}
 \end{tcolorbox}
 
-\subsection{Actor modeling}
+\subsection{Towards Actor Modeling}
+
+\subsubsection{Running \texttt{QAK} infrastructure under \texttt{Android}}
 
 In the \textit{Mobile System} course we study the fundamentals of \texttt{Android} developing.
 We deeply analysed all components offered to the \texttt{Android} developer such as \href{https://developer.android.com/reference/android/app/Activity}{\texttt{Activity}}, \href{https://developer.android.com/guide/components/services}{Services}, \href{https://developer.android.com/reference/android/content/Intent}{\texttt{Intent}},
 \href{https://developer.android.com/guide/components/broadcasts}{\texttt{Broadcast Received}}, \href{https://developer.android.com/reference/android/os/AsyncTask}{\texttt{AsyncTask}} and so on and so forth\dots
 
-Now, we want to merge all of these concepts with the already mentioned \texttt{actor meta-modeling} and programming. For these purposes, as anticipated we have the \texttt{QA-System} that is well documented at the \texttt{Github} \href{https://htmlpreview.github.io/?https://github.com/anatali/issLab2022/blob/main/it.unibo.issLabStart/userDocs/Dispense/lezioni/html/QakIntro.html}{\texttt{repository}} of the corse of \textit{Ingegneria dei Sistemi Software}.
+Now, we want to merge all of these concepts with the already mentioned \texttt{actor meta-modeling} and programming. For these purposes, as anticipated, we have the \texttt{QA-System} that is well documented at the \texttt{Github} \href{https://htmlpreview.github.io/?https://github.com/anatali/issLab2022/blob/main/it.unibo.issLabStart/userDocs/Dispense/lezioni/html/QakIntro.html}{\texttt{repository}} of the corse of \textit{Ingegneria dei Sistemi Software}.
 
-Just to give a fast overview, \textbf{an actor is an active entity that receives messages thanks to a channel that it owns}. So, when an actor receives a message, it performs some action depending on the contents. The \texttt{QAK} system make easy to define and handle actors that are mapped into \texttt{Kotlin} \href{https://developer.android.com/kotlin/coroutines?gclsrc=ds&gclsrc=ds}{coroutines} and, in addition to this, the infrastructure fully support the concept of \textbf{actor as finite state machine} that change their internal state by receiving messages or \textit{events}.
+Just to give a fast overview, \textbf{an actor is an active entity that receives messages thanks to a channel that it owns}. So, when an actor receives a message, it performs some action depending on the contents. The \texttt{QAK} system make easy to define and handle actors that are mapped into \texttt{Kotlin} \href{https://developer.android.com/kotlin/coroutines?gclsrc=ds&gclsrc=ds}{coroutines} and, in addition to this, the infrastructure fully supports the concept of \textbf{actors as finite state machine} that change their internal state by receiving messages or \textit{events}.
+
+\textbf{Using actors and \texttt{QAK} let us use \textit{actor meta-modeling} as shown in this \href{https://htmlpreview.github.io/?https://github.com/anatali/issLab2022/blob/main/it.unibo.issLabStart/userDocs/Dispense/lezioni/html/QakIntro.html\#qak-un-esempio-piu-articolato}{example}.}
+Once the actor meta-model is well-developed, we can execute it using \texttt{QAK}, but this introduces some problems related with the nature of \texttt{QAK} that works on normal \texttt{JVM}.
+
+
+
+\begin{enumerate}
+	\item To define an actor, \texttt{QAK} requires it definition in a special \texttt{.pl} file that maintains all the defined actors
+	\begin{tcolorbox}
+		\begin{center}
+			\textbf{We have an extension of the entire \texttt{QAK} infrastructure made by \textit{Luca Marchegiani} at \href{https://github.com/LM-96/QA-Extensions}{\texttt{QA-Extensions} repository} that let the developer use \href{https://kotlinlang.org/docs/annotations.html}{\texttt{Annotations}} instead of \textit{legacy} configuration file.}
+		\end{center}
+	\end{tcolorbox}
+
+	\item  To define an actor, in addition to annotations or configuration file, the developer must extend \href{https://github.com/LM-96/QA-Extensions/blob/main/it.unibo.qakactor/src/main/kotlin/QActorBasic.kt}{QActorBasic} or \href{https://github.com/LM-96/QA-Extensions/blob/main/it.unibo.qakactor/src/main/kotlin/QActorBasicFsm.kt}{QActorBasicFsm} classes so, since we are using \texttt{Kotlin}, multiple inheritance is not allowed than it is not possible to define classes that extend both \href{https://developer.android.com/reference/android/app/Activity}{\texttt{Activity}} and \texttt{ActorBasicFsm}
+	\begin{tcolorbox}
+		\begin{center}
+			\textbf{We have created a new way to define actors that uses the newest interfaces \href{https://github.com/LM-96/QA-Extensions/blob/android/it.unibo.qakactor/src/main/kotlin/IQActorBasic.kt}{\texttt{IQActorBasic}} and \href{https://github.com/LM-96/QA-Extensions/blob/android/it.unibo.qakactor/src/main/kotlin/IQActorBasicFsm.kt}{\texttt{IQActorBasicFsm}}.}
+		\end{center}
+	\end{tcolorbox}
+
+	\item \texttt{QAK} creates a log file for each defined actor: this is not easy in \texttt{Android} because of the restrictions for writing files
+	\begin{tcolorbox}
+		\begin{center}
+			\textbf{We have added another modification to the extensions that allows to disable file creation in \href{https://github.com/LM-96/QA-Extensions/blob/android/it.unibo.qakactor/src/main/kotlin/sysUtil.kt}{\texttt{sysUtil}} by adding ta simple parameter to the launcher of the \texttt{QA-System} (see \href{https://github.com/LucaLand/MobileSystemsProject-LL/blob/0.9.1/app/src/main/java/it/unibo/mobilesystems/actors/QAKUtils.kt}{QAKUtils.kt}).}
+		\end{center}
+	\end{tcolorbox}
+	
+\end{enumerate}
+
+\subsubsection{\texttt{Coroutines} in \texttt{Android} with \texttt{ViewModel}}
+
+As studied in \textit{Mobile System} course, if an \texttt{Android} developer has to perform a long \texttt{IO} operation inside ad \texttt{Activity}, he should use other components like \href{https://developer.android.com/reference/android/os/AsyncTask}{\texttt{AsyncTask}} that, in simple terms, creates a new thread for the \textit{long-time} operation, and \textit{after} calls a function in which the developer can put the \texttt{UI} updates.
+
+\begin{tcolorbox}[colback=red!5!white,colframe=red!75!black]
+	\begin{center}
+		\textbf{\texttt{AsyncTask} are now deprecated in favour of the new \texttt{Kotlin} concurrency utilities (see \href{https://developer.android.com/topic/libraries/architecture/coroutines}{\textit{Kotlin} coroutines components} in \texttt{Android}).}
+	\end{center}
+\end{tcolorbox}
+
+Before we knew this, we had already decided to experiment something new such as \href{https://developer.android.com/topic/libraries/architecture/viewmodel}{\texttt{ViewModel}} that is a component \textit{designed to store and manage UI-related data in a lifecycle conscious way} and that can be used in combination with \texttt{Kotlin} coroutines.
+
+Even without \texttt{ViewModel}, in \texttt{Kotlin} it is easily possible to execute pieces of concurrent code that update \texttt{UI} inside a coroutine. For example, suppose that you have to launch a long \texttt{IO} operation that loads your recipes stored into a database and have to show it on the activity:
+
+\begin{lstlisting}[language=Kotlin]
+class BluetoothConnectionActivity : ActorAppCompactActivity() {
+	
+	lateinit var tableLayout : TableLayout
+	val scope : CoroutineScope = ...
+	val recipesRepo : RecipesRepo = ...
+	
+	override fun onCreate(savedInstanceState: Bundle?) {
+		tableLayout = findViewById(R.id.recipesTableLayout)
+		scope.launch {
+			
+			//retrieveAll() method uses blocking network IO
+			//operations such as read from remote database
+			val recipes = recipesRepo.retrieveAll()
+			
+			withContext(Dispatchers.Main) {
+				for(recipe in recipes) {
+						//update tableLayout with recipe...
+				}
+			}
+		}
+	}
+}
+\end{lstlisting}
+
+Indeed, the \texttt{launch} primitive \textit{launches} a new coroutine that is dispatched to another thread (or to a pool of threads), but when we called \texttt{Dispatchers.Main} then the block inside is passed to the \textit{main} thread that executes it. So, \textit{UI} updates are performed.
+
+As suggested by \textit{Android} developer guide, instead of this pattern it is better to use \texttt{ViewModel} that automatically manage the lifecycle of the coroutines launched inside this.
+We have extended the suggested solution with this pattern:
+
+\begin{lstlisting}[language=Kotlin]
+	class RecipesIO(private val recipesRepo : RecipesRepo) {
+		
+		suspend fun retrieveAll() : Result<List<Recipe>> {
+			return withContext(Dispatchers.IO) {
+				return@withContext try {
+					Result.success(recipesRepo.retrieveAll())
+				} catch (e : Exception) {
+					Result.failure(e)
+				}
+			}
+		}
+				
+	}
+
+class RecipesViewModel(private val recipesIO : RecipesIO) {
+	
+	private val onRetrieved = mutableListOf<
+			suspend (Result<List<Recipe>>) -> Unit>()
+	
+	fun addOnRetrieved(uiUpdate : suspend (Result<List<Recipe>>) -> Unit) {
+		onRetrieved.add(uiUpdate)
+	}
+	
+	fun asyncRetrieveAll() {
+		viewModelScope.launch{
+			val recipes = this@RecipesViewModel.recipesIO.retrieveAll()
+			onRetrieved.forEach { uiUpdate ->
+				uiUpdate(recipes)
+			}
+		}
+	}
+	
+}
+	
+class BluetoothConnectionActivity : ActorAppCompactActivity() {
+		
+		lateinit var tableLayout : TableLayout
+		val recipesRepo : RecipesRepo = ...
+		val recipesViewModel = RecipesViewModel(recipesRepo)
+		
+		override fun onCreate(savedInstanceState: Bundle?) {
+			tableLayout = findViewById(R.id.recipesTableLayout)
+			recipesViewModel.addOnRetrieved { result ->
+					result.onSuccess { recipes ->
+						for(recipe in recipes) {
+							//update tableLayout with recipe...
+						}
+					}
+					result.onFailure { exception ->
+						//Notify failure 
+					}
+			}
+			recipesViewModel.asyncRetrieveAll()
+		}
+	}
+\end{lstlisting}
+
+Notice that \texttt{viewModelScope} is a special \href{https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-coroutine-scope/}{\texttt{CoroutineScope}} owned by each \texttt{ViewModel} that automatically cancel all coroutines launched inside it if the related owner is cancelled. So, using it is totally safe!
+
+\texttt{Android} let the developer use another special scope that is \href{https://developer.android.com/topic/libraries/architecture/coroutines#lifecyclescope}{\texttt{LifecycleScope}} (see the documentation for details).
+
+This mechanism is very powerful but \textbf{the developer must pay attention and be careful} because if he exaggerates he should saturate the main thread if he forgets to use  \texttt{Dispatcher.IO} for blocking operations.
+
+\subsubsection{From \texttt{Coroutines} to \texttt{QActors}}
+
+We have just shown that an \texttt{Activity} can launch asynchronous operations using coroutines that can also update the \texttt{UI}. So, what could happen if we \textit{transform} an \texttt{Activity} into a \textit{finite state machine actor}?
+
+Indeed, we added some modifications to the \href{https://github.com/LM-96/QA-Extensions}{\texttt{QA-Extensions}} that let the developer define actors \textbf{using an interface} thanks to the \texttt{Kotlin} \href{https://kotlinlang.org/docs/delegated-properties.html}{\textbf{delegates}} that let to make something similar to the multiple inheritance.
+
+\begin{tcolorbox}
+	\begin{center}
+		\textbf{We create the class \href{https://github.com/LucaLand/MobileSystemsProject-LL/blob/0.9.1/app/src/main/java/it/unibo/mobilesystems/actors/ActorAppCompactActivity.kt}{\texttt{ActorAppCompactActivity}} that automatically \textit{configure} the actor part of an activity. A class that extends \texttt{ActorAppCompactActivity} is an \texttt{Android} activity that also is a finite state machine actor. The developer must however remember to use the proper \href{https://github.com/LM-96/QA-Extensions/tree/android/it.unibo.qakactor/src/main/kotlin/annotations}{annotations} on his class\footnote{Notice that for instantiation reasons the actors that extends \texttt{ActorAppCompactActivity} \underline{must} be annotated with \texttt{\@StartMode(TransientStartMode.MANUAL)}}.}
+	\end{center}
+\end{tcolorbox}
 
  
 
