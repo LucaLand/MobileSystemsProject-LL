@@ -115,7 +115,7 @@ Before we knew this, we had already decided to experiment something new such as 
 Even without \texttt{ViewModel}, in \texttt{Kotlin} it is easily possible to execute pieces of concurrent code that update \texttt{UI} inside a coroutine. For example, suppose that you have to launch a long \texttt{IO} operation that loads your recipes stored into a database and have to show it on the activity:
 
 \begin{lstlisting}[language=Kotlin]
-class BluetoothConnectionActivity : ActorAppCompactActivity() {
+class BluetoothConnectionActivity : AppCompactActivity() {
 	
 	lateinit var tableLayout : TableLayout
 	val scope : CoroutineScope = ...
@@ -179,7 +179,7 @@ class RecipesViewModel(private val recipesIO : RecipesIO) {
 	
 }
 	
-class BluetoothConnectionActivity : ActorAppCompactActivity() {
+class BluetoothConnectionActivity : AppCompactActivity() {
 		
 		lateinit var tableLayout : TableLayout
 		val recipesRepo : RecipesRepo = ...

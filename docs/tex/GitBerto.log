@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.24 (MiKTeX 22.1) (preloaded format=pdflatex 2022.1.31)  11 JUL 2022 23:18
+This is pdfTeX, Version 3.141592653-2.6-1.40.24 (MiKTeX 22.1) (preloaded format=pdflatex 2022.1.31)  11 JUL 2022 23:19
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1045,7 +1045,7 @@ Package rerunfilecheck Info: File `GitBerto.out' has not changed.
  ) 
 Here is how much of TeX's memory you used:
  27360 strings out of 478593
- 524951 string characters out of 2845076
+ 524941 string characters out of 2845076
  843538 words of memory out of 3000000
  44956 multiletter control sequences out of 15000+600000
  488726 words of font info for 64 fonts, out of 8000000 for 9000
@@ -1075,7 +1075,7 @@ Programs/MiKTeX/fonts/type1/public/cm-super/sfti1200.pfb><C:/Users/Luca/AppData
 /Local/Programs/MiKTeX/fonts/type1/public/cm-super/sftt1000.pfb><C:/Users/Luca/
 AppData/Local/Programs/MiKTeX/fonts/type1/public/cm-super/sftt1200.pfb><C:/User
 s/Luca/AppData/Local/Programs/MiKTeX/fonts/type1/public/cm-super/sftt1440.pfb>
-Output written on GitBerto.pdf (10 pages, 1334961 bytes).
+Output written on GitBerto.pdf (10 pages, 1334941 bytes).
 PDF statistics:
  511 PDF objects out of 1000 (max. 8388607)
  124 named destinations out of 1000 (max. 500000)
