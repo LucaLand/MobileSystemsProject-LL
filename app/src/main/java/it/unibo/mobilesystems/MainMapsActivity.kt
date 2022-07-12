@@ -6,12 +6,10 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
+import android.content.Context
 import android.content.Intent
 import android.content.IntentSender
-import android.content.pm.PackageManager
 import android.graphics.Color
-import android.location.Location
-import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Build
 import android.os.Bundle
@@ -24,24 +22,34 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isGone
+import androidx.lifecycle.LifecycleCoroutineScope
+import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
 import com.google.android.gms.tasks.Task
 import com.google.android.material.bottomsheet.BottomSheetBehavior
-import it.unibo.kactor.MsgUtil
-import it.unibo.mobilesystems.bluetoothUtils.*
+import it.unibo.kactor.*
+import it.unibo.kactor.QakContext
+import it.unibo.kactor.annotations.*
+import it.unibo.kactor.annotations.State
+import it.unibo.kactor.model.TransientStartMode
+import it.unibo.mobilesystems.actors.*
+import it.unibo.mobilesystems.bluetooth.*
 import it.unibo.mobilesystems.databinding.ActivityMapsBinding
 import it.unibo.mobilesystems.debugUtils.Debugger
 import it.unibo.mobilesystems.fileUtils.ConfigManager
 import it.unibo.mobilesystems.joystickView.JoystickOnMoveListener
 import it.unibo.mobilesystems.joystickView.JoystickView
-import it.unibo.mobilesystems.joystickView.RobotMove
-import it.unibo.mobilesystems.msgUtils.RobotMsgUtils
 import it.unibo.mobilesystems.permissionManager.PermissionType
 import it.unibo.mobilesystems.permissionManager.PermissionsManager.permissionCheck
 import it.unibo.mobilesystems.permissionManager.PermissionsManager.permissionsCheck
 import it.unibo.mobilesystems.permissionManager.PermissionsManager.permissionsRequest
+import it.unibo.mobilesystems.utils.ApplicationVals
+import it.unibo.mobilesystems.utils.ExitCodes
+import it.unibo.mobilesystems.utils.OkDialogFragment
+import it.unibo.mobilesystems.utils.atomicNullableVar
+import kotlinx.coroutines.*
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
@@ -69,22 +77,27 @@ const val SOCKET_CLOSED_ACTION = "SOCKET_CLOSED_ACTION"
 
 //TODO(Use the Gatt server disconnection to notice when the device disconnect - Send the socket error message or encapsulate all in a function)
 //TODO(Use the Osmdroid RoadMap to: -Search a point, -Get all the instruction, -Send command to the Robot to reach the destination)
+//TODO(Doubleclick on Joypad for "Impennata!")
+@QActor(GIT_BERTO_CTX_NAME)
+//@CustomScope("MAIN")
+@StartMode(TransientStartMode.MANUAL)
+open class MainMapsActivity : ActorAppCompactActivity(),
+    IQActorBasicFsm by qakActorFsm(MainMapsActivity::class.java,Dispatchers.Default, DEFAULT_PARAMS) {
+
+    companion object {
+        const val ACTIVITY_NAME = "MAIN_ACTIVITY"
+    }
 
 
-class MainMapsActivity : AppCompatActivity(), LocationListener {
+    protected lateinit var mLocationOverlay : MyLocationNewOverlay
+    protected lateinit var map : MapView
+    protected lateinit var mLocationProvider: String
 
-
-    private val bluetoothMessageHandler: BluetoothSocketMessagesHandler = BluetoothSocketMessagesHandler()
-    private var myBluetoothManager : MyBluetoothManager? = null
     private var bluetoothActivityLauncher : ActivityResultLauncher<Intent>? = null
     private var gatt: BluetoothGatt? = null
     private var device : BluetoothDevice? = null
 
     private lateinit var binding: ActivityMapsBinding
-
-    private lateinit var map : MapView
-    private lateinit var mLocationOverlay : MyLocationNewOverlay
-    private lateinit var locationProvider: String
 
     //UI COMPONENTS
     private lateinit var rssiProgressBarr : ProgressBar
@@ -92,13 +105,25 @@ class MainMapsActivity : AppCompatActivity(), LocationListener {
     private lateinit var rssiTextView: TextView
 
     private var deviceName: String? = null
+    private lateinit var locationManagerActor: ActorBasic
 
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Debugger.printDebug("MainMapsActivity", "onCreate")
         binding = ActivityMapsBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        //Actors
+        locationManagerActor = QakContext.getActor(LOCATION_MANAGER_ACTOR_NAME)!!
+
+        //Setting application vals...
+        ApplicationVals.systemLocationManager.set(getSystemService(Context.LOCATION_SERVICE) as LocationManager)
+        ApplicationVals.fusedLocationServices.set(LocationServices.getFusedLocationProviderClient(applicationContext))
+        lifecycleScope.launch {
+            MsgUtil.sendMsg("updateLocationClient", "update", locationManagerActor )
+        }
 
         //UI COMPONENTS
         rssiProgressBarr = findViewById(R.id.rssi_progress_bar)
@@ -107,76 +132,67 @@ class MainMapsActivity : AppCompatActivity(), LocationListener {
 
         joystickView.setOnMoveListener(JoystickOnMoveListener())
 
-
-
         //PERMISSION
-        internetPermissions()
-        if(locationPermission()){
-            enableLocationOnDevice()
-            setProvider()
-            Configuration.getInstance().load(applicationContext, androidx.preference.PreferenceManager.getDefaultSharedPreferences(applicationContext))
-        }
+        checkPermissions()
 
         //CONFIG
         ConfigManager.init(this)
         deviceName = ConfigManager.getConfigString(ROBOT_DEVICE_NAME)
 
-        MyBluetoothService.setServiceHandler(bluetoothMessageHandler)
-
-        //Handlers For LeScanner Rssi Messages
-        myBluetoothManager?.rssiHandler = BluetoothSocketMessagesHandler().setCallbackForMessage(MESSAGE_RSSI) {string ->
-            updateRSSIValue(string?.toInt())
-            Debugger.printDebug("RSSI Handler", "Recived RSSI Message - Updated RSSI Progress Bar")
-        }
-
-        //Handlers For Socket Messages
-        bluetoothMessageHandler.setCallbackForMessage(MESSAGE_READ) { string ->
-            Debugger.printDebug("Handler-Receive","Received MSG: $string")
-            Toast.makeText(this, "Received: $string", 5 ).show()
-        }
-        bluetoothMessageHandler.setCallbackForMessage(MESSAGE_WRITE) { string ->
-            Debugger.printDebug("Handler-Send","Sent MSG: $string")
-            //Toast.makeText(this, "Sent: $string", 5 ).show()
-        }
-        bluetoothMessageHandler.setCallbackForMessage(MESSAGE_TOAST) { string ->
-            Debugger.printDebug("Handler-Send","Sent MSG: $string")
-            Toast.makeText(this, "Toast: $string", 5 ).show()
-        }
-
-        //Socket Connected Action
-        bluetoothMessageHandler.setCallbackForMessage(MESSAGE_CONNECTION_TRUE) {
-            Debugger.printDebug("Maps-Activity", "RECEIVED MESSAGE_CONNECTION_TRUE - Sent Socket Opened Action")
-            sendBroadcast(Intent().setAction(SOCKET_OPENED_ACTION))
-
-            MyBluetoothService.enabled = true
-            joystickEnable(true)
-            if(device != null)
-                gatt = device?.connectGatt(applicationContext, false, GattCallBack({int ->  updateRSSIValue(int)}))
-            //updateRSSIValue(80)
-        }
-
-        //SOCKET CLOSED ACTION
-        bluetoothMessageHandler.setCallbackForMessage(MESSAGE_SOCKET_ERROR) {
-            Debugger.printDebug("Maps-Activity", "Received Error Message: Socket Closed!")
-            sendBroadcast(Intent().setAction(SOCKET_CLOSED_ACTION))
-
-            MyBluetoothService.enabled = false
-            Toast.makeText(this, "DISCONNECTED!", 6 ).show()
-            updateRSSIValue(0)
-            joystickEnable(false)
-
-            MyBluetoothService.restartConnection()
-        }
-
+        //Map initialization
         map = startMap()
 
-        //Check Bluetooth Permission and start BluetoothActivity
-        if(bluetoothPermission()){
-            //init BluetoothManager
-            myBluetoothManager = MyBluetoothManager(this)
-            startBluetoothActivity(initRegisterForBluetoothActivityResult())
-        }else{
-            bluetoothActivityLauncher = initRegisterForBluetoothActivityResult()
+        //QActor
+        /*Debugger.printDebug(ACTIVITY_NAME, "starting QAK actors...")
+        runBlocking {
+            sysUtil.ioEnabled = false
+            launchQakWithBuildTimeScan()
+        }*/
+        Debugger.printDebug(ACTIVITY_NAME, "QAK actor started")
+
+        //Launch activity for bluetooth connection
+        Debugger.printDebug(ACTIVITY_NAME, "Starting bluetooth activity for connection")
+        startBluetoothActivity(
+            initRegisterForBluetoothActivityResult(this::onBluetoothActivityResult))
+
+    }
+
+    @State
+    @Initial
+    suspend fun begin() {
+        actorPrintln("STARTED")
+    }
+
+    private fun onBluetoothActivityResult(result: ActivityResult) {
+        if (result.resultCode == Activity.RESULT_OK) {
+            Debugger.printDebug( ACTIVITY_NAME, "bluetooth activity completed")
+            // Handle the Intent
+            val intent = result.data
+            //val resultMap : MutableMap<String,String?> = DeviceInfoIntentResult.getDeviceResult(intent!!)
+            device = intent?.getParcelableExtra(DEVICE_RESULT_CODE)
+            if(device == null) {
+                Debugger.printDebug(ACTIVITY_NAME, "bluetooth activity return null device... launching it again")
+                startBluetoothActivity(initRegisterForBluetoothActivityResult(this::onBluetoothActivityResult))
+            } else {
+                Debugger.printDebug(ACTIVITY_NAME, "starting gatt components")
+                val gattCallback = LambdaGattCallback(QakContext.scope22)
+                val gatt = device!!.connectGatt(applicationContext, false, gattCallback)
+                val gattDescriptor = GattDescriptor(gatt, gattCallback)
+                runBlocking {
+                    GattActor.gattDescriptor.set(gattDescriptor)
+                    MsgUtil.sendMsg(UPDATE_GATT_DESCRIPTOR_MSG_NAME, "update", QakContext.getActor(
+                        GATT_ACTOR_NAME)!!)
+                }
+            }
+        }
+    }
+
+    private fun checkPermissions() {
+        internetPermissions()
+        if(locationPermission()){
+            enableLocationOnDevice()
+            setProvider()
+            Configuration.getInstance().load(applicationContext, androidx.preference.PreferenceManager.getDefaultSharedPreferences(applicationContext))
         }
     }
 
@@ -207,7 +223,7 @@ class MainMapsActivity : AppCompatActivity(), LocationListener {
         mLocationOverlay.enableMyLocation()
         map.overlays.add(this.mLocationOverlay)
 
-        Debugger.printDebug("LocationProvider: $locationProvider ${mLocationOverlay.myLocationProvider}")
+        Debugger.printDebug("LocationProvider: $mLocationProvider ${mLocationOverlay.myLocationProvider}")
 
         //ITALY Center GeoPoint
         map.controller.setCenter(GeoPoint(42.820897, 12.532178))
@@ -278,7 +294,7 @@ class MainMapsActivity : AppCompatActivity(), LocationListener {
 
     private fun setProvider(){
         //Set Provider
-        locationProvider = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        mLocationProvider = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             LocationManager.FUSED_PROVIDER
         }else{
             LocationManager.NETWORK_PROVIDER //locationManager.getBestProvider()
@@ -320,6 +336,36 @@ class MainMapsActivity : AppCompatActivity(), LocationListener {
 
     }
 
+    /*
+    private fun updateRSSIValue(gatt : BluetoothGatt, rssiValue : Int, status : Int) {
+        Debugger.printDebug("UI", "Updated RSSI [$rssiValue]")
+        var color : Int = Color.GRAY
+        when(rssiValue){
+            in 61..100 -> {
+                color = Color.GREEN
+                MyBluetoothService.enabled = true
+                joystickEnable(true)
+            }
+            //in 41..79 -> rssiProgressBarr.setBackgroundColor(Color.YELLOW)
+            in 20..60 -> {
+                MyBluetoothService.sendMsg(RobotMsgUtils.cmdMsgFactory(RobotMove.HALT))
+                MyBluetoothService.enabled = false
+                //Toast.makeText(this, "Low Connection!!", 3)
+                joystickEnable(false)
+            }
+        }
+
+        //Set Color
+        rssiProgressBarr.setBackgroundColor(color)
+        rssiTextView.setBackgroundColor(color)
+
+
+        val meter = ((10.0.pow((( (-5) - (rssiValue - 100) )/40.0)))*100.0).toInt()
+        //Set RSSI and print
+        rssiTextView.text = "$rssiValue ($meter cm)"
+        rssiProgressBarr.setProgress(rssiValue, true)
+    }
+
     private fun updateRSSIValue(rssiValue: Int?){
         if (rssiValue != null) {
             Debugger.printDebug("UI", "Updated RSSI [$rssiValue]")
@@ -349,11 +395,31 @@ class MainMapsActivity : AppCompatActivity(), LocationListener {
             rssiTextView.text = "$rssiValue ($meter cm)"
             rssiProgressBarr.setProgress(rssiValue, true)
         }
+    }*/
+
+    fun updateRssiUi(gatt : BluetoothGatt, rssi : Int, status : Int) {
+        var color : Int = Color.GRAY
+        when(rssi) {
+            in 61..100 -> {
+                color = Color.GREEN
+                joystickEnable(true)
+            }
+            in 20..60 -> {
+                color = Color.GRAY
+                joystickEnable(false)
+            }
+        }
+        rssiProgressBarr.setBackgroundColor(color)
+        rssiTextView.setBackgroundColor(color)
+        val meter = ((10.0.pow((( (-5) - (rssi - 100) )/40.0)))*100.0).toInt()
+        //Set RSSI and print
+        rssiTextView.text = "$rssi ($meter cm)"
+        rssiProgressBarr.setProgress(rssi, true)
     }
 
     /**
      * RESULT FUNCTION
-     */
+     *//*
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
@@ -364,7 +430,6 @@ class MainMapsActivity : AppCompatActivity(), LocationListener {
             //Bluetooth Permission Result
             PermissionType.Bluetooth.ordinal -> {
                 if(grantResults[requestCode] == PackageManager.PERMISSION_GRANTED) {
-                    myBluetoothManager = MyBluetoothManager(this)
                     startBluetoothActivity(bluetoothActivityLauncher!!)
                 }else{
                     //Bluetooth Permission Not Granted
@@ -379,23 +444,15 @@ class MainMapsActivity : AppCompatActivity(), LocationListener {
 
             }
         }
-    }
+    }*/
 
 
-    private fun initRegisterForBluetoothActivityResult(): ActivityResultLauncher<Intent> {
+    private fun initRegisterForBluetoothActivityResult(
+        onBluetoothActivityCompleted: (ActivityResult) -> Unit
+    ): ActivityResultLauncher<Intent> {
         val startBluetoothActivityForResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
             //HANDLE RESULT FROM THE BLUETOOTH ACTIVITY
-            if (result.resultCode == Activity.RESULT_OK) {
-                Debugger.printDebug( "Bluetooth Activity Returned")
-                MyBluetoothService.enabled = true
-                // Handle the Intent
-                val intent = result.data
-                //val resultMap : MutableMap<String,String?> = DeviceInfoIntentResult.getDeviceResult(intent!!)
-                device = intent?.getParcelableExtra<BluetoothDevice>(DEVICE_RESULT_CODE)
-
-                //GATT CONNECTION
-                gatt = device?.connectGatt(applicationContext, false, GattCallBack({int ->  updateRSSIValue(int)}))
-            }
+            onBluetoothActivityCompleted(result)
         }
         return startBluetoothActivityForResult
     }
@@ -410,9 +467,9 @@ class MainMapsActivity : AppCompatActivity(), LocationListener {
         sheetBehavior.isHideable = false
     }
 
-    override fun onLocationChanged(p0: Location) {
+    /*override fun onLocationChanged(p0: Location) {
         Debugger.printDebug("Location changed [$p0]")
-    }
+    }*/
 
     fun onMoveButtonClick(view: View){
         //TEST ROBOT MSG
@@ -430,6 +487,12 @@ class MainMapsActivity : AppCompatActivity(), LocationListener {
             R.id.buttonBack -> {sendMessage(MsgUtil.buildDispatch("BeautifulViewActivity","cmd", "cmd(s)", "basicrobot").toString())}
             R.id.haltButton -> {sendMessage(MsgUtil.buildDispatch("BeautifulViewActivity","cmd", "cmd(h)", "basicrobot").toString())}
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        APP_SCOPE.cancel()
+        QakContext.scope22.cancel()
     }
 
     private fun sendMessage(s : String){

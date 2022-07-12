@@ -1,0 +1,109 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage[page,toc]{appendix}
+
+\geometry{a4paper,top=2.5cm,bottom=2.5cm,left=2.5cm,right=2.5cm}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage[parfill]{parskip}
+
+\usepackage{caption}
+\captionsetup{font=footnotesize}
+
+%\usepackage{xurl}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{wrapfig}
+\usepackage{listings}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{listings}
+\usepackage{gensymb}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{tcolorbox}
+
+% CUSTOM COMMANDS ---------------------------------------------------------
+\newcommand{\gitberto}{\texttt{GitBerto }}
+
+%USER STORIES -------------------------------------------------------------
+\usepackage[framemethod=TikZ]{mdframed}
+\newcounter{userstories}[section]\setcounter{userstories}{0}
+\newcommand{\cus}{\arabic{section}.\arabic{userstories}}
+
+\newenvironment{userstory}[2][]{%
+	\refstepcounter{userstories}%
+	\ifstrempty{#1}%
+	{\mdfsetup{%
+			frametitle={%
+				\tikz[baseline=(current bounding box.east),outer sep=0pt]
+				\node[anchor=east,rectangle,fill=blue!20]
+				{\strut User Story~\cus};}}
+	}%
+	{\mdfsetup{%
+			frametitle={%
+				\tikz[baseline=(current bounding box.east),outer sep=0pt]
+				\node[anchor=east,rectangle,fill=blue!20]
+				{\strut User Story~\cus:~#1};}}%
+	}%
+	\mdfsetup{innertopmargin=10pt,linecolor=blue!20,%
+		linewidth=2pt,topline=true,%
+		frametitleaboveskip=\dimexpr-\ht\strutbox\relax
+	}
+	\begin{mdframed}[]\relax%
+		\label{#2}}{\end{mdframed}}
+
+%Setting listing
+\definecolor{mygreen}{rgb}{0,0.6,0}
+\definecolor{mygray}{rgb}{0.5,0.5,0.5}
+\definecolor{mymauve}{rgb}{0.58,0,0.82}
+
+\lstset{
+	basicstyle=\footnotesize\sffamily\color{black},
+	frame=single,
+	numbers=left,
+	numbersep=5pt,
+	numberstyle=\tiny\color{gray},
+	showspaces=false,
+	showstringspaces=false,
+	tabsize=1,
+	literate={\$}{{\textcolor{orange}{\$}}}1,
+}
+
+\lstdefinelanguage{Kotlin}{
+	comment=[l]{//},
+	commentstyle={\color{gray}\ttfamily},
+	emph={filter, first, firstOrNull, forEach, lazy, map, mapNotNull, println},
+	emphstyle={\color{OrangeRed}},
+	identifierstyle=\color{black},
+	keywords={!in, !is, abstract, actual, annotation, as, as?, break, by, catch, class, companion, const, constructor, continue, crossinline, data, delegate, do, dynamic, else, enum, expect, external, false, field, file, final, finally, for, fun, get, if, import, in, infix, init, inline, inner, interface, internal, is, lateinit, noinline, null, object, open, operator, out, override, package, param, private, property, protected, public, receiveris, reified, return, return@, sealed, set, setparam, super, suspend, tailrec, this, throw, true, try, typealias, typeof, val, var, vararg, when, where, while},
+	keywordstyle={\color{NavyBlue}\bfseries},
+	morecomment=[s]{/*}{*/},
+	morestring=[b]",
+	morestring=[s]{"""*}{*"""},
+	ndkeywords={@Deprecated, @JvmField, @JvmName, @JvmOverloads, @JvmStatic, @JvmSynthetic, Array, Byte, Double, Float, Int, Integer, Iterable, Long, Runnable, Short, String, Any, Unit, Nothing, @QActor,
+		@QakContext, @HostName, @State, @Initial, @WhenDispatch, @WhenRequest, @WhenReply, @WhenEvent, @EpsilonMove, @WhenTime, state, action, transition},
+	ndkeywordstyle={\color{BurntOrange}\bfseries},
+	sensitive=true,
+	stringstyle={\color{ForestGreen}\ttfamily},
+}
+
+%Title
+\title{\textbf{GitBerto:\\The automated robot guide}}
+\author{Luca Landolfi \and Luca Marchegiani}
+
+\begin{document}
+	\maketitle
+	\input{section/00_abstract.tex}
+	\tableofcontents
+	\newpage
+	
+	%Body -----------------------------------------------------------------------------------
+	\input{section/01_introduction.tex}
+	\input{section/02_fast_problem_analysis.tex}
+	%----------------------------------------------------------------------------------------
+	
+\end{document}

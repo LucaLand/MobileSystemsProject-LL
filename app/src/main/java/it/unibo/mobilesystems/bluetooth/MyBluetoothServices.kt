@@ -1,4 +1,4 @@
-package it.unibo.mobilesystems.bluetoothUtils
+package it.unibo.mobilesystems.bluetooth
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
@@ -28,6 +28,7 @@ const val MESSAGE_CONNECTION_TRUE = 74
 
 
 private const val CLASS_NAME = "SERVICE-CLASS"
+@Deprecated("Old bluetooth system")
 object MyBluetoothService{
     private const val maximumConnectionRetry = 30
     lateinit var connectionThread: BluetoothSocketThread
@@ -83,6 +84,7 @@ object MyBluetoothService{
     }
 
     fun sendMsg(s : String){
+        Debugger.printDebug(TAG, "Trying Send: msg[$s]")
         if(enabled)
             connectionThread.write(s.toByteArray())
     }
@@ -95,7 +97,8 @@ object MyBluetoothService{
                                       private var mac: String, private var uuid: UUID
     ) : Thread(){
 
-        private lateinit var bluetoothSocket : BluetoothSocket
+        lateinit var bluetoothSocket : BluetoothSocket
+        private set
 
         lateinit var mmInStream: InputStream
         lateinit var mmOutStream: OutputStream
@@ -143,7 +146,7 @@ object MyBluetoothService{
         override fun run() {
             connectionThread.waitSomeTime(5000) //3 second first time starts
             initSocket()
-            var res = connectToSocket(bluetoothSocket)
+            val res = connectToSocket(bluetoothSocket)
             Debugger.printDebug("Initialized Socket: Now Listening...")
             var numBytes: Int // bytes returned from read()
 

@@ -1,10 +1,11 @@
-package it.unibo.mobilesystems.bluetoothUtils
+package it.unibo.mobilesystems.bluetooth
 
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothProfile
 import it.unibo.mobilesystems.debugUtils.Debugger
 
+@Deprecated("Old bluetooth system")
 class GattCallBack(private val func: (int: Int) -> Unit): BluetoothGattCallback() {
 
     companion object{

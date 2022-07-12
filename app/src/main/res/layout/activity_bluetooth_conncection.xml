@@ -35,6 +35,12 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:minHeight="75dp" />
+
+        <TextView
+            android:id="@+id/mainTextView"
+            android:gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="487dp" />
     </LinearLayout>
 
     <Button

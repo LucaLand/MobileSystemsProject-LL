@@ -1,8 +1,7 @@
 package it.unibo.mobilesystems.msgUtils
 
-import it.unibo.mobilesystems.bluetoothUtils.MyBluetoothService
+
 import it.unibo.mobilesystems.debugUtils.Debugger
-import it.unibo.mobilesystems.joystickView.RobotMove
 import unibo.actor22comm.utils.CommUtils
 
 object RobotMsgUtils {
@@ -17,5 +16,16 @@ object RobotMsgUtils {
         }
         val msg = CommUtils.buildDispatch("BeautifulViewActivity","cmd", "cmd($cmdMove)", "basicrobot").toString()
         return "$msg\n"
+    }
+
+    fun stringToRobotMove(cmd: String): RobotMove?{
+        return when(cmd){
+            "w" -> RobotMove.FORWARD
+            "r" -> RobotMove.RIGHT
+            "l" -> RobotMove.LEFT
+            "s" -> RobotMove.BACKWARD
+            "h" -> RobotMove.HALT
+            else -> {null}
+        }
     }
 }

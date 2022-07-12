@@ -1,4 +1,4 @@
-package it.unibo.mobilesystems.bluetoothUtils
+package it.unibo.mobilesystems.bluetooth
 
 import android.os.Handler
 import android.os.Looper
@@ -9,6 +9,7 @@ import it.unibo.mobilesystems.debugUtils.Debugger
 
 
 //TODO(Rename in MessageHandler)
+@Deprecated("Old bluetooth system")
 class BluetoothSocketMessagesHandler: Handler(Looper.myLooper()!!) {
 
     var callbackMap: MutableMap<Int, (string: String?) -> Unit> = mutableMapOf()
