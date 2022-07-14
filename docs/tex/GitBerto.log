@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.24 (MiKTeX 22.1) (preloaded format=pdflatex 2022.1.31)  15 JUL 2022 00:31
+This is pdfTeX, Version 3.141592653-2.6-1.40.24 (MiKTeX 22.1) (preloaded format=pdflatex 2022.1.31)  15 JUL 2022 00:36
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1080,8 +1080,14 @@ Package pdftex.def Info: img/logical_architecture.pdf  used on input line 284.
 LaTeX Warning: `!h' float specifier changed to `!ht'.
 
 [11]) [12 <./img/logical_architecture.pdf>] (GitBerto.aux)
-Package rerunfilecheck Info: File `GitBerto.out' has not changed.
-(rerunfilecheck)             Checksum: A4EF7FF5A7DBB11AD50B0CB91E30FA11;2363.
+
+Package rerunfilecheck Warning: File `GitBerto.out' has changed.
+(rerunfilecheck)                Rerun to get outlines right
+(rerunfilecheck)                or use package `bookmark'.
+
+Package rerunfilecheck Info: Checksums for `GitBerto.out':
+(rerunfilecheck)             Before: A7CD5838D2B53DE70C44A20B3CC9A5F3;2374
+(rerunfilecheck)             After:  A4EF7FF5A7DBB11AD50B0CB91E30FA11;2363.
  ) 
 Here is how much of TeX's memory you used:
  27438 strings out of 478593
