@@ -94,7 +94,7 @@ Once the actor meta-model is well-developed, we can execute it using \texttt{QAK
 	\item \texttt{QAK} creates a log file for each defined actor: this is not easy in \texttt{Android} because of the restrictions for writing files
 	\begin{tcolorbox}
 		\begin{center}
-			\textbf{We have added another modification to the extensions that allows to disable file creation in \href{https://github.com/LM-96/QA-Extensions/blob/android/it.unibo.qakactor/src/main/kotlin/sysUtil.kt}{\texttt{sysUtil}} by adding ta simple parameter to the launcher of the \texttt{QA-System} (see \href{https://github.com/LucaLand/MobileSystemsProject-LL/blob/0.9.1/app/src/main/java/it/unibo/mobilesystems/actors/QAKUtils.kt}{QAKUtils.kt}).}
+			\textbf{We have added another modification to the extensions that allows to disable file creation in \href{https://github.com/LM-96/QA-Extensions/blob/android/it.unibo.qakactor/src/main/kotlin/sysUtil.kt}{\texttt{sysUtil}} by adding a simple parameter to the launcher of the \texttt{QA-System} (see \href{https://github.com/LucaLand/MobileSystemsProject-LL/blob/0.9.1/app/src/main/java/it/unibo/mobilesystems/actors/QAKUtils.kt}{QAKUtils.kt}).}
 		\end{center}
 	\end{tcolorbox}
 	
@@ -220,9 +220,88 @@ Indeed, we added some modifications to the \href{https://github.com/LM-96/QA-Ext
 
 \begin{tcolorbox}
 	\begin{center}
-		\textbf{We create the class \href{https://github.com/LucaLand/MobileSystemsProject-LL/blob/0.9.1/app/src/main/java/it/unibo/mobilesystems/actors/ActorAppCompactActivity.kt}{\texttt{ActorAppCompactActivity}} that automatically \textit{configure} the actor part of an activity. A class that extends \texttt{ActorAppCompactActivity} is an \texttt{Android} activity that also is a finite state machine actor. The developer must however remember to use the proper \href{https://github.com/LM-96/QA-Extensions/tree/android/it.unibo.qakactor/src/main/kotlin/annotations}{annotations} on his class\footnote{Notice that for instantiation reasons the actors that extends \texttt{ActorAppCompactActivity} \underline{must} be annotated with \texttt{\@StartMode(TransientStartMode.MANUAL)}}.}
+		\textbf{We create the class \href{https://github.com/LucaLand/MobileSystemsProject-LL/blob/0.9.1/app/src/main/java/it/unibo/mobilesystems/actors/ActorAppCompactActivity.kt}{\texttt{ActorAppCompactActivity}} that automatically \textit{configure} the actor nature of an activity. A class that extends \texttt{ActorAppCompactActivity} is an \texttt{Android} activity that also is a finite state machine actor. The developer must however remember to use the proper \href{https://github.com/LM-96/QA-Extensions/tree/android/it.unibo.qakactor/src/main/kotlin/annotations}{annotations} on his class\footnote{Notice that for instantiation reasons the actors that extends \texttt{ActorAppCompactActivity} \underline{must} be annotated with \texttt{\@StartMode(TransientStartMode.MANUAL)}}.}
 	\end{center}
 \end{tcolorbox}
 
- 
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.5\textwidth]{img/actorappcompactactivity_uml.pdf}
+	\caption{Class diagram of \href{https://github.com/LucaLand/MobileSystemsProject-LL/blob/0.9.1/app/src/main/java/it/unibo/mobilesystems/actors/ActorAppCompactActivity.kt}{\texttt{ActorAppCompactActivity}}}
+	\label{fig:uml_actorappcompactactivity}
+\end{figure}
 
+All the classes that extends \texttt{ActorAppCompactActivity} \underline{\textbf{must}} also use th \texttt{by} keyword offered by \texttt{Kotlin} in order to get the implementation of the \texttt{IQActorBasicClass} following this pattern:
+ 
+\begin{lstlisting}[language=Kotlin]
+	val APP_SCOPE = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+	val DEFAULT_PARAMS = mutableParameterMap()
+	.addBlockIOParam()
+	.addAnnotatedClassesParams(
+				MyActivity::class.java
+	)
+	.addSystemScope(APP_SCOPE)
+
+	@QActor("my_ctx")
+	@StartMode(TransientStartMode.MANUAL)
+	class MyActivity : ActorAppCompactActivity(), IQActorBasicFsm
+								by qakActorFsm(MyActivity::class.java,
+								Dispatchers.Default,
+								DEFAULT_PARAMS)
+	{
+			...
+	}
+\end{lstlisting}
+
+If you want to add other activities, you have to add the relative class into \texttt{addAnnotatedClassesParams()} method that builds the \href{https://github.com/LM-96/QA-Extensions/blob/main/it.unibo.qakactor/src/main/kotlin/utils/ParameterUtils.kt}{\texttt{ParameterMap}}. In addition to this, the class must be passed also in the \texttt{qakActorFsm()} method after the \texttt{by} keyword: unlucky, this code repetition is needed because we are in \texttt{Android} so we can use annotation scanning as said.
+
+Notice also the \texttt{APP\_SCOPE}:  this scope is created in order to avoid the use of \href{https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-global-scope/}{\texttt{GlobalScope}} that is strongly discouraged.
+
+To conclude this overview, we underline these methods:
+\begin{itemize}
+	\item \underline{\texttt{lifecycleLaunch(block : suspend CoroutineScope.() -> Unit)}}\\
+	launches a coroutine that executes the passed \texttt{block} using the \href{https://developer.android.com/reference/kotlin/androidx/lifecycle/LifecycleCoroutineScope}{\texttt{LifecycleCoroutineScope}} associated with the lifecycle of the activity;
+	
+	\item \underline{\texttt{actorLaunch(block : suspend CoroutineScope.() -> Unit)}}\\
+	launches a coroutine that executes the passed \texttt{block} using the \texttt{CoroutineScope} associated with the actor;
+	
+	\item \underline{\texttt{updateUi(block : suspend () -> Unit)}}\\
+	a \texttt{suspend} function that executes the passed \texttt{block} using \href{https://developer.android.com/kotlin/coroutines/coroutines-adv#main-safety}{\texttt{Dispatchers.Main}}; this method can be used from a coroutine in order to perform \texttt{ui} updates.
+\end{itemize}
+
+\begin{tcolorbox}
+	\begin{center}
+		\textbf{In order to prevent the overload of main thread, we decide to use the \href{https://developer.android.com/kotlin/coroutines/coroutines-adv\#main-safety}{\texttt{Dispatchers.Default}} as default dispatcher of all coroutines in which actor are executing, so, if an \textit{activity actor} have to perform \texttt{ui} updates, he can call \texttt{updateUi} method.
+			This is the reason why we are using the \texttt{APP\_SCOPE} that is created using \texttt{Dispatchers.Default}.
+		}
+	\end{center}
+\end{tcolorbox}
+
+\subsubsection{Logical architecture}
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=\textwidth]{img/logical_architecture.pdf}
+	\caption{Logical architecture of \gitberto system}
+	\label{fig:logical_architecture}
+\end{figure}
+
+As final result of this very fast analysis, we provide the \textbf{logical architecture} of the \gitberto system in the figure \ref{fig:logical_architecture}.
+
+We can also provide a small description of all the actor that will be present in the \texttt{Android} application of \gitberto system:
+\begin{itemize}
+	\item \underline{\textbf{BluetoothActivity}}\\
+	the activity that makes the user device able to establish a connection with the robot;
+	
+	 \item \underline{\textbf{MainActivity}}\\
+	 the main activity that user can use to set the destination and start the trip;
+	 
+	 \item \underline{\textbf{GattActor}}\\
+	 the actor that uses \texttt{Bluetooth Low Energy} for \href{https://en.wikipedia.org/wiki/Bluetooth_Low_Energy#GATT_operations}{\texttt{GATT}} functionality in order to continuously check the presence of the robot when the connection is established;
+	 
+	 \item \underline{\textbf{LocationManagerActor}}\\
+	 the actor that \textit{manages} the location sending events when user move changing his position;
+	 
+	 \item \underline{\textbf{LocationManagerActor}}\\
+	 the actor that make the system able to interact with the robot using an \textit{high level} view of it; this actor offer the main operations to manage the trip execution.
+\end{itemize}

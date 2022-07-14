@@ -9,3 +9,4 @@
 \contentsline {subsubsection}{\numberline {2.2.1}Running \texttt {QAK} infrastructure under \texttt {Android}}{6}{subsubsection.2.2.1}%
 \contentsline {subsubsection}{\numberline {2.2.2}\texttt {Coroutines} in \texttt {Android} with \texttt {ViewModel}}{8}{subsubsection.2.2.2}%
 \contentsline {subsubsection}{\numberline {2.2.3}From \texttt {Coroutines} to \texttt {QActors}}{10}{subsubsection.2.2.3}%
+\contentsline {subsubsection}{\numberline {2.2.4}Logical architecture}{11}{subsubsection.2.2.4}%

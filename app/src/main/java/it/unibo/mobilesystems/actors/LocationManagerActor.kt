@@ -15,9 +15,9 @@ import kotlinx.coroutines.withContext
 
 const val LOCATION_MANAGER_ACTOR_NAME = "locationmanageractor"
 
-const val LOCATION_EVENT_NAME = "new_location"
-const val ENABLE_LOCATION_MONITORING_ARG = "enable_monitoring"
-const val DISABLE_LOCATION_MONITORING_ARG = "disable_monitoring"
+const val LOCATION_EVENT_NAME = "newLocation"
+const val ENABLE_LOCATION_MONITORING_ARG = "enableMonitoring"
+const val DISABLE_LOCATION_MONITORING_ARG = "disableMonitoring"
 const val LMA_CMD_MESSAGE_NAME = "cmd"
 
 @QActor(GIT_BERTO_CTX_NAME, LOCATION_MANAGER_ACTOR_NAME)
