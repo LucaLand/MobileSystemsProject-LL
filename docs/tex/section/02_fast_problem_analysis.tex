@@ -298,10 +298,41 @@ We can also provide a small description of all the actor that will be present in
 	 
 	 \item \underline{\textbf{GattActor}}\\
 	 the actor that uses \texttt{Bluetooth Low Energy} for \href{https://en.wikipedia.org/wiki/Bluetooth_Low_Energy#GATT_operations}{\texttt{GATT}} functionality in order to continuously check the presence of the robot when the connection is established;
+	 \begin{itemize}
+	 	\item \texttt{enablePolling} and \texttt{disablePolling}: dispatches that enable and disable the polling work of the actor;
+	 	
+	 	\item \texttt{setpollingdelay}: dispatch that set the polling delay of the actor;
+	 	
+	 	\item \texttt{readrssi}: request that asks the actor for reading the current \texttt{RSSI} value; the actor replies with the \texttt{readrssireply} reply with the readed value;
+	 	
+	 	\item \texttt{updategatt}: a dispatch that invites the actor to update the \href{https://developer.android.com/reference/android/bluetooth/BluetoothGatt}{\texttt{BluetoothGatt}} he is using;
+	 	
+	 	\item \textcolor{BrickRed}{\texttt{gattstatus}}: an event that is fired on a change of the status of the related \texttt{BluetoothGatt};
+	 	
+	 	\item \textcolor{BrickRed}{\texttt{rssivalue}}: an event that is fired when an \texttt{RSSI} value is readed;
+	 \end{itemize}
 	 
 	 \item \underline{\textbf{LocationManagerActor}}\\
 	 the actor that \textit{manages} the location sending events when user move changing his position;
+	 \begin{itemize}
+	 	\item \texttt{updateLocationClient}: a dispatch that invites the robot to update the \href{https://developers.google.com/android/reference/com/google/android/gms/location/FusedLocationProviderClient}{\textit{location provider}} he is using to perform location updates; this message can be sent only once when this actor is started in order to \textit{set up} it;
+	 	
+	 	\item \texttt{cmd(CMD)}: a dispatch that can be used to enable the \textit{location monitoring} work of this actor; the possible arguments of this message are two: \texttt{enableMonitoring} or \texttt{disableMonitoring} to enable or disable;
+	 	
+	 	\item \textcolor{BrickRed}{\texttt{newLocation}}: an event that is fired when the location of the device is changed; the argument of this message is a \texttt{JSON} string that serialize a \href{https://github.com/LucaLand/MobileSystemsProject-LL/blob/0.9.1/app/src/main/java/it/unibo/mobilesystems/geo/KLocation.kt}{\texttt{KLocation}}\footnote{We have suitably created this class because the \href{https://developer.android.com/reference/android/location/Location}{\texttt{Location}} that is present in \texttt{Android} is not serializable.} instance;
+	 \end{itemize}
 	 
-	 \item \underline{\textbf{LocationManagerActor}}\\
-	 the actor that make the system able to interact with the robot using an \textit{high level} view of it; this actor offer the main operations to manage the trip execution.
+	 \item \underline{\textbf{GitBertoActor}}\\
+	 the actor that make the system able to interact with the robot using the \textit{high level} operations that let to manage the trip execution;
+	 \begin{itemize}
+	 	\item \texttt{beginTrip(TRIP)}: a dispatch that start the work of the robot as a \textit{trip guide}; the argument of this message is a \texttt{JSON} string that serializes a \href{https://github.com/MKergall/osmbonuspack/blob/master/OSMBonusPack/src/main/java/org/osmdroid/bonuspack/routing/Road.java}{\texttt{Road}} object that maintains the road of the entire trip;
+	 	
+	 	\item \texttt{pauseTrip} and \texttt{resumeTrip}: dispatches that respectively pause the current trip of the robot and resume it;
+	 	
+	 	\item \texttt{stopTrip}: a dispatch that can be used in order to \textit{cancel} the trip stopping the robot;
+	 	
+	 	\item \textcolor{BrickRed}{\texttt{error(ERR)}}: an event that is fired when there is an error; the argument of this message is a string description of the thrown error;
+	 	
+	 	\item \textcolor{BrickRed}{\texttt{arrived}}: an event that is fired when the robot is correctly arrived at the destination.
+	 \end{itemize}
 \end{itemize}

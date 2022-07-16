@@ -10,3 +10,5 @@
 \contentsline {subsubsection}{\numberline {2.2.2}\texttt {Coroutines} in \texttt {Android} with \texttt {ViewModel}}{8}{subsubsection.2.2.2}%
 \contentsline {subsubsection}{\numberline {2.2.3}From \texttt {Coroutines} to \texttt {QActors}}{10}{subsubsection.2.2.3}%
 \contentsline {subsubsection}{\numberline {2.2.4}Logical architecture}{11}{subsubsection.2.2.4}%
+\contentsline {section}{\numberline {3}Fast project}{13}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Project of the \texttt {Bluetooth} communications}{13}{subsection.3.1}%

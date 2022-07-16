@@ -103,10 +103,8 @@ class BluetoothController (
      * Setup the bluetooth. The invocation of this method is required before
      * calling other methods that requires bluetooth. In addition to this, it
      * is *safe* in the sense that, once invoked, others invocation produce nothing.
-     * This method should not throw any exception but only notify if the operation
-     * is successful or not with the return [Boolean] value
+     * This must be used only once in the onCreate method of the owned activity
      * @exception [IOException] if the device does not support bluetooth
-     * @return `true` if bluetooth has correctly been setup
      */
     fun setupBluetooth(onBluetoothSetup : (Boolean) -> Unit) {
         checkSupportOrThrow()
