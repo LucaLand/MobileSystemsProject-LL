@@ -127,7 +127,7 @@ suspend fun discoverDevice(activity : Activity,
 }
 \end{lstlisting}
 
-\textbf{Notice thatn\texttt{discoverDevice} is a method that is executed by a coroutine that waits for the discovery operation completion.} Theoretically, this method should introduce only a very small overhead caused by the \texttt{scope.launch} that is present by the lambda that are invoked from the \texttt{BroadcastReceiver} of the bluetooth. Indeed, the suspension of calling coroutine on the result channel should introduce no additional costs.
+\textbf{Notice that \texttt{discoverDevice} is a method that is executed by a coroutine that waits for the discovery operation completion.} Theoretically, this method should introduce only a very small overhead caused by the \texttt{scope.launch} that is present by the lambda that are invoked from the \texttt{BroadcastReceiver} of the bluetooth. Indeed, the suspension of calling coroutine on the result channel should introduce no additional costs.
 
 In future implementations, this function might be refined in order to be called also from coroutines that are executing on the main thread by using the appropriate dispatcher.
 

@@ -263,7 +263,7 @@ Indeed, we added some modifications to the \href{https://github.com/LM-96/QA-Ext
 	\label{fig:uml_actorappcompactactivity}
 \end{figure}
 
-All the classes that extends \texttt{ActorAppCompactActivity} \underline{\textbf{must}} also use th \texttt{by} keyword offered by \texttt{Kotlin} in order to get the implementation of the \texttt{IQActorBasicClass} following this pattern:
+All the classes that extends \texttt{ActorAppCompactActivity} \underline{\textbf{must}} also use the \texttt{by} keyword offered by \texttt{Kotlin} in order to get the implementation of the \texttt{IQActorBasicClass} following this pattern:
  
 \begin{lstlisting}[language=Kotlin]
 	val APP_SCOPE = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -285,7 +285,7 @@ All the classes that extends \texttt{ActorAppCompactActivity} \underline{\textbf
 	}
 \end{lstlisting}
 
-If you want to add other activities, you have to add the relative class into \texttt{addAnnotatedClassesParams()} method that builds the \href{https://github.com/LM-96/QA-Extensions/blob/main/it.unibo.qakactor/src/main/kotlin/utils/ParameterUtils.kt}{\texttt{ParameterMap}}. In addition to this, the class must be passed also in the \texttt{qakActorFsm()} method after the \texttt{by} keyword: unlucky, this code repetition is needed because we are in \texttt{Android} so we can use annotation scanning as said.
+If you want to add other activities, you have to add the relative class into \textit{addAnnotatedClassesParams()} method that builds the \href{https://github.com/LM-96/QA-Extensions/blob/main/it.unibo.qakactor/src/main/kotlin/utils/ParameterUtils.kt}{\texttt{ParameterMap}}. In addition to this, the class must be passed also in the \texttt{qakActorFsm()} method after the \texttt{by} keyword: unlucky, this code repetition is needed because we are in \texttt{Android} so we can use annotation scanning as said.
 
 Notice also the \texttt{APP\_SCOPE}:  this scope is created in order to avoid the use of \href{https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/-global-scope/}{\texttt{GlobalScope}} that is strongly discouraged.
 

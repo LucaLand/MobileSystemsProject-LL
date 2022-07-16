@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.24 (MiKTeX 22.1) (preloaded format=pdflatex 2022.1.31)  16 JUL 2022 12:50
+This is pdfTeX, Version 3.141592653-2.6-1.40.24 (MiKTeX 22.1) (preloaded format=pdflatex 2022.1.31)  16 JUL 2022 16:35
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1055,13 +1055,7 @@ File: img/actorappcompactactivity_uml.pdf Graphic file (type pdf)
 Package pdftex.def Info: img/actorappcompactactivity_uml.pdf  used on input lin
 e 261.
 (pdftex.def)             Requested size: 227.62206pt x 194.2663pt.
-[11]
-Overfull \hbox (75.72765pt too wide) in paragraph at lines 288--289
-[]\T1/cmr/m/n/12 If you want to add other ac-tiv-i-ties, you have to add the re
-l-a-tive class into \T1/cmtt/m/n/12 addAnnotatedClassesParams()
- []
-
-[12 <./img/actorappcompactactivity_uml.pdf>]
+[11] [12 <./img/actorappcompactactivity_uml.pdf>]
 Overfull \hbox (27.28807pt too wide) in paragraph at lines 294--296
 \T1/cmr/m/n/12 launches a corou-tine that ex-e-cutes the passed \T1/cmtt/m/n/12
  block \T1/cmr/m/n/12 us-ing the []\T1/cmtt/m/n/12 LifecycleCoroutineScope[]
@@ -1193,7 +1187,7 @@ s/Luca/AppData/Local/Programs/MiKTeX/fonts/type1/public/cm-super/sftt1000.pfb><
 C:/Users/Luca/AppData/Local/Programs/MiKTeX/fonts/type1/public/cm-super/sftt120
 0.pfb><C:/Users/Luca/AppData/Local/Programs/MiKTeX/fonts/type1/public/cm-super/
 sftt1440.pfb>
-Output written on GitBerto.pdf (23 pages, 2070491 bytes).
+Output written on GitBerto.pdf (23 pages, 2071048 bytes).
 PDF statistics:
  972 PDF objects out of 1000 (max. 8388607)
  277 named destinations out of 1000 (max. 500000)
