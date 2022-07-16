@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.24 (MiKTeX 22.1) (preloaded format=pdflatex 2022.1.31)  16 JUL 2022 02:32
+This is pdfTeX, Version 3.141592653-2.6-1.40.24 (MiKTeX 22.1) (preloaded format=pdflatex 2022.1.31)  16 JUL 2022 02:38
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1089,11 +1089,11 @@ two: \T1/cmtt/m/n/12 enableMonitoring
 
 pdfTeX warning: pdflatex.exe (file ./img/bluetoothcontroller_uml.pdf): PDF incl
 usion: found PDF version <1.7>, but at most version <1.5> allowed
-<img/bluetoothcontroller_uml.pdf, id=608, 384.47638pt x 539.1342pt>
+<img/bluetoothcontroller_uml.pdf, id=607, 384.47638pt x 539.1342pt>
 File: img/bluetoothcontroller_uml.pdf Graphic file (type pdf)
 <use img/bluetoothcontroller_uml.pdf>
 Package pdftex.def Info: img/bluetoothcontroller_uml.pdf  used on input line 13
-2.
+6.
 (pdftex.def)             Requested size: 318.66948pt x 446.85606pt.
 
 LaTeX Warning: `!h' float specifier changed to `!ht'.
@@ -1102,10 +1102,10 @@ LaTeX Warning: `!h' float specifier changed to `!ht'.
 
 pdfTeX warning: pdflatex.exe (file ./img/bluetoothactivity.pdf): PDF inclusion:
  found PDF version <1.7>, but at most version <1.5> allowed
-<img/bluetoothactivity.pdf, id=610, 558.16531pt x 256.07669pt>
+<img/bluetoothactivity.pdf, id=609, 558.16531pt x 256.07669pt>
 File: img/bluetoothactivity.pdf Graphic file (type pdf)
 <use img/bluetoothactivity.pdf>
-Package pdftex.def Info: img/bluetoothactivity.pdf  used on input line 141.
+Package pdftex.def Info: img/bluetoothactivity.pdf  used on input line 145.
 (pdftex.def)             Requested size: 455.24411pt x 208.8589pt.
 
 LaTeX Warning: `!h' float specifier changed to `!ht'.
@@ -1118,7 +1118,7 @@ Package rerunfilecheck Info: File `GitBerto.out' has not changed.
 Here is how much of TeX's memory you used:
  27665 strings out of 478593
  530683 string characters out of 2845076
- 858956 words of memory out of 3000000
+ 856956 words of memory out of 3000000
  45123 multiletter control sequences out of 15000+600000
  488726 words of font info for 64 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
@@ -1150,9 +1150,9 @@ s/Luca/AppData/Local/Programs/MiKTeX/fonts/type1/public/cm-super/sftt1000.pfb><
 C:/Users/Luca/AppData/Local/Programs/MiKTeX/fonts/type1/public/cm-super/sftt120
 0.pfb><C:/Users/Luca/AppData/Local/Programs/MiKTeX/fonts/type1/public/cm-super/
 sftt1440.pfb>
-Output written on GitBerto.pdf (18 pages, 1857474 bytes).
+Output written on GitBerto.pdf (18 pages, 1858197 bytes).
 PDF statistics:
- 822 PDF objects out of 1000 (max. 8388607)
+ 824 PDF objects out of 1000 (max. 8388607)
  255 named destinations out of 1000 (max. 500000)
  157 words of extra memory for PDF output out of 10000 (max. 10000000)
 
