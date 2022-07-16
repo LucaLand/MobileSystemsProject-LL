@@ -1,14 +1,21 @@
 \babel@toc {english}{}\relax 
-\contentsline {section}{\numberline {1}Introduction and fast Requirement Analysis}{2}{section.1}%
-\contentsline {subsection}{\numberline {1.1}Main user story}{2}{subsection.1.1}%
-\contentsline {subsection}{\numberline {1.2}Main overview of the architecture of the system}{3}{subsection.1.2}%
-\contentsline {subsection}{\numberline {1.3}Code availability}{4}{subsection.1.3}%
-\contentsline {section}{\numberline {2}Fast problem analysis}{4}{section.2}%
-\contentsline {subsection}{\numberline {2.1}Connection between \texttt {Android} and \texttt {Arduino}}{5}{subsection.2.1}%
-\contentsline {subsection}{\numberline {2.2}Towards Actor Modeling}{6}{subsection.2.2}%
-\contentsline {subsubsection}{\numberline {2.2.1}Running \texttt {QAK} infrastructure under \texttt {Android}}{6}{subsubsection.2.2.1}%
-\contentsline {subsubsection}{\numberline {2.2.2}\texttt {Coroutines} in \texttt {Android} with \texttt {ViewModel}}{8}{subsubsection.2.2.2}%
-\contentsline {subsubsection}{\numberline {2.2.3}From \texttt {Coroutines} to \texttt {QActors}}{10}{subsubsection.2.2.3}%
-\contentsline {subsubsection}{\numberline {2.2.4}Logical architecture}{11}{subsubsection.2.2.4}%
-\contentsline {section}{\numberline {3}Fast project}{13}{section.3}%
-\contentsline {subsection}{\numberline {3.1}Project of the \texttt {Bluetooth} communications}{13}{subsection.3.1}%
+\contentsline {section}{\numberline {1}Introduction and fast Requirement Analysis}{3}{section.1}%
+\contentsline {subsection}{\numberline {1.1}Main user story}{3}{subsection.1.1}%
+\contentsline {subsection}{\numberline {1.2}Main overview of the architecture of the system}{4}{subsection.1.2}%
+\contentsline {subsection}{\numberline {1.3}Code availability}{5}{subsection.1.3}%
+\contentsline {section}{\numberline {2}Fast problem analysis}{5}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Connection between \texttt {Android} and \texttt {Arduino}\textbackslash \texttt {Raspberry}}{6}{subsection.2.1}%
+\contentsline {subsubsection}{\numberline {2.1.1}The problem of the robot proximity}{7}{subsubsection.2.1.1}%
+\contentsline {subsection}{\numberline {2.2}The problem of the location}{8}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}Towards Actor Modeling}{8}{subsection.2.3}%
+\contentsline {subsubsection}{\numberline {2.3.1}Running \texttt {QAK} infrastructure under \texttt {Android}}{8}{subsubsection.2.3.1}%
+\contentsline {subsubsection}{\numberline {2.3.2}\texttt {Coroutines} in \texttt {Android} with \texttt {ViewModel}}{9}{subsubsection.2.3.2}%
+\contentsline {subsubsection}{\numberline {2.3.3}From \texttt {Coroutines} to \texttt {QActors}}{11}{subsubsection.2.3.3}%
+\contentsline {subsubsection}{\numberline {2.3.4}Logical architecture}{13}{subsubsection.2.3.4}%
+\contentsline {section}{\numberline {3}Fast project}{15}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Project of the \texttt {Bluetooth} communications}{15}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}Project of \texttt {GATT} functionalities}{19}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.3}Project of positioning functionalities}{21}{subsection.3.3}%
+\contentsline {subsection}{\numberline {3.4}Project of \texttt {GitBertoActor}}{22}{subsection.3.4}%
+\contentsline {subsection}{\numberline {3.5}Project of the main activity}{22}{subsection.3.5}%
+\contentsline {section}{\numberline {4}Conclusions}{22}{section.4}%

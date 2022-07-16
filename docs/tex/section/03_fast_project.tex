@@ -165,3 +165,119 @@ About the states in \texttt{BluetoothActivity}:
 	
 \end{itemize}
 \textbf{We also underline that the actor waits for a \texttt{setupBluetooth} message from its activity in order to perform Bluetooth operations}: this allows to set up Bluetooth from the \texttt{onCreate}, notifying the actor when this operation is concluded, so the actor can correctly use a well initiated controller. 
+
+\subsection{Project of \texttt{GATT} functionalities}
+
+As said in the fast analysis, we have to implement a mechanism based on \texttt{GATT} protocol in order to make the robot able to be stopped by the business logic when it is far from the user.
+
+For this reason, in the logical architecture the analyst has inserted a \texttt{GattActor}.
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=\textwidth]{img/gattactor.pdf}
+	\caption{State diagram of \texttt{GattActorActivity}}
+	\label{fig:gattactor}
+\end{figure}
+
+The figure \ref{fig:gattactor} shows the state diagram of the \texttt{GattActor} and the \texttt{UML} of \texttt{GattDescriptor} class.
+
+\textbf{Notice that the \texttt{GattActor} class has a \href{https://kotlinlang.org/docs/object-declarations.html\#companion-objects}{\texttt{companion object}} with an atomic variable that can be set in order to safely update the \texttt{GattDescriptor}.}
+
+After the atomic variable is set, the actor can be \textit{notified} of this update by sending an \texttt{updategatt} dispatch.
+
+About the states in \texttt{GattActor}:
+\begin{itemize}
+	\item \textbf{begin}:\\
+	in this state the actor prepare itself for its job by taking the current \texttt{GattDescriptor} from the concurrent variable of the  companion object.
+	
+	\item \textbf{idle}:\\
+	the actor simply waits for a command.
+	
+	\item \textbf{enablePolling}:\\
+	the actor prepare itself to do polling work. After all is initialized, it automatically goes to \textbf{polling} state.
+	
+	\item \textbf{polling}:\\
+	the actor perform the read of the \texttt{RSSI} value and then emits the proper event. After a time specified into \texttt{pollingDelay} variable, the actor returns in this state performing a new polling step.
+	
+	\item \textbf{disablePolling}:\\
+	the actor prepare stop its polling job and returns to \texttt{idle} state.
+	
+	\item \textbf{setPollingDelay}:\\
+	the actor updates the \texttt{pollingDelay} variable using the argument of the \texttt{setpollingdelay} message.
+	
+	\item \textbf{updategatt}:\\
+	the actor updates its descriptor taking the current value using the companion object.
+	
+	\item \textbf{handleRssiRequest}:\\
+	the actor handles a \texttt{readrssi} request by reading the current \texttt{RSSI} value and then sending a reply with the measurement.
+	
+\end{itemize}
+
+\textbf{In the \texttt{updateGatt} state the actor automatically adds some callback to the \texttt{GATT} descriptor that emits the events when the \texttt{RSSI} value or \texttt{GATT} status is changed.} This because in \texttt{Android} the developer must register callbacks to the \texttt{BluetoothGatt} instance and that he has to ask for a reading (so the native mechanism is asynchronous).
+
+\subsection{Project of positioning functionalities}
+
+About positioning, as we studied in the course \texttt{Android} leaves to the developer only \textit{high-level} operations, hiding the lower levels.
+
+So, the developer can only use a \textit{location provider} to notify his interest to monitor the position with no \textit{request/response} possibility. In addition, \texttt{Android} let the developer only to set some policies about precision, energy consumption, and so on and so forth.
+
+\textbf{We need to have an high accuracy in order to send the proper command to the robot}, so we decide to use the \href{https://developers.google.com/android/reference/com/google/android/gms/location/FusedLocationProviderClient}{\texttt{FusedLocationProviderClient}} offered by the \textit{Gloogle Play Service API}.
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=\textwidth]{img/locationmanageractor.pdf}
+	\caption{State diagram of \texttt{LocationManagerActor}}
+	\label{fig:locationmanageractor}
+\end{figure}
+
+The figure \ref{fig:locationmanageractor} shows the state diagram of the actor that monitor the location.
+
+About the states in \texttt{LocationManagerActor}:
+\begin{itemize}
+	\item \textbf{begin}:\\
+	in this state the actor prepare itself for its job by taking the current \texttt{GattDescriptor} from the concurrent variable of the  companion object.
+	
+	\item \textbf{getLocationClient}:\\
+	with a similar mechanism used by the \texttt{GattActor} with \texttt{GattDescriptor}, this actor retrieves the location provider \textbf{must have been previously set} by an activity. Then, the actor goes to \textbf{idle} state.
+	
+	\item \textbf{idle}:\\
+	the actor waits for a command.
+	
+	\item \textbf{handleCmd}:\\
+	the actor handle the dispatch that invites it to execute a command. Possible commands are two:
+	\begin{itemize}
+		\item \texttt{enableMonitoring}: set up the location provider in order to fire the \texttt{newLocation} event when the location is changed; as \texttt{Android} imposes, the used pattern implies callbacks automatically registered by the actor;
+		
+		\item \texttt{disableMonitoring}: stop the location provider work.
+	\end{itemize}
+	
+\end{itemize}
+
+\subsection{Project of \texttt{GitBertoActor}}
+
+For time reasons, we will not provide details or graphs about the \texttt{GitBertoActor}.
+
+\subsection{Project of the main activity}
+
+We will not provide lots of details about the main activity that is \href{https://github.com/LucaLand/MobileSystemsProject-LL/blob/0.9.1/app/src/main/java/it/unibo/mobilesystems/MainMapsActivity.kt}{\texttt{MainMapsActivity}}.
+
+This activity offers something similar to a \textit{navigator}: a map with a search box in which the user can type the desired address. The user can also tap a position on the map to set the target destination (following what the analyst said).
+
+\begin{tcolorbox}
+	\begin{center}
+		\textbf{
+			To manage map and calculate routes we decide to use a library called \href{https://github.com/osmdroid/osmdroid}{\texttt{OpenStreetMap}} with also some extensions from \href{https://github.com/MKergall/osmbonuspack}{\texttt{osmbonuspack}}.
+			Then, in order to search addresses, to geocode them and to calculate path, we use the given \textit{API} using the \textit{ViewModel} pattern we have described.
+		}
+	\end{center}
+\end{tcolorbox}
+
+\begin{itemize}
+	\item About \textbf{geocoding} we have created the classes \href{https://github.com/LucaLand/MobileSystemsProject-LL/blob/0.9.1/app/src/main/java/it/unibo/mobilesystems/geo/Geocoder.kt}{\texttt{Geocoder}} and \href{https://github.com/LucaLand/MobileSystemsProject-LL/blob/0.9.1/app/src/main/java/it/unibo/mobilesystems/geo/GeocoderViewModel.kt}{\texttt{GeocoderViewModel}}.
+	
+	\item About \textbf{path calculation} we have created the classes \href{https://github.com/LucaLand/MobileSystemsProject-LL/blob/0.9.1/app/src/main/java/it/unibo/mobilesystems/geo/PathCalculator.kt}{\texttt{PathCalculator}} and \href{https://github.com/LucaLand/MobileSystemsProject-LL/blob/0.9.1/app/src/main/java/it/unibo/mobilesystems/geo/PathViewModel.kt}{\texttt{PathViewModel}}
+\end{itemize}
+
+Then, the \texttt{MainMapsActivity} contains a map, an address box and a button to start the navigation process. When an address is written into the box, the \texttt{GeocoderViewModel} starts to search for the written address letting the user tap the desired and translating it into geographical coordinates.
+So, when the user clicks on the start button, the \texttt{PathViewModel} calculates the path and the navigation is started by \textbf{sending proper messages to the business actor} we have presented.
+

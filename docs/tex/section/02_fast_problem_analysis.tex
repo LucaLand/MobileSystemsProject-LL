@@ -11,7 +11,7 @@ Then \textbf{we consider that the robot is controlled by a \texttt{Raspberry} th
 	\end{center}
 \end{tcolorbox}
 
-\subsection{Connection between \texttt{Android} and \texttt{Arduino}}
+\subsection{Connection between \texttt{Android} and \texttt{Arduino}\textbackslash\texttt{Raspberry}}
 
 As shown in the fast requirement analysis, from the \texttt{Android} point of view we have large set of instruments to develop using Bluetooth or Wi-Fi Direct, but we can't say the same thing from the \texttt{Raspberry} (Linux) point of view.
 
@@ -58,6 +58,38 @@ Then, this socket can be used exactly as the internet protocol sockets in order 
 		\textbf{We have used \texttt{BluetoothSocket} implementation in order to create a bluetooth server on \texttt{Raspberry} that make it able to communicate with the device of the user. No library or third-party components are needed in \texttt{Android}.}
 	\end{center}
 \end{tcolorbox}
+
+\subsubsection{The problem of the robot proximity}
+
+From the requirements, we know that the robot must be a guide for the user that takes him to the destination he has chosen. Then, it's important that \textbf{the robot does not run alone leaving the user behind}: it must consider \textit{how far the user is from him} by adapting its speed to that of the user.
+
+\begin{tcolorbox}
+	\begin{center}
+		\textbf{Since we have chosen to use Bluetooth, a way to make the robot able to adapt itself to the speed of the user is to use the \href{https://en.wikipedia.org/wiki/Bluetooth_Low_Energy\#GATT_operations}{Bluetooth Low Energy} with \texttt{GATT} operation.}
+	\end{center}
+\end{tcolorbox}
+
+Then, the developer can give intelligence to the robot by adding a smart mechanism that \textit{stop the robot if its distance from the user is greater than a reasonable threshold}.
+At the operational point of view, this can be realized using the \texttt{RSSI} calculation offered by \texttt{GATT} that leaves the possibility to implement some proximity mechanisms.
+
+\textbf{Notice that if the physical robot supports the speed management, the \texttt{RSSI} can be used in order to really adapt its speed and not only to stop it.}
+
+\subsection{The problem of the location}
+
+As said in the requirements, the system should let the user specify the target destination.
+There are two main ways to allow the user to choose destination:
+\begin{enumerate}
+	\item allow him to \textbf{specify an address};
+	\item allow him to\textbf{ tap a point over a map}.
+\end{enumerate}
+
+The developer should handle both modes but only once it's strictly needed.
+\begin{enumerate}
+	\item If the developer chooses the first way and the positioning system requires coordinates, then it is needed to \textit{translate} the address into geographic coordinates (\href{https://developers.google.com/maps/documentation/geocoding/overview}{\textit{geocoding}}).
+	
+	\item If the developer chooses the second way and the positioning system requires addresses, then it is needed to \textit{translate} the coordinates into addresses (\textit{reverse geocoding})
+\end{enumerate}
+
 
 \subsection{Towards Actor Modeling}
 
