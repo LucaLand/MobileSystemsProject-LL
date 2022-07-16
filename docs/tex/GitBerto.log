@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.24 (MiKTeX 22.1) (preloaded format=pdflatex 2022.1.31)  11 JUL 2022 23:27
+This is pdfTeX, Version 3.141592653-2.6-1.40.24 (MiKTeX 22.1) (preloaded format=pdflatex 2022.1.31)  16 JUL 2022 16:35
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -960,14 +960,13 @@ LaTeX Font Info:    Trying to load font information for T1+cmtt on input line 7
 
 (C:\Users\Luca\AppData\Local\Programs\MiKTeX\tex/latex/base\t1cmtt.fd
 File: t1cmtt.fd 2019/12/16 v2.5j Standard LaTeX font definitions
-))
+) [1
+
+{C:/Users/Luca/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map}])
 \tf@toc=\write5
 \openout5 = `GitBerto.toc'.
 
-
-[1
-
-{C:/Users/Luca/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map}]
+ [2]
 (section/01_introduction.tex
 LaTeX Font Info:    Font shape `T1/cmtt/bx/n' in size <12> not available
 (Font)              Font shape `T1/cmtt/m/n' tried instead on input line 15.
@@ -975,29 +974,29 @@ LaTeX Font Info:    Font shape `T1/cmtt/bx/n' in size <12> not available
 
 pdfTeX warning: pdflatex.exe (file ./img/user_story_main.pdf): PDF inclusion: f
 ound PDF version <1.7>, but at most version <1.5> allowed
-<img/user_story_main.pdf, id=74, 488.78609pt x 450.72388pt>
+<img/user_story_main.pdf, id=128, 488.78609pt x 450.72388pt>
 File: img/user_story_main.pdf Graphic file (type pdf)
 <use img/user_story_main.pdf>
 Package pdftex.def Info: img/user_story_main.pdf  used on input line 25.
 (pdftex.def)             Requested size: 318.66948pt x 293.85423pt.
-[2 <./img/user_story_main.pdf>]
+[3 <./img/user_story_main.pdf>]
 
 pdfTeX warning: pdflatex.exe (file ./img/coarse_architecture.pdf): PDF inclusio
 n: found PDF version <1.7>, but at most version <1.5> allowed
-<img/coarse_architecture.pdf, id=150, 434.58359pt x 248.8497pt>
+<img/coarse_architecture.pdf, id=204, 434.58359pt x 248.8497pt>
 File: img/coarse_architecture.pdf Graphic file (type pdf)
 <use img/coarse_architecture.pdf>
 Package pdftex.def Info: img/coarse_architecture.pdf  used on input line 48.
 (pdftex.def)             Requested size: 364.19667pt x 208.55386pt.
-[3 <./img/coarse_architecture.pdf>]) (section/02_fast_problem_analysis.tex
-[4]
+[4 <./img/coarse_architecture.pdf>]) (section/02_fast_problem_analysis.tex
+[5]
 LaTeX Font Info:    Font shape `T1/cmtt/bx/n' in size <14.4> not available
 (Font)              Font shape `T1/cmtt/m/n' tried instead on input line 14.
 
 
 pdfTeX warning: pdflatex.exe (file ./img/kbluez_general_architecture.pdf): PDF 
 inclusion: found PDF version <1.7>, but at most version <1.5> allowed
-<img/kbluez_general_architecture.pdf, id=207, 621.28107pt x 467.82779pt>
+<img/kbluez_general_architecture.pdf, id=261, 621.28107pt x 467.82779pt>
 File: img/kbluez_general_architecture.pdf Graphic file (type pdf)
 <use img/kbluez_general_architecture.pdf>
 Package pdftex.def Info: img/kbluez_general_architecture.pdf  used on input lin
@@ -1010,7 +1009,7 @@ LaTeX Warning: `!h' float specifier changed to `!ht'.
 
 pdfTeX warning: pdflatex.exe (file ./img/uml_bluetooth_socket_interface.pdf): P
 DF inclusion: found PDF version <1.7>, but at most version <1.5> allowed
-<img/uml_bluetooth_socket_interface.pdf, id=209, 246.9225pt x 284.98468pt>
+<img/uml_bluetooth_socket_interface.pdf, id=263, 246.9225pt x 284.98468pt>
 File: img/uml_bluetooth_socket_interface.pdf Graphic file (type pdf)
 <use img/uml_bluetooth_socket_interface.pdf>
 Package pdftex.def Info: img/uml_bluetooth_socket_interface.pdf  used on input 
@@ -1023,40 +1022,144 @@ LaTeX Font Info:    Trying to load font information for T1+cmss on input line 5
 1.
 (C:\Users\Luca\AppData\Local\Programs\MiKTeX\tex/latex/base\t1cmss.fd
 File: t1cmss.fd 2019/12/16 v2.5j Standard LaTeX font definitions
-) [5]
-[6 <./img/kbluez_general_architecture.pdf> <./img/uml_bluetooth_socket_interfac
+) [6]
+[7 <./img/kbluez_general_architecture.pdf> <./img/uml_bluetooth_socket_interfac
 e.pdf>]
-Overfull \hbox (23.33781pt too wide) in paragraph at lines 70--71
+Overfull \hbox (23.33781pt too wide) in paragraph at lines 102--103
 []\T1/cmr/m/n/12 Now, we want to merge all of these con-cepts with the al-ready
  men-tioned \T1/cmtt/m/n/12 actor meta-modeling
  []
 
-
-Overfull \hbox (6.7981pt too wide) in paragraph at lines 103--104
+[8]
+Overfull \hbox (6.7981pt too wide) in paragraph at lines 135--136
 \T1/cmr/m/n/12 the []QAKU-tils.kt[]. In-deed, for ex-ten-sion pur-poses, the la
 uncher de-vel-oped in \T1/cmtt/m/n/12 QA-Extensions
  []
 
-[7] [8]
+[9]
 LaTeX Font Info:    Trying to load font information for TS1+cmss on input line 
-169.
+201.
  (C:\Users\Luca\AppData\Local\Programs\MiKTeX\tex/latex/base\ts1cmss.fd
 File: ts1cmss.fd 2019/12/16 v2.5j Standard LaTeX font definitions
-) [9]
+)
+[10]
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <5> on input line 223.
-) [10] (GitBerto.aux)
+(Font)              <5> on input line 255.
+
+
+pdfTeX warning: pdflatex.exe (file ./img/actorappcompactactivity_uml.pdf): PDF 
+inclusion: found PDF version <1.7>, but at most version <1.5> allowed
+<img/actorappcompactactivity_uml.pdf, id=417, 239.93639pt x 204.765pt>
+File: img/actorappcompactactivity_uml.pdf Graphic file (type pdf)
+<use img/actorappcompactactivity_uml.pdf>
+Package pdftex.def Info: img/actorappcompactactivity_uml.pdf  used on input lin
+e 261.
+(pdftex.def)             Requested size: 227.62206pt x 194.2663pt.
+[11] [12 <./img/actorappcompactactivity_uml.pdf>]
+Overfull \hbox (27.28807pt too wide) in paragraph at lines 294--296
+\T1/cmr/m/n/12 launches a corou-tine that ex-e-cutes the passed \T1/cmtt/m/n/12
+ block \T1/cmr/m/n/12 us-ing the []\T1/cmtt/m/n/12 LifecycleCoroutineScope[]
+ []
+
+
+
+pdfTeX warning: pdflatex.exe (file ./img/logical_architecture.pdf): PDF inclusi
+on: found PDF version <1.7>, but at most version <1.5> allowed
+<img/logical_architecture.pdf, id=504, 589.24138pt x 536.96606pt>
+File: img/logical_architecture.pdf Graphic file (type pdf)
+<use img/logical_architecture.pdf>
+Package pdftex.def Info: img/logical_architecture.pdf  used on input line 316.
+(pdftex.def)             Requested size: 455.24411pt x 414.86623pt.
+
+LaTeX Warning: `!h' float specifier changed to `!ht'.
+
+[13]
+Overfull \hbox (4.42087pt too wide) in paragraph at lines 352--353
+\T1/cmr/m/n/12 of this ac-tor; the pos-si-ble ar-gu-ments of this mes-sage are 
+two: \T1/cmtt/m/n/12 enableMonitoring
+ []
+
+[14 <./img/logical_architecture.pdf>]) (section/03_fast_project.tex [15]
+[16] [17]
+
+pdfTeX warning: pdflatex.exe (file ./img/bluetoothcontroller_uml.pdf): PDF incl
+usion: found PDF version <1.7>, but at most version <1.5> allowed
+<img/bluetoothcontroller_uml.pdf, id=666, 384.47638pt x 539.1342pt>
+File: img/bluetoothcontroller_uml.pdf Graphic file (type pdf)
+<use img/bluetoothcontroller_uml.pdf>
+Package pdftex.def Info: img/bluetoothcontroller_uml.pdf  used on input line 13
+6.
+(pdftex.def)             Requested size: 318.66948pt x 446.85606pt.
+
+
+pdfTeX warning: pdflatex.exe (file ./img/bluetoothactivity.pdf): PDF inclusion:
+ found PDF version <1.7>, but at most version <1.5> allowed
+<img/bluetoothactivity.pdf, id=668, 558.16531pt x 256.07669pt>
+File: img/bluetoothactivity.pdf Graphic file (type pdf)
+<use img/bluetoothactivity.pdf>
+Package pdftex.def Info: img/bluetoothactivity.pdf  used on input line 145.
+(pdftex.def)             Requested size: 455.24411pt x 208.8589pt.
+
+LaTeX Warning: `!h' float specifier changed to `!ht'.
+
+[18 <./img/bluetoothcontroller_uml.pdf>]
+
+pdfTeX warning: pdflatex.exe (file ./img/gattactor.pdf): PDF inclusion: found P
+DF version <1.7>, but at most version <1.5> allowed
+<img/gattactor.pdf, id=690, 718.60468pt x 549.01106pt>
+File: img/gattactor.pdf Graphic file (type pdf)
+<use img/gattactor.pdf>
+Package pdftex.def Info: img/gattactor.pdf  used on input line 177.
+(pdftex.def)             Requested size: 455.24411pt x 347.80556pt.
+
+LaTeX Warning: `!h' float specifier changed to `!ht'.
+
+[19 <./img/bluetoothactivity.pdf>]
+Overfull \hbox (26.13979pt too wide) in paragraph at lines 205--207
+\T1/cmr/m/n/12 the ac-tor up-dates the \T1/cmtt/m/n/12 pollingDelay \T1/cmr/m/n
+/12 vari-able us-ing the ar-gu-ment of the \T1/cmtt/m/n/12 setpollingdelay
+ []
+
+[20 <./img/gattactor.pdf>]
+
+pdfTeX warning: pdflatex.exe (file ./img/locationmanageractor.pdf): PDF inclusi
+on: found PDF version <1.7>, but at most version <1.5> allowed
+<img/locationmanageractor.pdf, id=764, 566.115pt x 256.07669pt>
+File: img/locationmanageractor.pdf Graphic file (type pdf)
+<use img/locationmanageractor.pdf>
+Package pdftex.def Info: img/locationmanageractor.pdf  used on input line 228.
+(pdftex.def)             Requested size: 455.24411pt x 205.93225pt.
+[21 <./img/locationmanageractor.pdf>]
+Overfull \hbox (7.21982pt too wide) in paragraph at lines 249--250
+[]\T1/cmtt/m/n/12 enableMonitoring\T1/cmr/m/n/12 : set up the lo-ca-tion provid
+er in or-der to fire the \T1/cmtt/m/n/12 newLocation
+ []
+
+
+Overfull \hbox (1.01146pt too wide) in paragraph at lines 262--263
+\T1/cmr/m/n/12 We will not pro-vide lots of de-tails about the main ac-tiv-ity 
+that is []\T1/cmtt/m/n/12 MainMapsActivity[]\T1/cmr/m/n/12 . 
+ []
+
+
+Overfull \hbox (32.56735pt too wide) in paragraph at lines 278--279
+[]\T1/cmr/m/n/12 About \T1/cmr/bx/n/12 path cal-cu-la-tion \T1/cmr/m/n/12 we ha
+ve cre-ated the classes []\T1/cmtt/m/n/12 PathCalculator[] \T1/cmr/m/n/12 and [
+]\T1/cmtt/m/n/12 PathViewModel[] 
+ []
+
+) (section/04_conclusions.tex [22]) [23] (GitBerto.aux)
 Package rerunfilecheck Info: File `GitBerto.out' has not changed.
-(rerunfilecheck)             Checksum: 2C9D0A997B5F0CA9F01E3B00A7043167;2192.
+(rerunfilecheck)             Checksum: A679E49FB69AFA9F0CF0621CDDE35E13;4218.
  ) 
 Here is how much of TeX's memory you used:
- 27360 strings out of 478593
- 524941 string characters out of 2845076
- 850538 words of memory out of 3000000
- 44956 multiletter control sequences out of 15000+600000
+ 27718 strings out of 478593
+ 531727 string characters out of 2845076
+ 855101 words of memory out of 3000000
+ 45149 multiletter control sequences out of 15000+600000
  488726 words of font info for 64 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 83i,10n,88p,872b,1898s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 83i,10n,88p,874b,1898s stack positions out of 5000i,500n,10000p,200000b,80000s
 {C:/Users/Luca/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/cm-super/cm-supe
 r-t1.enc}{C:/Users/Luca/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/cm-super/
 cm-super-ts1.enc}<C:/Users/Luca/AppData/Local/Programs/MiKTeX/fonts/type1/publi
@@ -1068,22 +1171,25 @@ ams/MiKTeX/fonts/type1/public/cm-super/sfbx1440.pfb><C:/Users/Luca/AppData/Loca
 l/Programs/MiKTeX/fonts/type1/public/cm-super/sfbx1728.pfb><C:/Users/Luca/AppDa
 ta/Local/Programs/MiKTeX/fonts/type1/public/cm-super/sfbx2074.pfb><C:/Users/Luc
 a/AppData/Local/Programs/MiKTeX/fonts/type1/public/cm-super/sfrm0600.pfb><C:/Us
-ers/Luca/AppData/Local/Programs/MiKTeX/fonts/type1/public/cm-super/sfrm1000.pfb
-><C:/Users/Luca/AppData/Local/Programs/MiKTeX/fonts/type1/public/cm-super/sfrm1
-200.pfb><C:/Users/Luca/AppData/Local/Programs/MiKTeX/fonts/type1/public/cm-supe
-r/sfrm1440.pfb><C:/Users/Luca/AppData/Local/Programs/MiKTeX/fonts/type1/public/
-cm-super/sfss1000.pfb><C:/Users/Luca/AppData/Local/Programs/MiKTeX/fonts/type1/
-public/cm-super/sfsx1000.pfb><C:/Users/Luca/AppData/Local/Programs/MiKTeX/fonts
-/type1/public/cm-super/sfti0700.pfb><C:/Users/Luca/AppData/Local/Programs/MiKTe
-X/fonts/type1/public/cm-super/sfti0800.pfb><C:/Users/Luca/AppData/Local/Program
-s/MiKTeX/fonts/type1/public/cm-super/sfti1000.pfb><C:/Users/Luca/AppData/Local/
-Programs/MiKTeX/fonts/type1/public/cm-super/sfti1200.pfb><C:/Users/Luca/AppData
-/Local/Programs/MiKTeX/fonts/type1/public/cm-super/sftt1000.pfb><C:/Users/Luca/
-AppData/Local/Programs/MiKTeX/fonts/type1/public/cm-super/sftt1200.pfb><C:/User
-s/Luca/AppData/Local/Programs/MiKTeX/fonts/type1/public/cm-super/sftt1440.pfb>
-Output written on GitBerto.pdf (10 pages, 1336679 bytes).
+ers/Luca/AppData/Local/Programs/MiKTeX/fonts/type1/public/cm-super/sfrm0700.pfb
+><C:/Users/Luca/AppData/Local/Programs/MiKTeX/fonts/type1/public/cm-super/sfrm0
+800.pfb><C:/Users/Luca/AppData/Local/Programs/MiKTeX/fonts/type1/public/cm-supe
+r/sfrm1000.pfb><C:/Users/Luca/AppData/Local/Programs/MiKTeX/fonts/type1/public/
+cm-super/sfrm1200.pfb><C:/Users/Luca/AppData/Local/Programs/MiKTeX/fonts/type1/
+public/cm-super/sfrm1440.pfb><C:/Users/Luca/AppData/Local/Programs/MiKTeX/fonts
+/type1/public/cm-super/sfss1000.pfb><C:/Users/Luca/AppData/Local/Programs/MiKTe
+X/fonts/type1/public/cm-super/sfsx1000.pfb><C:/Users/Luca/AppData/Local/Program
+s/MiKTeX/fonts/type1/public/cm-super/sfti0700.pfb><C:/Users/Luca/AppData/Local/
+Programs/MiKTeX/fonts/type1/public/cm-super/sfti0800.pfb><C:/Users/Luca/AppData
+/Local/Programs/MiKTeX/fonts/type1/public/cm-super/sfti1000.pfb><C:/Users/Luca/
+AppData/Local/Programs/MiKTeX/fonts/type1/public/cm-super/sfti1200.pfb><C:/User
+s/Luca/AppData/Local/Programs/MiKTeX/fonts/type1/public/cm-super/sftt1000.pfb><
+C:/Users/Luca/AppData/Local/Programs/MiKTeX/fonts/type1/public/cm-super/sftt120
+0.pfb><C:/Users/Luca/AppData/Local/Programs/MiKTeX/fonts/type1/public/cm-super/
+sftt1440.pfb>
+Output written on GitBerto.pdf (23 pages, 2071048 bytes).
 PDF statistics:
- 514 PDF objects out of 1000 (max. 8388607)
- 124 named destinations out of 1000 (max. 500000)
- 113 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 972 PDF objects out of 1000 (max. 8388607)
+ 277 named destinations out of 1000 (max. 500000)
+ 223 words of extra memory for PDF output out of 10000 (max. 10000000)
 
